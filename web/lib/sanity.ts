@@ -97,6 +97,13 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
         items
       },
       url,
+      alt,
+      videoFile {
+        asset-> {
+          url,
+          _id
+        }
+      },
       logos[] {
         _key,
         logo {
@@ -156,6 +163,13 @@ export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.cu
         items
       },
       url,
+      alt,
+      videoFile {
+        asset-> {
+          url,
+          _id
+        }
+      },
       logos[] {
         _key,
         logo {

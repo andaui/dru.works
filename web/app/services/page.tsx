@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
-import SectionNav from "@/components/SectionNav";
-import AboutPageContent from "@/components/AboutPageContent";
+import AboutPageLayout from "@/components/AboutPageLayout";
 import { client, pageSectionsQuery } from "@/lib/sanity";
 
 async function getSections() {
@@ -33,19 +32,18 @@ export default async function Services() {
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
       <Header currentPage="services" />
 
-      {/* Title */}
-      <h1 className="absolute left-[24px] top-[127px] font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
-        Products, Websites, Team design sessions, AI Expertise
-      </h1>
-
-      {/* Separator Line */}
-      <div className="absolute left-0 right-0 top-[598px] h-px bg-[#e5e5e5]" />
-
-      {/* Bottom Navigation Links */}
-      {sectionsForNav.length > 0 && <SectionNav sections={sectionsForNav} />}
-
-      {/* Sections */}
-      {sections.length > 0 && <AboutPageContent sections={sections} />}
+      <AboutPageLayout
+        heroContent={
+          <>
+            {/* Title */}
+            <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
+              Products, Websites, Team design sessions, AI Expertise
+            </h1>
+          </>
+        }
+        sections={sections}
+        sectionsForNav={sectionsForNav}
+      />
     </div>
   );
 }

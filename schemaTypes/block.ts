@@ -19,6 +19,7 @@ export default defineType({
         {type: 'link'},
         {type: 'sectionLink'},
         {type: 'clients'},
+        {type: 'video'},
       ],
       validation: (Rule) => Rule.required().min(1),
     }),

@@ -7,6 +7,7 @@ import ColLayout from "./ColLayout";
 import Link from "./Link";
 import SectionLink from "./SectionLink";
 import Clients from "./Clients";
+import Video from "./Video";
 
 interface BlockContent {
   _type: string;
@@ -41,6 +42,14 @@ interface BlockContent {
     };
     companyName?: string;
   }>;
+  // Video
+  videoFile?: {
+    asset?: {
+      url?: string;
+      _id?: string;
+    };
+  };
+  alt?: string;
 }
 
 interface BlockProps {
@@ -86,6 +95,10 @@ export default function Block({ content, backgroundColor, maxWidth780 = false, m
       case "clients":
         return item.logos ? (
           <Clients key={item._key} logos={item.logos} maxWidth980={maxWidth980} />
+        ) : null;
+      case "video":
+        return item.videoFile ? (
+          <Video key={item._key} videoFile={item.videoFile} alt={item.alt} />
         ) : null;
       default:
         return null;

@@ -9,6 +9,7 @@ import colLayout from './colLayout'
 import link from './link'
 import sectionLink from './sectionLink'
 import clients from './clients'
+import video from './video'
 import block from './block'
 import section from './section'
 import page from './page'
@@ -25,6 +26,7 @@ export const schemaTypes = [
   link,
   sectionLink,
   clients,
+  video,
   block,
   section,
   page,

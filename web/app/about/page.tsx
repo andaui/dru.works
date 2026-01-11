@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
-import SectionNav from "@/components/SectionNav";
-import AboutPageContent from "@/components/AboutPageContent";
+import AboutPageLayout from "@/components/AboutPageLayout";
 import { client, pageSectionsQuery } from "@/lib/sanity";
 
 async function getSections() {
@@ -33,30 +32,29 @@ export default async function About() {
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
       <Header currentPage="about" />
 
-      {/* Title */}
-      <h1 className="absolute left-[24px] top-[127px] font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)]">
-        My approach to building products
-      </h1>
+      <AboutPageLayout
+        heroContent={
+          <>
+            {/* Title */}
+            <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)] mb-[34px]">
+              My approach to building products
+            </h1>
 
-      {/* Content Text */}
-      <div className="absolute left-[24px] top-[256px] font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
-        <p className="mb-0">
-          I work as a design partner for product teams, focusing on visual design and building high quality interfaces. I care deeply about craft, clarity, and the details that make products feel considered and reliable.
-        </p>
-        <p className="mb-0">&nbsp;</p>
-        <p>
-          I often collaborate with other designers and engineers depending on the needs of the project, and have worked with teams at [Google, Revolut, BlackRock, Intercom, Bumble and others]
-        </p>
-      </div>
-
-      {/* Separator Line */}
-      <div className="absolute left-0 right-0 top-[598px] h-px bg-[#e5e5e5]" />
-
-      {/* Bottom Navigation Links */}
-      {sectionsForNav.length > 0 && <SectionNav sections={sectionsForNav} />}
-
-      {/* Sections */}
-      {sections.length > 0 && <AboutPageContent sections={sections} />}
+            {/* Content Text */}
+            <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
+              <p className="mb-0">
+                I work as a design partner for product teams, focusing on visual design and building high quality interfaces. I care deeply about craft, clarity, and the details that make products feel considered and reliable.
+              </p>
+              <p className="mb-0">&nbsp;</p>
+              <p>
+                I often collaborate with other designers and engineers depending on the needs of the project, and have worked with teams at [Google, Revolut, BlackRock, Intercom, Bumble and others]
+              </p>
+            </div>
+          </>
+        }
+        sections={sections}
+        sectionsForNav={sectionsForNav}
+      />
     </div>
   );
 }

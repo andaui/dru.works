@@ -65,32 +65,39 @@ export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
   const testimonialText = testimonial.testimonialLong || testimonial.testimonialShort || '';
 
   return (
-    <div className="w-full bg-white flex flex-col gap-[24px] items-start">
-      <div className="flex flex-col gap-[12px] items-start w-full max-w-[600px] px-[24px]">
-        <p className="font-normal text-[13px] leading-[19px] not-italic text-[#5d5d5d] w-full">
-          {testimonialText}
-        </p>
-        <div className="flex items-center gap-[10px] min-h-[19px]">
-          {personPhotoUrl ? (
-            <div className="relative shrink-0 size-[21px] overflow-hidden rounded-full">
-              <Image
-                src={personPhotoUrl}
-                alt={personPhotoAlt}
-                fill
-                className="object-cover"
-                sizes="21px"
-                quality={90}
-              />
-            </div>
-          ) : (
-            <div className="relative shrink-0 size-[21px]">
-              <div className="size-full rounded-full bg-gray-300" />
-            </div>
-          )}
-          <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
-            {testimonial.person}
-            {roleAtCompany ? `, ${roleAtCompany}` : ""}
+    <div className="w-full flex flex-col gap-[75px] items-center" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
+      {/* Horizontal Line - Full Width */}
+      <div className="w-full h-px bg-[#e5e5e5]" />
+      
+      {/* Testimonial Content Container - Full Width, Center Aligned */}
+      <div className="flex flex-col gap-[12px] items-center w-full px-[24px]">
+        {/* Text Content - Max Width 824px, Centered */}
+        <div className="flex flex-col gap-[20px] items-center w-full max-w-[780px]">
+          <p className="font-inter font-normal text-[16px] leading-[23px] not-italic text-black text-center tracking-[0%] w-full whitespace-pre-line">
+            {testimonialText}
           </p>
+          <div className="flex flex-col md:flex-row items-center gap-[10px] min-h-[19px]">
+            {personPhotoUrl ? (
+              <div className="relative shrink-0 size-[21px] overflow-hidden rounded-full">
+                <Image
+                  src={personPhotoUrl}
+                  alt={personPhotoAlt}
+                  fill
+                  className="object-cover"
+                  sizes="21px"
+                  quality={90}
+                />
+              </div>
+            ) : (
+              <div className="relative shrink-0 size-[21px]">
+                <div className="size-full rounded-full bg-gray-300" />
+              </div>
+            )}
+            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-center md:text-left w-full md:w-auto">
+              {testimonial.person}
+              {roleAtCompany ? `, ${roleAtCompany}` : ""}
+            </p>
+          </div>
         </div>
       </div>
     </div>

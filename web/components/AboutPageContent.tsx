@@ -71,12 +71,12 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
   }, [sections]);
 
   return (
-    <div ref={containerRef} className="absolute left-0 top-[648px] w-full flex flex-col gap-[75px] items-start pb-[200px]">
+    <div ref={containerRef} className="relative w-full flex flex-col gap-[75px] items-start pt-[25px] pb-[200px]">
       {sections.map((item: any, index: number) => {
         // Check if it's a testimonial or section
         if (item._type === 'testimonial') {
           return (
-            <div key={item._id || index} data-testimonial={item._id}>
+            <div key={item._id || index} data-testimonial={item._id} className="w-full">
               <PageTestimonial testimonial={item} />
             </div>
           );
