@@ -67,8 +67,8 @@ export default function Block({ content, backgroundColor, maxWidth780 = false, m
         return item.title ? <ListTitle key={item._key} title={item.title} /> : null;
       case "listItems":
         // For listItems, items is an array of strings, not objects
-        const listItemsArray = item.items && Array.isArray(item.items) && typeof item.items[0] === 'string' 
-          ? item.items as string[] 
+        const listItemsArray = item.items && Array.isArray(item.items) && item.items.length > 0 && typeof item.items[0] === 'string' 
+          ? (item.items as unknown as string[])
           : undefined;
         return listItemsArray ? (
           <ListItems key={item._key} items={listItemsArray} showBullets={item.showBullets} />
