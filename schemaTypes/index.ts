@@ -1,1 +1,3 @@
-export const schemaTypes = []
+import featuredWork from './featuredWork'
+
+export const schemaTypes = [featuredWork]
