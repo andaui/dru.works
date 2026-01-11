@@ -44,3 +44,58 @@ export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) 
   }
 }`
 
+// GROQ query to fetch all testimonials (for hero section carousel)
+export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order asc) {
+  _id,
+  _type,
+  testimonialShort,
+  testimonialLong,
+  person,
+  role,
+  company,
+  personPhoto {
+    _type,
+    asset-> {
+      _id,
+      _type,
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt
+  }
+}`
+
+// GROQ query to fetch sections
+export const sectionsQuery = `*[_type == "section"] | order(order asc) {
+  _id,
+  _type,
+  sectionTitle,
+  order,
+  blocks[] {
+    _key,
+    backgroundColor,
+    content[] {
+      _type,
+      _key,
+      title,
+      text,
+      items[] {
+        label,
+        price
+      },
+      listItems,
+      showBullets,
+      columns[] {
+        title,
+        items
+      },
+      url
+    }
+  }
+}`
+

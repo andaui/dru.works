@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import WorkFeatureCard from "@/components/WorkFeatureCard";
-import { client, featuredWorkQuery, urlFor } from "@/lib/sanity";
+import HeroTestimonial from "@/components/HeroTestimonial";
+import { client, featuredWorkQuery, heroTestimonialsQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
   try {
@@ -12,9 +13,66 @@ async function getFeaturedWork() {
   }
 }
 
+async function getHeroTestimonials() {
+  try {
+    const testimonials = await client.fetch(heroTestimonialsQuery);
+    return testimonials || [];
+  } catch (error) {
+    console.error('Error fetching hero testimonials:', error);
+    return [];
+  }
+}
+
 export default async function Home() {
-  // Fetch featured work from Sanity
+  // Fetch featured work and testimonials from Sanity
   const workItems = await getFeaturedWork();
+  const rawTestimonials = await getHeroTestimonials();
+  
+  // Process testimonials data on the server
+  const processedTestimonials = rawTestimonials.map((testimonial: any) => {
+    // Process person photo
+    let personPhotoUrl: string | null = null;
+    let personPhotoAlt: string = '';
+    
+    if (testimonial?.personPhoto?.asset) {
+      try {
+        personPhotoUrl = urlFor(testimonial.personPhoto)
+          .width(42) // 21px * 2 for retina
+          .height(42)
+          .fit('crop')
+          .quality(90)
+          .format('jpg')
+          .url();
+        personPhotoAlt = testimonial.personPhoto.alt || testimonial.person || 'Person photo';
+      } catch (error) {
+        console.error('Error building person photo URL:', error);
+        if (testimonial.personPhoto.asset?.url) {
+          personPhotoUrl = testimonial.personPhoto.asset.url;
+          personPhotoAlt = testimonial.personPhoto.alt || testimonial.person || 'Person photo';
+        }
+      }
+    }
+    
+    // Format role and company
+    // Use "of" for founder roles, "at" for other roles
+    const role = testimonial?.role || '';
+    const company = testimonial?.company || '';
+    const isFounderRole = role.toLowerCase().includes('founder') || role.toLowerCase().includes('co-founder');
+    const roleAtCompany = role && company 
+      ? isFounderRole 
+        ? `${role} of ${company}`
+        : `${role} at ${company}`
+      : '';
+    
+    return {
+      _id: testimonial._id,
+      testimonialShort: testimonial.testimonialShort || '',
+      person: testimonial.person || '',
+      roleAtCompany,
+      personPhotoUrl,
+      personPhotoAlt,
+    };
+  });
 
   // Calculate approximate height needed: 758px (start) + (cards * 623px) + (gaps * 106px)
   const estimatedHeight = workItems.length > 0 
@@ -23,7 +81,7 @@ export default async function Home() {
   
   return (
     <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
-      <Header />
+      <Header currentPage="work" />
 
       {/* Pricing Section - Left Side */}
       <div className="absolute left-[1.25%] lg:left-[24px] top-[588px] flex items-start gap-[22px]">
@@ -45,26 +103,14 @@ export default async function Home() {
       <div className="absolute left-0 right-0 top-[688px] h-px bg-[#e5e5e5]" />
 
       {/* Hero Section */}
-      <div className="absolute left-1/2 top-[266px] -translate-x-1/2 flex w-[90%] max-w-[475px] flex-col items-center gap-[19px]">
+      <div className="absolute left-1/2 top-[266px] -translate-x-1/2 flex w-[90%] max-w-[700px] flex-col items-center gap-[22px]">
         <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-center tracking-[-0.25px]">
           <p className="mb-0">Design partner </p>
           <p>with technical skills</p>
         </div>
-        <div className="flex w-full max-w-[459px] flex-col items-center gap-[13px]">
-          <div className="flex items-center justify-center w-full">
-            <p className="relative shrink-0 font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-center">
-              Andrew didn't just deliver designs—he helped us build from the ground up.
-            </p>
-          </div>
-          <div className="flex items-center gap-[10px]">
-            <div className="relative shrink-0 size-[21px]">
-              <div className="size-full rounded-full bg-gray-300" />
-            </div>
-            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
-              Egor, Co Founder of Jamie
-            </p>
-          </div>
-        </div>
+        <HeroTestimonial
+          testimonials={processedTestimonials}
+        />
       </div>
 
       {/* Work Feature Cards Section */}

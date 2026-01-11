@@ -28,6 +28,9 @@ export default function WorkFeatureCard({
   // Only show "Read more" if projectDescriptionLong is populated
   const showReadMore = projectDescriptionLong && projectDescriptionLong.trim().length > 0;
   
+  // Expand/collapse state for long description
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   // Carousel state - only track image index, not work item index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const totalImages = images.length;
@@ -53,18 +56,26 @@ export default function WorkFeatureCard({
           <p className="relative shrink-0 w-full max-w-[452px] text-[16px] leading-[normal] text-black">
             {projectTitle}
           </p>
-          <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] leading-[19px] text-[#5d5d5d]">
+          <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] leading-[19px] text-[#5d5d5d] whitespace-pre-line">
             {projectDescriptionShort}
           </p>
+          {isExpanded && projectDescriptionLong && (
+            <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] leading-[19px] text-[#5d5d5d] whitespace-pre-line">
+              {projectDescriptionLong}
+            </p>
+          )}
           {teamContribution && (
             <p className="relative shrink-0 w-full max-w-[354.667px] text-[13px] leading-[19px] text-[#5d5d5d]">
               {teamContribution}
             </p>
           )}
           {showReadMore && (
-            <p className="relative shrink-0 w-full max-w-[354.667px] text-[12px] leading-[19px] text-[#5d5d5d] opacity-50">
-              {readMoreText}
-            </p>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="relative shrink-0 w-full max-w-[354.667px] text-left text-[12px] leading-[19px] text-[#5d5d5d] opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
+            >
+              {isExpanded ? 'Read less' : readMoreText}
+            </button>
           )}
         </div>
         {/* Navigation Controls */}
