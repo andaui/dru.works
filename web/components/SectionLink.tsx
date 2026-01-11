@@ -17,12 +17,12 @@ export default function SectionLink({ text, url }: SectionLinkProps) {
 
   if (url) {
     return (
-      <a href={url} className="block">
+      <a href={url} className="block pt-[8px] -ml-[3px]">
         {content}
       </a>
     );
   }
 
-  return <div className="flex flex-col items-start justify-center max-w-[600px]">{content}</div>;
+  return <div className="flex flex-col items-start justify-center max-w-[600px] pt-[8px] -ml-[3px]">{content}</div>;
 }
 

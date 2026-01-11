@@ -13,7 +13,7 @@ export default function Header({ currentPage = "work" }: HeaderProps) {
       <Link href="/about" className={`relative shrink-0 ${currentPage === "about" ? "text-black" : "text-[#989898]"}`}>
         About
       </Link>
-      <Link href="#" className={`relative shrink-0 ${currentPage === "services" ? "text-black" : "text-[#989898]"}`}>
+      <Link href="/services" className={`relative shrink-0 ${currentPage === "services" ? "text-black" : "text-[#989898]"}`}>
         Services & Sessions
       </Link>
       <Link href="#" className={`relative shrink-0 ${currentPage === "intro" ? "text-black" : "text-[#989898]"}`}>

@@ -10,8 +10,8 @@ export default function ListItems({ items, showBullets = false }: ListItemsProps
     return (
       <div className="flex flex-col gap-[4px] items-start leading-[19px] text-[#5d5d5d] text-[13px] w-full">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-[4px] w-full">
-            <Image src="/dot.svg" alt="" width={12} height={12} className="shrink-0" />
+          <div key={index} className="flex items-start gap-[4px] w-full">
+            <Image src="/dot.svg" alt="" width={12} height={12} className="shrink-0 mt-[3px]" />
             <span>{item}</span>
           </div>
         ))}

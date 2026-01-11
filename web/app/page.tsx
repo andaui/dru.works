@@ -74,13 +74,13 @@ export default async function Home() {
     };
   });
 
-  // Calculate approximate height needed: 758px (start) + (cards * 623px) + (gaps * 106px)
+  // Calculate approximate height needed: 758px (start) + (cards * 623px) + (gaps * 106px) + 200px bottom spacing
   const estimatedHeight = workItems.length > 0 
-    ? 758 + (workItems.length * 623) + ((workItems.length - 1) * 106)
-    : 1000;
+    ? 758 + (workItems.length * 623) + ((workItems.length - 1) * 106) + 200
+    : 1000 + 200;
   
   return (
-    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
+    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[200px]" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
       <Header currentPage="work" />
 
       {/* Pricing Section - Left Side */}

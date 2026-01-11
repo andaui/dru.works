@@ -6,7 +6,7 @@ import { client, pageSectionsQuery } from "@/lib/sanity";
 async function getSections() {
   try {
     // Sections and testimonials are already returned in the correct order from the query
-    const items = await client.fetch(pageSectionsQuery('about'));
+    const items = await client.fetch(pageSectionsQuery('services'));
     return items || [];
   } catch (error) {
     console.error('Error fetching sections:', error);
@@ -17,7 +17,7 @@ async function getSections() {
 async function getSectionsForNav() {
   try {
     // Get only sections (not testimonials) for navigation
-    const items = await client.fetch(pageSectionsQuery('about'));
+    const items = await client.fetch(pageSectionsQuery('services'));
     const sections = (items || []).filter((item: any) => item._type === 'section');
     return sections;
   } catch (error) {
@@ -26,28 +26,17 @@ async function getSectionsForNav() {
   }
 }
 
-export default async function About() {
+export default async function Services() {
   const sections = await getSections();
   const sectionsForNav = await getSectionsForNav();
   return (
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
-      <Header currentPage="about" />
+      <Header currentPage="services" />
 
       {/* Title */}
-      <h1 className="absolute left-[24px] top-[127px] font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)]">
-        My approach to building products
+      <h1 className="absolute left-[24px] top-[127px] font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
+        Products, Websites, Team design sessions, AI Expertise
       </h1>
-
-      {/* Content Text */}
-      <div className="absolute left-[24px] top-[256px] font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
-        <p className="mb-0">
-          I work as a design partner for product teams, focusing on visual design and building high quality interfaces. I care deeply about craft, clarity, and the details that make products feel considered and reliable.
-        </p>
-        <p className="mb-0">&nbsp;</p>
-        <p>
-          I often collaborate with other designers and engineers depending on the needs of the project, and have worked with teams at [Google, Revolut, BlackRock, Intercom, Bumble and others]
-        </p>
-      </div>
 
       {/* Separator Line */}
       <div className="absolute left-0 right-0 top-[598px] h-px bg-[#e5e5e5]" />

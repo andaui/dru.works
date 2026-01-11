@@ -70,7 +70,7 @@ export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order as
   }
 }`
 
-// GROQ query to fetch sections
+// GROQ query to fetch sections (legacy - kept for backward compatibility)
 export const sectionsQuery = `*[_type == "section"] | order(order asc) {
   _id,
   _type,
@@ -79,6 +79,8 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
   blocks[] {
     _key,
     backgroundColor,
+    maxWidth780,
+    maxWidth980,
     content[] {
       _type,
       _key,
@@ -88,14 +90,120 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
         label,
         price
       },
-      listItems,
+      items,
       showBullets,
       columns[] {
         title,
         items
       },
-      url
+      url,
+      logos[] {
+        _key,
+        logo {
+          asset-> {
+            url
+          },
+          alt
+        },
+        companyName
+      }
     }
+  },
+  featuredImage {
+    image {
+      asset-> {
+        _id,
+        _type,
+        url,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    },
+    text
+  }
+}`
+
+// Query to get sections and testimonials for a specific page by slug
+// Items are returned in the order they appear in the array (maintained by drag-and-drop)
+export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.current == "${slug}"][0].sections[]-> {
+  _id,
+  _type,
+  // Section fields
+  sectionTitle,
+  blocks[] {
+    _key,
+    backgroundColor,
+    maxWidth780,
+    maxWidth980,
+    content[] {
+      _type,
+      _key,
+      title,
+      text,
+      items[] {
+        label,
+        price
+      },
+      items,
+      showBullets,
+      columns[] {
+        title,
+        items
+      },
+      url,
+      logos[] {
+        _key,
+        logo {
+          asset-> {
+            url
+          },
+          alt
+        },
+        companyName
+      }
+    }
+  },
+  featuredImage {
+    image {
+      asset-> {
+        _id,
+        _type,
+        url,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    },
+    text
+  },
+  // Testimonial fields
+  testimonialShort,
+  testimonialLong,
+  person,
+  role,
+  company,
+  personPhoto {
+    asset-> {
+      _id,
+      _type,
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt
   }
 }`
 

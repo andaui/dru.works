@@ -8,8 +8,10 @@ import listItems from './listItems'
 import colLayout from './colLayout'
 import link from './link'
 import sectionLink from './sectionLink'
+import clients from './clients'
 import block from './block'
 import section from './section'
+import page from './page'
 
 export const schemaTypes = [
   featuredWork,
@@ -22,6 +24,8 @@ export const schemaTypes = [
   colLayout,
   link,
   sectionLink,
+  clients,
   block,
   section,
+  page,
 ]

@@ -31,3 +31,20 @@ body {
 .animate-fade-in {
   animation: fade-in 0.5s ease-in-out;
 }
+
+.featured-image-responsive {
+  max-width: 100%;
+}
+
+.featured-image-responsive .featured-image-container {
+  max-height: none;
+}
+
+@media (min-width: 1024px) {
+  .featured-image-responsive {
+    max-width: var(--featured-max-width, 510px);
+  }
+  .featured-image-responsive .featured-image-container {
+    max-height: 510px;
+  }
+}

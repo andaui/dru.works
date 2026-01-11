@@ -19,6 +19,27 @@ export default defineType({
       validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
+      name: 'featuredImage',
+      title: 'Featured Image',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'image',
+          title: 'Image',
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+        }),
+        defineField({
+          name: 'text',
+          title: 'Text',
+          type: 'text',
+          description: 'Optional text to display below the image',
+        }),
+      ],
+    }),
+    defineField({
       name: 'order',
       title: 'Order',
       type: 'number',

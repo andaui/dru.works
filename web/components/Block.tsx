@@ -6,6 +6,7 @@ import ListItems from "./ListItems";
 import ColLayout from "./ColLayout";
 import Link from "./Link";
 import SectionLink from "./SectionLink";
+import Clients from "./Clients";
 
 interface BlockContent {
   _type: string;
@@ -18,9 +19,9 @@ interface BlockContent {
   items?: Array<{ label: string; price: string }>;
   // ListTitle (uses title field)
   listTitle?: string;
-  // ListItems
-  listItems?: string[];
-  showBullets?: boolean;
+      // ListItems (uses items field, but as string array)
+      listItems?: string[];
+      showBullets?: boolean;
   // ColLayout
   columns?: Array<{ title: string; items: string[] }>;
   // Link (uses text and url fields)
@@ -29,14 +30,27 @@ interface BlockContent {
   // SectionLink (uses text and url fields)
   sectionLinkText?: string;
   sectionLinkUrl?: string;
+  // Clients
+  logos?: Array<{
+    _key: string;
+    logo: {
+      asset: {
+        url: string;
+      };
+      alt?: string;
+    };
+    companyName?: string;
+  }>;
 }
 
 interface BlockProps {
   content: BlockContent[];
   backgroundColor?: string;
+  maxWidth780?: boolean;
+  maxWidth980?: boolean;
 }
 
-export default function Block({ content, backgroundColor }: BlockProps) {
+export default function Block({ content, backgroundColor, maxWidth780 = false, maxWidth980 = false }: BlockProps) {
   const renderComponent = (item: BlockContent) => {
     switch (item._type) {
       case "mainTitle":
@@ -44,12 +58,20 @@ export default function Block({ content, backgroundColor }: BlockProps) {
       case "textContent":
         return item.text ? <Text key={item._key} text={item.text} /> : null;
       case "price2Col":
-        return item.items ? <Price2Col key={item._key} items={item.items} /> : null;
+        // For price2Col, items is an array of objects with label and price
+        const priceItems = item.items && Array.isArray(item.items) && item.items.length > 0 && typeof item.items[0] === 'object' && 'label' in item.items[0]
+          ? item.items as Array<{ label: string; price: string }>
+          : undefined;
+        return priceItems ? <Price2Col key={item._key} items={priceItems} /> : null;
       case "listTitle":
         return item.title ? <ListTitle key={item._key} title={item.title} /> : null;
       case "listItems":
-        return item.listItems ? (
-          <ListItems key={item._key} items={item.listItems} showBullets={item.showBullets} />
+        // For listItems, items is an array of strings, not objects
+        const listItemsArray = item.items && Array.isArray(item.items) && typeof item.items[0] === 'string' 
+          ? item.items as string[] 
+          : undefined;
+        return listItemsArray ? (
+          <ListItems key={item._key} items={listItemsArray} showBullets={item.showBullets} />
         ) : null;
       case "colLayout":
         return item.columns ? <ColLayout key={item._key} columns={item.columns} /> : null;
@@ -61,6 +83,10 @@ export default function Block({ content, backgroundColor }: BlockProps) {
         return item.text ? (
           <SectionLink key={item._key} text={item.text} url={item.url} />
         ) : null;
+      case "clients":
+        return item.logos ? (
+          <Clients key={item._key} logos={item.logos} maxWidth980={maxWidth980} />
+        ) : null;
       default:
         return null;
     }
@@ -71,7 +97,7 @@ export default function Block({ content, backgroundColor }: BlockProps) {
       className={`flex flex-col items-start w-full ${backgroundColor ? `bg-[${backgroundColor}]` : ""}`}
       style={backgroundColor ? { backgroundColor } : undefined}
     >
-      <div className="flex flex-col gap-[16px] items-start justify-center max-w-[600px] px-[24px] py-0 w-full">
+      <div className={`flex flex-col gap-[16px] items-start justify-center ${maxWidth980 ? 'max-w-[980px]' : maxWidth780 ? 'max-w-[780px]' : 'max-w-[600px]'} px-[24px] py-0 w-full`}>
         {content.map((item) => renderComponent(item))}
       </div>
     </div>

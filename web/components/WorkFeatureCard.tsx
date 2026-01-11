@@ -51,7 +51,7 @@ export default function WorkFeatureCard({
   return (
     <div className="flex w-full flex-col items-start gap-[28px] lg:flex-row lg:items-start">
       {/* Left Column - Text Content */}
-      <div className="flex min-w-0 w-full flex-col items-start justify-between px-0 pb-[2px] pt-[12px] lg:min-w-[350px] lg:min-h-0 lg:grow lg:basis-0 lg:self-stretch">
+      <div className="flex min-w-0 w-full flex-col items-start justify-between px-0 pb-[2px] pt-[12px] lg:min-w-[430px] lg:min-h-0 lg:grow lg:basis-0 lg:self-stretch">
         <div className="flex max-w-[452px] flex-col items-start gap-[22px] font-normal not-italic w-full">
           <p className="relative shrink-0 w-full max-w-[452px] text-[16px] leading-[normal] text-black">
             {projectTitle}

@@ -18,6 +18,7 @@ export default defineType({
         {type: 'colLayout'},
         {type: 'link'},
         {type: 'sectionLink'},
+        {type: 'clients'},
       ],
       validation: (Rule) => Rule.required().min(1),
     }),
@@ -26,6 +27,20 @@ export default defineType({
       title: 'Background Color',
       type: 'string',
       description: 'Optional background color (e.g., #fbebeb)',
+    }),
+    defineField({
+      name: 'maxWidth780',
+      title: 'Max Width 780px',
+      type: 'boolean',
+      description: 'Toggle to set max width to 780px (default: 600px)',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'maxWidth980',
+      title: 'Max Width 980px (for clients)',
+      type: 'boolean',
+      description: 'Toggle to set max width to 980px for clients component',
+      initialValue: false,
     }),
   ],
   preview: {
