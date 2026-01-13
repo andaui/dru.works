@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import WorkFeatureCard from "@/components/WorkFeatureCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
 import SpotlightCarousel from "@/components/SpotlightCarousel";
-import { client, featuredWorkQuery, heroTestimonialsQuery, urlFor } from "@/lib/sanity";
+import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
   try {
@@ -24,10 +24,21 @@ async function getHeroTestimonials() {
   }
 }
 
+async function getSpotlightItems() {
+  try {
+    const spotlightItems = await client.fetch(spotlightQuery);
+    return spotlightItems || [];
+  } catch (error) {
+    console.error('Error fetching spotlight items:', error);
+    return [];
+  }
+}
+
 export default async function Home() {
-  // Fetch featured work and testimonials from Sanity
+  // Fetch featured work, testimonials, and spotlight items from Sanity
   const workItems = await getFeaturedWork();
   const rawTestimonials = await getHeroTestimonials();
+  const rawSpotlightItems = await getSpotlightItems();
   
   // Process testimonials data on the server
   const processedTestimonials = rawTestimonials.map((testimonial: any) => {
@@ -75,45 +86,45 @@ export default async function Home() {
     };
   });
 
-  // Collect images for spotlight carousel (first 4 images from featured work)
-  const spotlightImages: Array<{ url: string; alt: string }> = [];
-  let imageCount = 0;
-  const maxImages = 4;
-  
-  for (const item of workItems) {
-    if (imageCount >= maxImages) break;
-    
-    if (item.images && Array.isArray(item.images)) {
-      for (const image of item.images) {
-        if (imageCount >= maxImages) break;
-        
-        // Only process image types (skip videos)
-        if (image._type === 'image' && image.asset) {
-          try {
-            const imageUrl = urlFor(image)
-              .width(1200) // 2x for retina (600 * 2)
-              .height(800) // 2x for retina (400 * 2)
-              .fit('crop')
-              .quality(90)
-              .format('jpg')
-              .url();
-            const imageAlt = image.alt || item.projectTitle || 'Project image';
-            spotlightImages.push({ url: imageUrl, alt: imageAlt });
-            imageCount++;
-          } catch (error) {
-            console.error('Error building spotlight image URL:', error);
-            if (image.asset?.url) {
-              spotlightImages.push({
-                url: image.asset.url,
-                alt: image.alt || item.projectTitle || 'Project image',
-              });
-              imageCount++;
-            }
-          }
+  // Process spotlight items from Sanity
+  const processedSpotlightItems = rawSpotlightItems.map((item: any) => {
+    const media = item.media;
+    let mediaUrl = '';
+    let mediaAlt = '';
+    let mediaType: 'image' | 'video' = 'image';
+
+    if (media?.type === 'image' && media?.image?.asset) {
+      try {
+        // Use fit('max') to preserve full image without cropping
+        // Set a high max height to ensure quality, but let width be auto
+        mediaUrl = urlFor(media.image)
+          .height(1200) // High resolution for quality
+          .fit('max') // Preserve full image, no cropping
+          .quality(90)
+          .format('jpg')
+          .url();
+        mediaAlt = media.image.alt || item.title || 'Spotlight image';
+        mediaType = 'image';
+      } catch (error) {
+        console.error('Error building spotlight image URL:', error);
+        if (media.image.asset?.url) {
+          mediaUrl = media.image.asset.url;
+          mediaAlt = media.image.alt || item.title || 'Spotlight image';
         }
       }
+    } else if (media?.type === 'video' && media?.video?.asset) {
+      mediaUrl = media.video.asset.url;
+      mediaAlt = item.title || 'Spotlight video';
+      mediaType = 'video';
     }
-  }
+
+    return {
+      url: mediaUrl,
+      alt: mediaAlt,
+      text: item.title || '',
+      type: mediaType,
+    };
+  }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
   // Calculate approximate height needed: 758px (start) + 500px (carousel space) + (cards * 623px) + (gaps * 106px) + 200px bottom spacing
   const carouselHeight = 500; // Space for carousel
@@ -182,8 +193,8 @@ export default async function Home() {
         <div className="w-full h-px bg-[#e5e5e5]" />
 
         {/* Spotlight Carousel */}
-        {spotlightImages.length > 0 && (
-          <SpotlightCarousel images={spotlightImages} />
+        {processedSpotlightItems.length > 0 && (
+          <SpotlightCarousel items={processedSpotlightItems} />
         )}
 
         {/* Second Separator Line - 98px below carousel */}

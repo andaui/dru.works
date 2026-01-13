@@ -1,23 +1,22 @@
 import Header from "@/components/Header";
 import AboutPageLayout from "@/components/AboutPageLayout";
-import { client, pageSectionsQuery } from "@/lib/sanity";
+import { client, pageDataQuery } from "@/lib/sanity";
 
-async function getSections() {
+async function getPageData() {
   try {
-    // Sections and testimonials are already returned in the correct order from the query
-    const items = await client.fetch(pageSectionsQuery('services'));
-    return items || [];
+    const pageData = await client.fetch(pageDataQuery('services'));
+    return pageData || null;
   } catch (error) {
-    console.error('Error fetching sections:', error);
-    return [];
+    console.error('Error fetching page data:', error);
+    return null;
   }
 }
 
 async function getSectionsForNav() {
   try {
     // Get only sections (not testimonials) for navigation
-    const items = await client.fetch(pageSectionsQuery('services'));
-    const sections = (items || []).filter((item: any) => item._type === 'section');
+    const pageData = await client.fetch(pageDataQuery('services'));
+    const sections = (pageData?.sections || []).filter((item: any) => item._type === 'section');
     return sections;
   } catch (error) {
     console.error('Error fetching sections for nav:', error);
@@ -26,8 +25,10 @@ async function getSectionsForNav() {
 }
 
 export default async function Services() {
-  const sections = await getSections();
+  const pageData = await getPageData();
+  const sections = pageData?.sections || [];
   const sectionsForNav = await getSectionsForNav();
+  
   return (
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
       <Header currentPage="services" />
@@ -36,9 +37,11 @@ export default async function Services() {
         heroContent={
           <>
             {/* Title */}
-            <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
-              Products, Websites, Team design sessions, AI Expertise
-            </h1>
+            {pageData?.heroTitle && (
+              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
+                {pageData.heroTitle}
+              </h1>
+            )}
           </>
         }
         sections={sections}

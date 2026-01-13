@@ -13,6 +13,7 @@ import video from './video'
 import block from './block'
 import section from './section'
 import page from './page'
+import spotlight from './spotlight'
 
 export const schemaTypes = [
   featuredWork,
@@ -30,4 +31,5 @@ export const schemaTypes = [
   block,
   section,
   page,
+  spotlight,
 ]

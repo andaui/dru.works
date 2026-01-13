@@ -21,6 +21,18 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'heroTitle',
+      title: 'Hero Title',
+      type: 'string',
+      description: 'Title displayed in the hero section of the page',
+    }),
+    defineField({
+      name: 'heroDescription',
+      title: 'Hero Description',
+      type: 'text',
+      description: 'Description text displayed in the hero section of the page',
+    }),
+    defineField({
       name: 'sections',
       title: 'Sections & Testimonials',
       type: 'array',

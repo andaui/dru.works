@@ -1,23 +1,22 @@
 import Header from "@/components/Header";
 import AboutPageLayout from "@/components/AboutPageLayout";
-import { client, pageSectionsQuery } from "@/lib/sanity";
+import { client, pageDataQuery } from "@/lib/sanity";
 
-async function getSections() {
+async function getPageData() {
   try {
-    // Sections and testimonials are already returned in the correct order from the query
-    const items = await client.fetch(pageSectionsQuery('about'));
-    return items || [];
+    const pageData = await client.fetch(pageDataQuery('about'));
+    return pageData || null;
   } catch (error) {
-    console.error('Error fetching sections:', error);
-    return [];
+    console.error('Error fetching page data:', error);
+    return null;
   }
 }
 
 async function getSectionsForNav() {
   try {
     // Get only sections (not testimonials) for navigation
-    const items = await client.fetch(pageSectionsQuery('about'));
-    const sections = (items || []).filter((item: any) => item._type === 'section');
+    const pageData = await client.fetch(pageDataQuery('about'));
+    const sections = (pageData?.sections || []).filter((item: any) => item._type === 'section');
     return sections;
   } catch (error) {
     console.error('Error fetching sections for nav:', error);
@@ -26,8 +25,10 @@ async function getSectionsForNav() {
 }
 
 export default async function About() {
-  const sections = await getSections();
+  const pageData = await getPageData();
+  const sections = pageData?.sections || [];
   const sectionsForNav = await getSectionsForNav();
+  
   return (
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
       <Header currentPage="about" />
@@ -36,20 +37,20 @@ export default async function About() {
         heroContent={
           <>
             {/* Title */}
-            <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)] mb-[34px]">
-              My approach to building products
-            </h1>
+            {pageData?.heroTitle && (
+              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)] mb-[34px]">
+                {pageData.heroTitle}
+              </h1>
+            )}
 
             {/* Content Text */}
-            <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
-              <p className="mb-0">
-                I work as a design partner for product teams, focusing on visual design and building high quality interfaces. I care deeply about craft, clarity, and the details that make products feel considered and reliable.
-              </p>
-              <p className="mb-0">&nbsp;</p>
-              <p>
-                I often collaborate with other designers and engineers depending on the needs of the project, and have worked with teams at [Google, Revolut, BlackRock, Intercom, Bumble and others]
-              </p>
-            </div>
+            {pageData?.heroDescription && (
+              <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
+                <p className="whitespace-pre-line mb-0">
+                  {pageData.heroDescription}
+                </p>
+              </div>
+            )}
           </>
         }
         sections={sections}

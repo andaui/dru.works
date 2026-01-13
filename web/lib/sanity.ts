@@ -70,6 +70,39 @@ export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order as
   }
 }`
 
+// GROQ query to fetch all spotlight items
+export const spotlightQuery = `*[_type == "spotlight"] | order(order asc) {
+  _id,
+  _type,
+  title,
+  order,
+  media {
+    type,
+    image {
+      asset-> {
+        _id,
+        _type,
+        url,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    },
+    video {
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType
+      }
+    }
+  }
+}`
+
 // GROQ query to fetch sections (legacy - kept for backward compatibility)
 export const sectionsQuery = `*[_type == "section"] | order(order asc) {
   _id,
@@ -132,6 +165,97 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
       alt
     },
     text
+  }
+}`
+
+// Query to get full page data including hero fields and sections for a specific page by slug
+export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.current == "${slug}"][0] {
+  _id,
+  _type,
+  heroTitle,
+  heroDescription,
+  sections[]-> {
+    _id,
+    _type,
+    // Section fields
+    sectionTitle,
+    blocks[] {
+      _key,
+      backgroundColor,
+      maxWidth780,
+      maxWidth980,
+      content[] {
+        _type,
+        _key,
+        title,
+        text,
+        items[] {
+          label,
+          price
+        },
+        items,
+        showBullets,
+        columns[] {
+          title,
+          items
+        },
+        url,
+        alt,
+        videoFile {
+          asset-> {
+            url,
+            _id
+          }
+        },
+        logos[] {
+          _key,
+          logo {
+            asset-> {
+              url
+            },
+            alt
+          },
+          companyName
+        }
+      }
+    },
+    featuredImage {
+      image {
+        asset-> {
+          _id,
+          _type,
+          url,
+          metadata {
+            dimensions {
+              width,
+              height
+            }
+          }
+        },
+        alt
+      },
+      text
+    },
+    // Testimonial fields
+    testimonialShort,
+    testimonialLong,
+    person,
+    role,
+    company,
+    personPhoto {
+      asset-> {
+        _id,
+        _type,
+        url,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    }
   }
 }`
 

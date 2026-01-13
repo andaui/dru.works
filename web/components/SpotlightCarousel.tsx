@@ -2,27 +2,31 @@
 
 import { useEffect, useRef } from "react";
 
-interface ImageData {
+interface MediaData {
   url: string;
   alt: string;
+  text?: string;
+  type: 'image' | 'video';
 }
 
 interface SpotlightCarouselProps {
-  images: ImageData[];
+  items: MediaData[];
 }
 
-export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
+export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
   const lockedScrollYRef = useRef<number>(0);
   const progressRef = useRef<number>(0);
   const isActiveRef = useRef<boolean>(false);
   const triggerPointRef = useRef<number>(0);
   const justUnlockedRef = useRef<boolean>(false);
   const scrollDistanceRef = useRef<number>(1000);
+  const isScrollableRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!containerRef.current || !scrollContainerRef.current || images.length === 0) return;
+    if (!containerRef.current || !scrollContainerRef.current || items.length === 0) return;
 
     const container = containerRef.current;
     const scrollContainer = scrollContainerRef.current;
@@ -43,8 +47,27 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
     // Initialize
     progressRef.current = 0;
     updateCarouselPosition(0);
+    
+    // Check if carousel is scrollable (has content that extends beyond viewport)
+    const checkIfScrollable = () => {
+      const scrollableWidth = calculateScrollableWidth();
+      // Only consider scrollable if there's at least 10px of scrollable content
+      isScrollableRef.current = scrollableWidth > 10;
+    };
+    
+    checkIfScrollable();
+    
     // Reduce multiplier from 2 to 1.2 for faster scrolling
     scrollDistanceRef.current = Math.max(calculateScrollableWidth() * 1.4, 1000);
+
+    // Set spacer width to 10% of container width
+    const updateSpacerWidth = () => {
+      if (spacerRef.current && containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        spacerRef.current.style.width = `${containerWidth * 0.1}px`;
+      }
+    };
+    updateSpacerWidth();
 
     const handleWheel = (e: WheelEvent) => {
       const rect = container.getBoundingClientRect();
@@ -54,8 +77,8 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
       // Check if carousel has reached trigger point (8% from top)
       const isAtTrigger = Math.abs(rect.top - triggerPoint) < 2;
 
-      // Activate if at trigger point and not already active
-      if (isAtTrigger && !isActiveRef.current) {
+      // Activate if at trigger point, not already active, and carousel is scrollable
+      if (isAtTrigger && !isActiveRef.current && isScrollableRef.current) {
         isActiveRef.current = true;
         // Calculate exact lock position: container should be at triggerPoint (8% from top)
         // Use the same formula as checkTrigger for consistency
@@ -130,7 +153,8 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
                              (lastTop < triggerPoint && currentTop >= triggerPoint);
 
       // Don't reactivate if we just unlocked (prevents immediate reactivation)
-      if ((isAtTrigger || crossedTrigger) && !isActiveRef.current && !justUnlockedRef.current && rect.bottom > 0) {
+      // Only activate if carousel is scrollable
+      if ((isAtTrigger || crossedTrigger) && !isActiveRef.current && !justUnlockedRef.current && rect.bottom > 0 && isScrollableRef.current) {
         isActiveRef.current = true;
         // Calculate exact lock position: container should be at triggerPoint (8% from top)
         // This formula ensures container.top = triggerPoint when locked
@@ -146,10 +170,10 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
         });
       }
 
-      // Deactivate if moved away significantly
+      // Deactivate if moved away significantly or if carousel is no longer scrollable
       if (isActiveRef.current) {
         const distanceFromTrigger = Math.abs(currentTop - triggerPoint);
-        if (distanceFromTrigger > 200) {
+        if (distanceFromTrigger > 200 || !isScrollableRef.current) {
           isActiveRef.current = false;
           lockedScrollYRef.current = 0;
         }
@@ -192,6 +216,10 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     const handleResize = () => {
+      // Update spacer width on resize
+      updateSpacerWidth();
+      // Recheck if carousel is scrollable after resize
+      checkIfScrollable();
       // Recalculate scroll distance on resize
       scrollDistanceRef.current = Math.max(calculateScrollableWidth() * 1.4, 1000);
       updateCarouselPosition(progressRef.current);
@@ -204,9 +232,9 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, [images.length]);
+  }, [items.length]);
 
-  if (images.length === 0) {
+  if (items.length === 0) {
     return null;
   }
 
@@ -234,24 +262,44 @@ export default function SpotlightCarousel({ images }: SpotlightCarouselProps) {
       >
         <div
           ref={scrollContainerRef}
-          className="flex gap-8"
+          className="flex gap-5"
           style={{
             paddingLeft: '40%',
             transition: 'none',
           }}
         >
-          {images.map((image, index) => (
+          {items.map((item, index) => (
             <div
               key={index}
-              className="relative shrink-0 flex items-center h-[582px] max-md:h-[400px] max-lg:h-[500px]"
+              className="relative shrink-0 flex flex-col items-start gap-[12px]"
             >
-              <img
-                src={image.url}
-                alt={image.alt}
-                className="object-contain h-full w-auto"
-              />
+              <div className="relative flex items-center" style={{ height: '582px', backgroundColor: 'transparent' }}>
+                {item.type === 'video' ? (
+                  <video
+                    src={item.url}
+                    className="object-contain h-[582px] w-auto"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{ backgroundColor: 'transparent' }}
+                  />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={item.alt}
+                    className="object-contain h-[582px] w-auto"
+                    style={{ backgroundColor: 'transparent' }}
+                  />
+                )}
+              </div>
+              <p className="font-normal leading-[19px] not-italic text-[#5d5d5d] text-[13px] w-full text-left">
+                {item.text || 'Text'}
+              </p>
             </div>
           ))}
+          {/* Spacer for right padding - creates scrollable space (10% of container width) */}
+          <div ref={spacerRef} style={{ flexShrink: 0 }} />
         </div>
       </div>
     </div>
