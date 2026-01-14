@@ -67,7 +67,7 @@ export default function FeaturedImage({ image, text }: FeaturedImageProps) {
   
   return (
     <div 
-      className="flex flex-col gap-[12px] items-start w-full px-[24px] lg:px-0 shrink min-w-0 featured-image-responsive" 
+      className="flex flex-col gap-[12px] items-start w-full px-0 lg:px-0 shrink min-w-0 featured-image-responsive" 
       style={{ 
         '--featured-max-width': `${maxWidth}px`
       } as React.CSSProperties & { '--featured-max-width': string }}

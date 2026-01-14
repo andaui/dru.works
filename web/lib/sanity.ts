@@ -33,6 +33,7 @@ export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) 
       _id,
       _type,
       url,
+      mimeType,
       metadata {
         dimensions {
           width,

@@ -17,7 +17,7 @@ export default function AboutPageLayout({
   return (
     <>
       {/* Hero Section - Uses normal flow */}
-      <div className="relative w-full pt-[127px] px-[24px] pb-0">
+      <div className="relative w-full pt-[126px] pb-[76px] lg:pt-[127px] lg:pb-0 px-[2.5%] lg:px-[24px]">
         {heroContent}
       </div>
 
@@ -28,14 +28,14 @@ export default function AboutPageLayout({
       <div className="relative w-full">
         {/* Bottom Navigation Links */}
         {sectionsForNav.length > 0 && (
-          <div className="relative pt-[43px] overflow-visible px-[24px]" data-nav-container>
+          <div className="relative pt-[43px] overflow-visible px-[2.5%] lg:px-[24px]" data-nav-container>
             <SectionNav sections={sectionsForNav} />
           </div>
         )}
 
         {/* Separator Line - 24px below navigation */}
         {sectionsForNav.length > 0 && (
-          <div className="w-full h-px bg-[#e5e5e5] mt-[24px]" />
+          <div className="w-full h-px bg-[#e5e5e5] mt-[24px] -mx-[2.5%] lg:mx-0" />
         )}
 
         {/* Sections - Uses normal flow */}

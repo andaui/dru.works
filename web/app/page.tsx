@@ -2,7 +2,8 @@ import Header from "@/components/Header";
 import WorkFeatureCard from "@/components/WorkFeatureCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
 import SpotlightCarousel from "@/components/SpotlightCarousel";
-import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, urlFor } from "@/lib/sanity";
+import Link from "@/components/Link";
+import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
   try {
@@ -34,11 +35,22 @@ async function getSpotlightItems() {
   }
 }
 
+async function getAboutPageData() {
+  try {
+    const pageData = await client.fetch(pageDataQuery('about'));
+    return pageData || null;
+  } catch (error) {
+    console.error('Error fetching about page data:', error);
+    return null;
+  }
+}
+
 export default async function Home() {
-  // Fetch featured work, testimonials, and spotlight items from Sanity
+  // Fetch featured work, testimonials, spotlight items, and about page data from Sanity
   const workItems = await getFeaturedWork();
   const rawTestimonials = await getHeroTestimonials();
   const rawSpotlightItems = await getSpotlightItems();
+  const aboutPageData = await getAboutPageData();
   
   // Process testimonials data on the server
   const processedTestimonials = rawTestimonials.map((testimonial: any) => {
@@ -133,7 +145,7 @@ export default async function Home() {
     : 1000 + carouselHeight + 200;
   
   return (
-    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[200px]" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
+    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[200px] px-[2.5%] lg:px-0" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
       <Header currentPage="work" />
 
 
@@ -153,7 +165,7 @@ export default async function Home() {
       {/* Content Section - Normal Flow */}
       <div className="w-full">
         {/* Pricing and CTA Section - 22px above line */}
-        <div className="w-full flex justify-between items-end px-[1.25%] lg:px-[24px] mb-[22px]">
+        <div className="w-full flex flex-col lg:flex-row justify-center lg:justify-between items-center lg:items-end px-0 lg:px-[24px] mb-[22px] gap-[22px] lg:gap-0">
           {/* Pricing Section - Left Side */}
           <div className="flex items-end gap-[22px]">
             <div className="flex shrink-0 flex-col items-start gap-px font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
@@ -190,63 +202,71 @@ export default async function Home() {
         </div>
 
         {/* Separator Line */}
-        <div className="w-full h-px bg-[#e5e5e5]" />
+        <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" />
 
         {/* Spotlight Carousel */}
         {processedSpotlightItems.length > 0 && (
           <SpotlightCarousel items={processedSpotlightItems} />
         )}
 
-        {/* Second Separator Line - 98px below carousel */}
-        <div className="w-full h-px bg-[#e5e5e5]" style={{ marginTop: '98px' }} />
+        {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on lg screens) */}
+        {aboutPageData?.heroDescription && (
+          <div className="pl-0 lg:pl-[24px] mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
+            <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
+              <p className="whitespace-pre-line mb-0">
+                {aboutPageData.heroDescription}
+              </p>
+            </div>
+            {/* About Link - 28px gap from description */}
+            <div style={{ marginTop: '28px' }}>
+              <Link text="About" url="/about" />
+            </div>
+          </div>
+        )}
 
-        {/* Work Heading - 12px below line */}
-        <div
-          className="text-left"
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '13px',
-            lineHeight: '20px',
-            marginTop: '12px',
-            marginLeft: '24px',
-            marginBottom: '104px',
-          }}
-        >
-          Work
-        </div>
+        {/* Second Separator Line - 170px below about section (or 98px below carousel if no about section) */}
+        <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
+
       </div>
 
       {/* Work Feature Cards Section */}
-      <div className="w-full px-[1.25%] lg:px-[24px] flex flex-col items-start gap-[106px]">
+      <div className="w-full px-0 lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[106px] mt-[80px]">
         {workItems.length > 0 ? (
           workItems.map((item: any, index: number) => {
-            // Process all images from Sanity
-            const processedImages: Array<{ url: string; alt: string }> = [];
+            // Process all images and videos from Sanity
+            const processedImages: Array<{ url: string; alt: string; type: 'image' | 'video' }> = [];
             
             if (item.images && Array.isArray(item.images)) {
-              item.images.forEach((image: any) => {
-                // Only process image types (skip videos for now)
-                if (image._type === 'image' && image.asset) {
+              item.images.forEach((media: any) => {
+                if (media._type === 'image' && media.asset) {
                   try {
                     // Request higher resolution (2x for retina displays) and high quality
-                    const imageUrl = urlFor(image)
+                    const imageUrl = urlFor(media)
                       .width(1692) // 2x the display width (846 * 2) for retina
                       .height(1246) // 2x the display height (623 * 2) for retina
                       .fit('crop')
                       .quality(90) // High quality (0-100, default is usually 75)
                       .format('jpg') // Use JPEG for better compression
                       .url();
-                    const imageAlt = image.alt || item.projectTitle || 'Project image';
-                    processedImages.push({ url: imageUrl, alt: imageAlt });
+                    const imageAlt = media.alt || item.projectTitle || 'Project image';
+                    processedImages.push({ url: imageUrl, alt: imageAlt, type: 'image' });
                   } catch (error) {
                     console.error('Error building image URL:', error);
                     // Fallback to direct asset URL if URL builder fails
-                    if (image.asset?.url) {
+                    if (media.asset?.url) {
                       processedImages.push({
-                        url: image.asset.url,
-                        alt: image.alt || item.projectTitle || 'Project image',
+                        url: media.asset.url,
+                        alt: media.alt || item.projectTitle || 'Project image',
+                        type: 'image',
                       });
                     }
+                  }
+                } else if (media._type === 'file' && media.asset && media.asset.mimeType?.startsWith('video/')) {
+                  // Process video files - check mimeType to confirm it's a video
+                  const videoUrl = media.asset.url;
+                  const videoAlt = media.alt || item.projectTitle || 'Project video';
+                  if (videoUrl) {
+                    processedImages.push({ url: videoUrl, alt: videoAlt, type: 'video' });
                   }
                 }
               });

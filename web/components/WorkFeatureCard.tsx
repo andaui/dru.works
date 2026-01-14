@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useState } from "react";
 
-interface ImageData {
+interface MediaData {
   url: string;
   alt: string;
+  type?: 'image' | 'video';
 }
 
 interface WorkFeatureCardProps {
@@ -13,7 +14,7 @@ interface WorkFeatureCardProps {
   projectDescriptionShort: string;
   projectDescriptionLong?: string | null;
   teamContribution?: string | null;
-  images?: ImageData[];
+  images?: MediaData[];
   readMoreText?: string;
 }
 
@@ -31,22 +32,22 @@ export default function WorkFeatureCard({
   // Expand/collapse state for long description
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Carousel state - only track image index, not work item index
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const totalImages = images.length;
-  const currentImage = images[currentImageIndex];
+  // Carousel state - only track media index, not work item index
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const totalMedia = images.length;
+  const currentMedia = images[currentMediaIndex];
   
   // Navigation handlers
   const handlePrevious = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? totalImages - 1 : prev - 1));
+    setCurrentMediaIndex((prev) => (prev === 0 ? totalMedia - 1 : prev - 1));
   };
   
   const handleNext = () => {
-    setCurrentImageIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
+    setCurrentMediaIndex((prev) => (prev === totalMedia - 1 ? 0 : prev + 1));
   };
   
-  // Only show navigation if there are multiple images
-  const showNavigation = totalImages > 1;
+  // Only show navigation if there are multiple media items
+  const showNavigation = totalMedia > 1;
 
   return (
     <div className="flex w-full flex-col items-start gap-[28px] lg:flex-row lg:items-start">
@@ -82,7 +83,7 @@ export default function WorkFeatureCard({
         {showNavigation && (
           <div className="flex flex-col items-end justify-center gap-[12px] px-0 py-0 pl-[30px] pr-0 w-full">
             <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-black text-nowrap">
-              {currentImageIndex + 1}/{totalImages}
+              {currentMediaIndex + 1}/{totalMedia}
             </p>
             <div className="flex items-center justify-between w-[48px] font-normal text-[14px] leading-[19px] not-italic text-black text-nowrap">
               <button
@@ -103,31 +104,43 @@ export default function WorkFeatureCard({
           </div>
         )}
       </div>
-      {/* Right Column - Image Carousel */}
+      {/* Right Column - Media Carousel */}
       <div className="relative w-full aspect-[846/623] overflow-hidden lg:shrink lg:min-w-0 lg:max-w-[846px]">
         {images.length > 0 ? (
           <div 
             className="flex h-full transition-transform duration-500 ease-in-out"
             style={{
-              transform: `translateX(-${currentImageIndex * (100 / images.length)}%)`,
+              transform: `translateX(-${currentMediaIndex * (100 / images.length)}%)`,
               width: `${images.length * 100}%`,
             }}
           >
-            {images.map((image, index) => (
+            {images.map((media, index) => (
               <div
                 key={index}
                 className="relative shrink-0"
                 style={{ width: `${100 / images.length}%` }}
               >
-                <Image
-                  src={image.url}
-                  alt={image.alt}
-                  fill
-                  className="object-cover object-[50%_50%]"
-                  sizes="(max-width: 1024px) 100vw, 846px"
-                  quality={95}
-                  priority={index === 0}
-                />
+                {media.type === 'video' ? (
+                  <video
+                    src={media.url}
+                    className="object-cover object-[50%_50%] w-full h-full"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls={false}
+                  />
+                ) : (
+                  <Image
+                    src={media.url}
+                    alt={media.alt}
+                    fill
+                    className="object-cover object-[50%_50%]"
+                    sizes="(max-width: 1024px) 100vw, 846px"
+                    quality={95}
+                    priority={index === 0}
+                  />
+                )}
               </div>
             ))}
           </div>

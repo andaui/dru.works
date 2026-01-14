@@ -13,6 +13,94 @@ interface SpotlightCarouselProps {
   items: MediaData[];
 }
 
+interface CarouselItemProps {
+  item: MediaData;
+  index: number;
+  isFirst?: boolean;
+}
+
+function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
+  const itemRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const updateTextWidth = () => {
+      if (imageRef.current && itemRef.current) {
+        const imageWidth = imageRef.current.offsetWidth;
+        const textElement = itemRef.current.querySelector('p');
+        if (textElement) {
+          textElement.style.maxWidth = `${imageWidth}px`;
+        }
+      }
+    };
+
+    // Update on load and resize
+    updateTextWidth();
+    window.addEventListener('resize', updateTextWidth);
+    
+    // Also update after image loads
+    if (imageRef.current) {
+      if (item.type === 'image' && imageRef.current instanceof HTMLImageElement) {
+        imageRef.current.addEventListener('load', updateTextWidth);
+      } else if (item.type === 'video' && imageRef.current instanceof HTMLVideoElement) {
+        imageRef.current.addEventListener('loadedmetadata', updateTextWidth);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateTextWidth);
+      if (imageRef.current) {
+        if (item.type === 'image' && imageRef.current instanceof HTMLImageElement) {
+          imageRef.current.removeEventListener('load', updateTextWidth);
+        } else if (item.type === 'video' && imageRef.current instanceof HTMLVideoElement) {
+          imageRef.current.removeEventListener('loadedmetadata', updateTextWidth);
+        }
+      }
+    };
+  }, [item.type]);
+
+  return (
+    <div
+      ref={itemRef}
+      className={`relative shrink-0 flex flex-col items-start gap-[12px] ${isFirst ? 'pl-[2.5%] lg:pl-[24px]' : ''}`}
+    >
+      <div className="relative flex items-center" style={{ height: 'clamp(300px, 40vw, 582px)', backgroundColor: 'transparent' }}>
+        {item.type === 'video' ? (
+          <video
+            ref={imageRef as React.RefObject<HTMLVideoElement>}
+            src={item.url}
+            className="object-contain w-auto"
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ 
+              backgroundColor: 'transparent',
+              height: 'clamp(300px, 40vw, 582px)',
+              maxHeight: '582px'
+            }}
+          />
+        ) : (
+          <img
+            ref={imageRef as React.RefObject<HTMLImageElement>}
+            src={item.url}
+            alt={item.alt}
+            className="object-contain w-auto"
+            style={{ 
+              backgroundColor: 'transparent',
+              height: 'clamp(300px, 40vw, 582px)',
+              maxHeight: '582px'
+            }}
+          />
+        )}
+      </div>
+      <p className="font-normal leading-[19px] not-italic text-[#5d5d5d] text-[13px] text-left break-words" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+        {item.text || 'Text'}
+      </p>
+    </div>
+  );
+}
+
 export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -239,16 +327,14 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-[calc(100%+5%)] lg:w-full -ml-[2.5%] -mr-[2.5%] lg:mx-0" style={{ marginTop: '52px' }}>
       <div
-        className="text-left"
+        className="text-left pl-[2.5%] lg:pl-[24px]"
         style={{
           fontFamily: 'Inter, sans-serif',
           fontSize: '13px',
           lineHeight: '20px',
-          marginTop: '52px',
           marginBottom: '28px',
-          marginLeft: '24px',
         }}
       >
         Spotlight
@@ -257,46 +343,18 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
         ref={containerRef}
         className="w-full overflow-hidden"
         style={{ 
-          minHeight: '582px',
+          minHeight: 'clamp(300px, 40vw, 582px)',
         }}
       >
         <div
           ref={scrollContainerRef}
           className="flex gap-5"
           style={{
-            paddingLeft: '40%',
             transition: 'none',
           }}
         >
           {items.map((item, index) => (
-            <div
-              key={index}
-              className="relative shrink-0 flex flex-col items-start gap-[12px]"
-            >
-              <div className="relative flex items-center" style={{ height: '582px', backgroundColor: 'transparent' }}>
-                {item.type === 'video' ? (
-                  <video
-                    src={item.url}
-                    className="object-contain h-[582px] w-auto"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    style={{ backgroundColor: 'transparent' }}
-                  />
-                ) : (
-                  <img
-                    src={item.url}
-                    alt={item.alt}
-                    className="object-contain h-[582px] w-auto"
-                    style={{ backgroundColor: 'transparent' }}
-                  />
-                )}
-              </div>
-              <p className="font-normal leading-[19px] not-italic text-[#5d5d5d] text-[13px] w-full text-left">
-                {item.text || 'Text'}
-              </p>
-            </div>
+            <CarouselItem key={index} item={item} index={index} isFirst={index === 0} />
           ))}
           {/* Spacer for right padding - creates scrollable space (10% of container width) */}
           <div ref={spacerRef} style={{ flexShrink: 0 }} />
