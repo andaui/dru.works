@@ -3,7 +3,9 @@ import WorkFeatureCard from "@/components/WorkFeatureCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
 import SpotlightCarousel from "@/components/SpotlightCarousel";
 import Link from "@/components/Link";
+import NextLink from "next/link";
 import Clients from "@/components/Clients";
+import Image from "next/image";
 import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
@@ -177,11 +179,11 @@ export default async function Home() {
 
 
       {/* Hero Section */}
-      <div className="w-full flex justify-start md:justify-center pt-[70px] pb-[76px] lg:pt-[218px] lg:pb-[156px]">
+      <div className="w-full flex justify-start md:justify-center pt-[70px] pb-[76px] lg:pt-[120px] lg:pb-[156px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
           <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-left md:text-center tracking-[-0.25px]">
-            <p className="mb-0">Design partner </p>
-            <p>with technical skills</p>
+            <p className="mb-0">Design partner with</p>
+            <p>engineering fluency</p>
           </div>
           <HeroTestimonial
             testimonials={processedTestimonials}
@@ -210,22 +212,20 @@ export default async function Home() {
           </div>
 
           {/* CTA Button */}
-          <div className="flex items-center justify-end gap-[2px]">
-            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
+          <NextLink href="/about#mentorship-and-team-design-sessions" className="flex items-center justify-end gap-[4px] group transition-colors">
+            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap group-hover:text-black transition-colors">
               Interested in Team Design Sessions?
             </p>
-            <div className="relative shrink-0 size-[14px]">
-              <svg className="block size-full max-w-none" viewBox="0 0 14 14" fill="none">
+            <div className="shrink-0" style={{ width: '14px', height: '14px' }}>
+              <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
-                  d="M5 3L9 7L5 11"
-                  stroke="#989898"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
+                  fill="#989898"
+                  className="group-hover:fill-black transition-colors"
                 />
               </svg>
             </div>
-          </div>
+          </NextLink>
         </div>
 
         {/* Separator Line */}

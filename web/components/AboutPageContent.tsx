@@ -68,6 +68,59 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
     calculateHeight();
     setTimeout(calculateHeight, 100);
     setTimeout(calculateHeight, 500);
+
+    // Handle hash-based scrolling
+    const handleHashScroll = () => {
+      const hash = window.location.hash.slice(1); // Remove the #
+      if (hash) {
+        // Try to find section by ID or by matching section title
+        const sectionElement = document.getElementById(hash);
+        if (sectionElement) {
+          // Find the grey header strip (the first child div)
+          const headerStrip = sectionElement.firstElementChild as HTMLElement;
+          if (headerStrip) {
+            setTimeout(() => {
+              headerStrip.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start',
+                inline: 'nearest'
+              });
+            }, 100);
+          }
+        } else {
+          // Try to find by section title match (case-insensitive, spaces to hyphens)
+          const normalizedHash = hash.toLowerCase().replace(/\s+/g, '-');
+          const allSections = document.querySelectorAll('[id]');
+          for (const section of Array.from(allSections)) {
+            const sectionTitle = section.querySelector('p')?.textContent?.toLowerCase().replace(/\s+/g, '-');
+            if (sectionTitle === normalizedHash || section.id.toLowerCase().includes(normalizedHash)) {
+              const headerStrip = section.firstElementChild as HTMLElement;
+              if (headerStrip) {
+                setTimeout(() => {
+                  headerStrip.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start',
+                    inline: 'nearest'
+                  });
+                }, 100);
+                break;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    // Handle initial hash on page load
+    if (window.location.hash) {
+      setTimeout(handleHashScroll, 300);
+    }
+
+    // Handle hash changes
+    window.addEventListener('hashchange', handleHashScroll);
+    return () => {
+      window.removeEventListener('hashchange', handleHashScroll);
+    };
   }, [sections]);
 
   return (

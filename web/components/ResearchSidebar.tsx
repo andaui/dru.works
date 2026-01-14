@@ -58,13 +58,23 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
         aria-hidden="true"
       />
       
-      {/* Sidebar - 417px width, black background, 100vh height with proportional scaling */}
+      {/* Sidebar - 573px width, black background, 100vh height with proportional scaling */}
       <div
         className={`fixed top-0 right-0 bg-black z-[9999] flex flex-col items-center transition-transform duration-300 ease-in-out ${
           isAnimating ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ width: '417px', height: '100vh' }}
+        style={{ width: '573px', height: '100vh' }}
       >
+        {/* Close button - 11px from top, 9px from right */}
+        <button
+          onClick={onClose}
+          className="absolute z-10 cursor-pointer transition-opacity hover:opacity-70"
+          style={{ top: '11px', right: '9px' }}
+          aria-label="Close sidebar"
+        >
+          <img src="/close-icon.svg" alt="Close" className="block" />
+        </button>
+
         {/* Video at the top - aspect ratio 2466/1720, scales with viewport */}
         <div className="w-full relative flex-shrink-0" style={{ aspectRatio: '2466/1720' }}>
           <video
@@ -81,24 +91,11 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
         </div>
 
         {/* Content area - flex to fill remaining space, ensures View is always visible */}
-        <div className="flex flex-col items-start shrink-0 w-[363px] flex-1 min-h-0 pr-[27px] justify-between" style={{ paddingTop: '44px' }}>
-          {/* Text section - 22px gap between heading and paragraph */}
-          <div className="flex flex-col items-start gap-[22px] w-full">
-            {/* Heading - 30px font size */}
-            <p className="font-inter font-normal leading-[35px] text-[30px] text-[#d8d8d8] w-full whitespace-pre-wrap">
-              A dedicated space to showcase explorations within art, design, and technology.
-            </p>
-            
-            {/* Paragraph */}
-            <p className="font-inter font-normal leading-[23px] text-[16px] text-[#d8d8d8] w-full whitespace-pre-wrap">
-              The work is approached with lack of constraint in mind, with an opportunity to learn new skills techniques, and methods of thinking.
-            </p>
-          </div>
-
-          {/* View link with arrow - 4px gap, 24px text, #d7d7d7 color, underlined - always at bottom */}
-          <div className="flex flex-col items-start flex-shrink-0" style={{ marginBottom: '12.62vh' }}>
-            <Link href="/infinite-canvas" className="flex gap-[4px] items-center">
-              <p className="font-inter font-normal leading-[35px] text-[24px] text-[#d7d7d7] underline whitespace-pre">
+        <div className="flex flex-col items-start shrink-0 flex-1 min-h-0 pl-[24px] pr-[54px] w-full" style={{ paddingTop: '44px', paddingBottom: '30px' }}>
+          {/* View link with arrow - 4px gap, 24px text, #d7d7d7 color, underlined - at top */}
+          <div className="flex flex-col items-start gap-[40px] w-full">
+            <Link href="/infinite-canvas" className="flex gap-[4px] items-center" target="_blank" rel="noopener noreferrer">
+              <p className="font-inter font-normal leading-[35px] text-[24px] text-[#d7d7d7] underline whitespace-pre" style={{ textUnderlineOffset: '8px' }}>
                 View
               </p>
               {/* Arrow icon - 22x22px, upward-right arrow */}
@@ -120,14 +117,19 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
                 </svg>
               </div>
             </Link>
-            
-            {/* "or close" text - 6px gap below View, #FCFCFC 50% opacity, 70% on hover, clickable */}
-            <button
-              onClick={onClose}
-              className="font-inter font-normal leading-[35px] text-[16px] text-[#fcfcfc] mt-[6px] cursor-pointer transition-opacity opacity-50 hover:opacity-70"
-            >
-              or close
-            </button>
+
+            {/* Text section - 20px gap between heading and paragraph */}
+            <div className="flex flex-col items-start gap-[20px] w-full">
+              {/* Heading - 30px font size, leading 33px */}
+              <p className="font-inter font-normal leading-[33px] text-[30px] text-[#fcfcfc] w-full whitespace-pre-wrap">
+                A dedicated space showcasing explorations within art, design, and technology.
+              </p>
+              
+              {/* Paragraph */}
+              <p className="font-inter font-normal leading-[23px] text-[16px] text-[#fcfcfc] w-full whitespace-pre-wrap">
+                This work is approached with lack of constraint in mind, with an opportunity to learn new skills techniques, and methods of thinking and showing some of the clients work.
+              </p>
+            </div>
           </div>
         </div>
       </div>
