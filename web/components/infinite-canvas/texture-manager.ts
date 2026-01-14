@@ -77,8 +77,8 @@ export const getTexture = (item: MediaItem, onLoad?: (texture: THREE.Texture) =>
     }
   );
 
-  // Set crossOrigin on the texture as well
-  texture.crossOrigin = 'anonymous';
+  // crossOrigin is set on the loader, which applies to the image element
+  // No need to set it on the texture object itself
   textureCache.set(key, texture);
   return texture;
 };
