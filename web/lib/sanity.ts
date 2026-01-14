@@ -260,6 +260,28 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
   }
 }`
 
+// GROQ query to fetch clients section and extract logos
+export const clientsSectionQuery = `*[_type == "section" && sectionTitle == "Clients"][0] {
+  _id,
+  sectionTitle,
+  blocks[] {
+    content[] {
+      _type,
+      _key,
+      logos[] {
+        _key,
+        logo {
+          asset-> {
+            url
+          },
+          alt
+        },
+        companyName
+      }
+    }
+  }
+}`
+
 // Query to get sections and testimonials for a specific page by slug
 // Items are returned in the order they appear in the array (maintained by drag-and-drop)
 export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.current == "${slug}"][0].sections[]-> {

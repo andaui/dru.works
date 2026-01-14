@@ -3,7 +3,8 @@ import WorkFeatureCard from "@/components/WorkFeatureCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
 import SpotlightCarousel from "@/components/SpotlightCarousel";
 import Link from "@/components/Link";
-import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, urlFor } from "@/lib/sanity";
+import Clients from "@/components/Clients";
+import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
   try {
@@ -45,12 +46,38 @@ async function getAboutPageData() {
   }
 }
 
+async function getClientsSection() {
+  try {
+    const clientsSection = await client.fetch(clientsSectionQuery);
+    if (!clientsSection) return [];
+    
+    // Extract logos from all blocks and content items
+    const allLogos: any[] = [];
+    if (clientsSection.blocks) {
+      clientsSection.blocks.forEach((block: any) => {
+        if (block.content) {
+          block.content.forEach((content: any) => {
+            if (content._type === 'clients' && content.logos) {
+              allLogos.push(...content.logos);
+            }
+          });
+        }
+      });
+    }
+    return allLogos;
+  } catch (error) {
+    console.error('Error fetching clients section:', error);
+    return [];
+  }
+}
+
 export default async function Home() {
-  // Fetch featured work, testimonials, spotlight items, and about page data from Sanity
+  // Fetch featured work, testimonials, spotlight items, about page data, and clients section from Sanity
   const workItems = await getFeaturedWork();
   const rawTestimonials = await getHeroTestimonials();
   const rawSpotlightItems = await getSpotlightItems();
   const aboutPageData = await getAboutPageData();
+  const clientLogos = await getClientsSection();
   
   // Process testimonials data on the server
   const processedTestimonials = rawTestimonials.map((testimonial: any) => {
@@ -150,9 +177,9 @@ export default async function Home() {
 
 
       {/* Hero Section */}
-      <div className="w-full flex justify-center pt-[266px] pb-[156px]">
-        <div className="flex w-[90%] max-w-[700px] flex-col items-center gap-[22px]">
-          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-center tracking-[-0.25px]">
+      <div className="w-full flex justify-start md:justify-center pt-[70px] pb-[76px] lg:pt-[218px] lg:pb-[156px]">
+        <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
+          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-left md:text-center tracking-[-0.25px]">
             <p className="mb-0">Design partner </p>
             <p>with technical skills</p>
           </div>
@@ -165,7 +192,7 @@ export default async function Home() {
       {/* Content Section - Normal Flow */}
       <div className="w-full">
         {/* Pricing and CTA Section - 22px above line */}
-        <div className="w-full flex flex-col lg:flex-row justify-center lg:justify-between items-center lg:items-end px-0 lg:px-[24px] mb-[22px] gap-[22px] lg:gap-0">
+        <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-0 lg:px-[24px] mb-[22px] gap-[22px] md:gap-0">
           {/* Pricing Section - Left Side */}
           <div className="flex items-end gap-[22px]">
             <div className="flex shrink-0 flex-col items-start gap-px font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
@@ -183,7 +210,7 @@ export default async function Home() {
           </div>
 
           {/* CTA Button */}
-          <div className="flex items-center justify-center gap-[2px]">
+          <div className="flex items-center justify-end gap-[2px]">
             <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
               Interested in Team Design Sessions?
             </p>
@@ -206,7 +233,9 @@ export default async function Home() {
 
         {/* Spotlight Carousel */}
         {processedSpotlightItems.length > 0 && (
-          <SpotlightCarousel items={processedSpotlightItems} />
+          <div className="hidden md:block">
+            <SpotlightCarousel items={processedSpotlightItems} />
+          </div>
         )}
 
         {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on lg screens) */}
@@ -287,6 +316,34 @@ export default async function Home() {
           <div className="text-[#989898] text-sm">No featured work items found. Please add items in Sanity Studio.</div>
         )}
       </div>
+
+      {/* Clients Section */}
+      {clientLogos.length > 0 && (
+        <>
+          {/* Horizontal line with 200px gap from featured work */}
+          <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" style={{ marginTop: '200px', marginBottom: '0' }} />
+          <div className="w-full" style={{ marginTop: '0' }}>
+            {/* Clients Title - matching Spotlight styling */}
+            <div
+              className="text-left pl-[2.5%] lg:pl-[24px]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '13px',
+                lineHeight: '20px',
+                marginTop: '12px',
+              }}
+            >
+              Clients
+            </div>
+            {/* Clients Logos - Right Side, aligned to top and far right */}
+            <div className="w-full flex flex-col md:flex-row items-start gap-0 px-0">
+              <div className="flex-1 w-full md:w-auto pt-0 flex justify-end" style={{ marginTop: '-33px' }}>
+                <Clients logos={clientLogos} />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );

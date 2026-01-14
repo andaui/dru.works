@@ -46,11 +46,11 @@ export default function HeroTestimonial({
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <div className="flex w-full max-w-[700px] flex-col items-center gap-[12px]">
-      <div className="flex items-center justify-center w-full">
+    <div className="flex w-full max-w-[700px] flex-col items-start md:items-center gap-[12px]">
+      <div className="flex items-start md:items-center justify-start w-full">
         <p
           key={currentTestimonial._id}
-          className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-center animate-fade-in"
+          className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-left md:text-center animate-fade-in"
         >
           {currentTestimonial.testimonialShort}
         </p>

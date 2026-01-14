@@ -112,6 +112,9 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   const justUnlockedRef = useRef<boolean>(false);
   const scrollDistanceRef = useRef<number>(1000);
   const isScrollableRef = useRef<boolean>(false);
+  const touchStartYRef = useRef<number>(0);
+  const touchStartXRef = useRef<number>(0);
+  const lastTouchYRef = useRef<number>(0);
 
   useEffect(() => {
     if (!containerRef.current || !scrollContainerRef.current || items.length === 0) return;
@@ -157,7 +160,7 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     };
     updateSpacerWidth();
 
-    const handleWheel = (e: WheelEvent) => {
+    const checkAndActivate = (deltaY: number) => {
       const rect = container.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const triggerPoint = viewportHeight * 0.08;
@@ -187,43 +190,139 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
 
         // Check boundaries FIRST - unlock before preventing default
         // If at end and scrolling down, unlock and allow scroll
-        if (isAtEnd && e.deltaY > 0) {
+        if (isAtEnd && deltaY > 0) {
           isActiveRef.current = false;
-          lockedScrollYRef.current = 0;
+          // Don't reset lockedScrollYRef - keep current scroll position to prevent snapping
           justUnlockedRef.current = true;
           // Clear the flag after a short delay to prevent immediate reactivation
           setTimeout(() => {
             justUnlockedRef.current = false;
           }, 100);
           // Don't prevent default - let scroll continue naturally
-          return;
+          return false;
         }
 
         // If at start and scrolling up, unlock and allow scroll
-        if (isAtStart && e.deltaY < 0) {
+        if (isAtStart && deltaY < 0) {
           isActiveRef.current = false;
-          lockedScrollYRef.current = 0;
+          // Don't reset lockedScrollYRef - keep current scroll position to prevent snapping
           justUnlockedRef.current = true;
           // Clear the flag after a short delay to prevent immediate reactivation
           setTimeout(() => {
             justUnlockedRef.current = false;
           }, 100);
           // Don't prevent default - let scroll continue naturally
-          return;
+          return false;
         }
 
         // Not at boundaries - lock scroll and control carousel
         // Lock scroll position first
         window.scrollTo({ top: lockedScrollYRef.current, behavior: 'auto' });
-        e.preventDefault();
-        e.stopPropagation();
 
         // Update carousel
-        const progressDelta = e.deltaY / scrollDistanceRef.current;
+        const progressDelta = deltaY / scrollDistanceRef.current;
         let newProgress = progressRef.current + progressDelta;
         newProgress = Math.max(0, Math.min(1, newProgress));
         updateCarouselPosition(newProgress);
+        return true; // Should prevent default
       }
+      return false;
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      const shouldPrevent = checkAndActivate(e.deltaY);
+      if (shouldPrevent) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartYRef.current = e.touches[0].clientY;
+        touchStartXRef.current = e.touches[0].clientX;
+        lastTouchYRef.current = e.touches[0].clientY;
+        
+        // Check trigger point on touch start (similar to wheel handler)
+        const rect = container.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const triggerPoint = viewportHeight * 0.08;
+        const isAtTrigger = Math.abs(rect.top - triggerPoint) < 2;
+
+        // Activate if at trigger point, not already active, and carousel is scrollable
+        if (isAtTrigger && !isActiveRef.current && isScrollableRef.current) {
+          isActiveRef.current = true;
+          const containerTopAbsolute = window.scrollY + rect.top;
+          lockedScrollYRef.current = containerTopAbsolute - triggerPoint;
+          triggerPointRef.current = triggerPoint;
+          window.scrollTo({ top: lockedScrollYRef.current, behavior: 'auto' });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: lockedScrollYRef.current, behavior: 'auto' });
+          });
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        const currentY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const deltaY = lastTouchYRef.current - currentY; // Inverted: swipe up = positive deltaY
+        const deltaX = Math.abs(currentX - touchStartXRef.current);
+        
+        // Only handle vertical swipes (ignore horizontal swipes)
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 1) {
+          // If active, control carousel
+          if (isActiveRef.current) {
+            const isAtStart = progressRef.current <= 0;
+            const isAtEnd = progressRef.current >= 1;
+
+            // Check boundaries FIRST - unlock before preventing default
+            if (isAtEnd && deltaY > 0) {
+              isActiveRef.current = false;
+              // Don't reset lockedScrollYRef - keep current scroll position to prevent snapping
+              justUnlockedRef.current = true;
+              setTimeout(() => {
+                justUnlockedRef.current = false;
+              }, 100);
+              return; // Don't prevent default - let scroll continue
+            }
+
+            if (isAtStart && deltaY < 0) {
+              isActiveRef.current = false;
+              // Don't reset lockedScrollYRef - keep current scroll position to prevent snapping
+              justUnlockedRef.current = true;
+              setTimeout(() => {
+                justUnlockedRef.current = false;
+              }, 100);
+              return; // Don't prevent default - let scroll continue
+            }
+
+            // Not at boundaries - lock scroll and control carousel
+            window.scrollTo({ top: lockedScrollYRef.current, behavior: 'auto' });
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Update carousel - use smaller scroll distance for touch to make it more responsive
+            const touchScrollDistance = scrollDistanceRef.current * 0.5; // More sensitive for touch
+            const progressDelta = deltaY / touchScrollDistance;
+            let newProgress = progressRef.current + progressDelta;
+            newProgress = Math.max(0, Math.min(1, newProgress));
+            updateCarouselPosition(newProgress);
+          } else {
+            // Not active yet, but check if we should activate (in case touch started before reaching trigger)
+            checkAndActivate(deltaY);
+          }
+        }
+        
+        lastTouchYRef.current = currentY;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchStartYRef.current = 0;
+      touchStartXRef.current = 0;
+      lastTouchYRef.current = 0;
     };
 
     let lastTop = container.getBoundingClientRect().top;
@@ -302,6 +401,9 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
 
     window.addEventListener('wheel', handleWheel, { passive: false, capture: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     const handleResize = () => {
       // Update spacer width on resize
@@ -318,6 +420,9 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     return () => {
       window.removeEventListener('wheel', handleWheel, { capture: true });
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove, { capture: true });
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('resize', handleResize);
     };
   }, [items.length]);
@@ -329,7 +434,7 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   return (
     <div className="w-[calc(100%+5%)] lg:w-full -ml-[2.5%] -mr-[2.5%] lg:mx-0" style={{ marginTop: '52px' }}>
       <div
-        className="text-left pl-[2.5%] lg:pl-[24px]"
+        className="hidden md:block text-left pl-[2.5%] lg:pl-[24px]"
         style={{
           fontFamily: 'Inter, sans-serif',
           fontSize: '13px',
