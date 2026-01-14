@@ -9,6 +9,10 @@ const loader = new THREE.TextureLoader();
 loader.setCrossOrigin('anonymous');
 
 const isTextureLoaded = (tex: THREE.Texture): boolean => {
+  if (tex instanceof THREE.VideoTexture) {
+    const video = tex.image as HTMLVideoElement;
+    return video.readyState >= 2; // HAVE_CURRENT_DATA
+  }
   const img = tex.image as HTMLImageElement | undefined;
   return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
 };
@@ -32,7 +36,73 @@ export const getTexture = (item: MediaItem, onLoad?: (texture: THREE.Texture) =>
   if (onLoad) callbacks.add(onLoad);
   loadCallbacks.set(key, callbacks);
 
-  // Create a new loader instance for this texture to ensure crossOrigin is set
+  // Handle videos differently from images
+  if (item.type === 'video') {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = item.autoplay !== false; // Default to autoplay for videos
+    video.preload = 'auto';
+    
+    video.src = key;
+    
+    // Create video texture immediately (it will update when video loads)
+    const videoTexture = new THREE.VideoTexture(video);
+    videoTexture.minFilter = THREE.LinearFilter;
+    videoTexture.magFilter = THREE.LinearFilter;
+    videoTexture.colorSpace = THREE.SRGBColorSpace;
+    videoTexture.wrapS = THREE.ClampToEdgeWrapping;
+    videoTexture.wrapT = THREE.ClampToEdgeWrapping;
+    videoTexture.flipY = true; // Default for Three.js textures
+    
+    video.addEventListener('loadeddata', () => {
+      // Start playing if autoplay is enabled
+      if (item.autoplay !== false) {
+        video.play().catch((err) => {
+          console.error('Error playing video:', err);
+        });
+      }
+      
+      // Notify callbacks that video is ready
+      loadCallbacks.get(key)?.forEach((cb) => {
+        try {
+          cb(videoTexture);
+        } catch (err) {
+          console.error(`Callback failed: ${JSON.stringify(err)}`);
+        }
+      });
+      loadCallbacks.delete(key);
+    });
+    
+    video.addEventListener('canplay', () => {
+      // Video is ready to play
+      videoTexture.needsUpdate = true;
+    });
+    
+    video.addEventListener('error', (err) => {
+      console.error("Video load failed:", key, err);
+      textureCache.delete(key);
+      loadCallbacks.delete(key);
+      
+      loadCallbacks.get(key)?.forEach((cb) => {
+        try {
+          const placeholder = new THREE.Texture();
+          cb(placeholder);
+        } catch (callbackErr) {
+          console.error('Error in failure callback:', callbackErr);
+        }
+      });
+      loadCallbacks.delete(key);
+    });
+    
+    // Store the video texture immediately (it will update as video loads)
+    textureCache.set(key, videoTexture);
+    return videoTexture;
+  }
+
+  // Handle images
   const textureLoader = new THREE.TextureLoader();
   textureLoader.setCrossOrigin('anonymous');
 
@@ -44,6 +114,9 @@ export const getTexture = (item: MediaItem, onLoad?: (texture: THREE.Texture) =>
       tex.generateMipmaps = true;
       tex.anisotropy = 4;
       tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.flipY = true; // Default for Three.js textures (prevents upside down)
       tex.needsUpdate = true;
 
       loadCallbacks.get(key)?.forEach((cb) => {
@@ -58,15 +131,11 @@ export const getTexture = (item: MediaItem, onLoad?: (texture: THREE.Texture) =>
     undefined,
     (err) => {
       console.error("Texture load failed:", key, err);
-      // Remove from cache on error so it can be retried
       textureCache.delete(key);
       loadCallbacks.delete(key);
       
-      // Notify callbacks of failure
       loadCallbacks.get(key)?.forEach((cb) => {
-        // Create a placeholder texture or handle error
         try {
-          // You could create a 1x1 transparent texture as fallback
           const placeholder = new THREE.Texture();
           cb(placeholder);
         } catch (callbackErr) {
@@ -77,8 +146,6 @@ export const getTexture = (item: MediaItem, onLoad?: (texture: THREE.Texture) =>
     }
   );
 
-  // crossOrigin is set on the loader, which applies to the image element
-  // No need to set it on the texture object itself
   textureCache.set(key, texture);
   return texture;
 };

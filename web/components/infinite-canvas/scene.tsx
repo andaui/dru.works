@@ -86,6 +86,7 @@ function MediaPlane({
 
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isReady, setIsReady] = React.useState(false);
+  const [actualDimensions, setActualDimensions] = React.useState<{ width: number; height: number } | null>(null);
 
   useFrame(() => {
     const material = materialRef.current;
@@ -94,6 +95,14 @@ function MediaPlane({
 
     if (!material || !mesh) {
       return;
+    }
+
+    // Update video textures every frame
+    if (texture instanceof THREE.VideoTexture && texture.image) {
+      const video = texture.image as HTMLVideoElement;
+      if (video.readyState >= 2) {
+        texture.needsUpdate = true;
+      }
     }
 
     state.frame = (state.frame + 1) & 1;
@@ -132,15 +141,26 @@ function MediaPlane({
     mesh.visible = state.opacity > INVIS_THRESHOLD;
   });
 
-  // Calculate display scale from media dimensions (from manifest)
+  // Calculate display scale from media dimensions (from manifest or actual texture)
+  // This ensures the plane maintains the correct aspect ratio
   const displayScale = React.useMemo(() => {
-    if (media.width && media.height) {
-      const aspect = media.width / media.height;
-      return new THREE.Vector3(scale.y * aspect, scale.y, 1);
+    // Use actual texture dimensions if available, otherwise use media dimensions
+    const width = actualDimensions?.width || media.width;
+    const height = actualDimensions?.height || media.height;
+    
+    if (width && height && width > 0 && height > 0) {
+      const aspect = width / height;
+      // Use the base scale's Y value (height) and scale width proportionally
+      // This ensures the plane maintains the correct aspect ratio
+      // If the image is 2:1 (landscape), width will be 2x the height
+      // If the image is 1:2 (portrait), width will be 0.5x the height
+      const baseSize = scale.y; // Use Y as the base size
+      return new THREE.Vector3(baseSize * aspect, baseSize, 1);
     }
 
+    // Fallback to original scale if no dimensions available
     return scale;
-  }, [media.width, media.height, scale]);
+  }, [media.width, media.height, scale, actualDimensions]);
 
   // Load texture with onLoad callback
   React.useEffect(() => {
@@ -148,6 +168,7 @@ function MediaPlane({
     state.ready = false;
     state.opacity = 0;
     setIsReady(false);
+    setActualDimensions(null); // Reset dimensions when media changes
 
     const material = materialRef.current;
 
@@ -157,9 +178,22 @@ function MediaPlane({
       material.map = null;
     }
 
-    const tex = getTexture(media, () => {
+    const tex = getTexture(media, (loadedTexture) => {
       state.ready = true;
       setIsReady(true);
+      
+      // Get actual texture dimensions from the loaded texture
+      if (loadedTexture instanceof THREE.VideoTexture && loadedTexture.image) {
+        const video = loadedTexture.image as HTMLVideoElement;
+        if (video.videoWidth && video.videoHeight) {
+          setActualDimensions({ width: video.videoWidth, height: video.videoHeight });
+        }
+      } else if (loadedTexture.image) {
+        const img = loadedTexture.image as HTMLImageElement;
+        if (img.naturalWidth && img.naturalHeight) {
+          setActualDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+        }
+      }
     });
 
     setTexture(tex);
@@ -176,10 +210,41 @@ function MediaPlane({
     }
 
     material.map = texture;
+    // Ensure texture doesn't repeat or stretch
+    if (texture) {
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.flipY = true; // Default for Three.js textures (prevents upside down)
+      // Ensure texture maps 1:1 to the plane geometry (no repeating)
+      texture.repeat.set(1, 1);
+      texture.offset.set(0, 0);
+      
+      // Get actual dimensions from texture - this is critical for maintaining aspect ratio
+      if (!actualDimensions) {
+        if (texture instanceof THREE.VideoTexture && texture.image) {
+          const video = texture.image as HTMLVideoElement;
+          // Wait for video to have dimensions
+          if (video.videoWidth && video.videoHeight && video.videoWidth > 0 && video.videoHeight > 0) {
+            setActualDimensions({ width: video.videoWidth, height: video.videoHeight });
+          }
+        } else if (texture.image) {
+          const img = texture.image as HTMLImageElement;
+          if (img.naturalWidth && img.naturalHeight && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            setActualDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+          }
+        }
+      }
+    }
     material.opacity = state.opacity;
     material.depthWrite = state.opacity >= 1;
+    // Apply the calculated scale which maintains aspect ratio
     mesh.scale.copy(displayScale);
-  }, [displayScale, texture, isReady]);
+    
+    // For video textures, ensure they update every frame
+    if (texture instanceof THREE.VideoTexture) {
+      texture.needsUpdate = true;
+    }
+  }, [displayScale, texture, isReady, actualDimensions]);
 
   if (!texture || !isReady) {
     return null;
@@ -187,7 +252,13 @@ function MediaPlane({
 
   return (
     <mesh ref={meshRef} position={position} scale={displayScale} visible={false} geometry={PLANE_GEOMETRY}>
-      <meshBasicMaterial ref={materialRef} transparent opacity={0} side={THREE.DoubleSide} />
+      <meshBasicMaterial 
+        ref={materialRef} 
+        transparent 
+        opacity={0} 
+        side={THREE.DoubleSide}
+        map={texture}
+      />
     </mesh>
   );
 }

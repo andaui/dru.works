@@ -1,70 +1,109 @@
 import { InfiniteCanvasClient } from "@/components/infinite-canvas/InfiniteCanvasClient";
-import { client, infiniteCanvasImagesQuery, urlFor } from "@/lib/sanity";
+import { client, infiniteCanvasMediaQuery, urlFor } from "@/lib/sanity";
 import type { MediaItem } from "@/components/infinite-canvas/types";
 
-async function getInfiniteCanvasImages(): Promise<MediaItem[]> {
+async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
   try {
-    const workItems = await client.fetch(infiniteCanvasImagesQuery);
+    const data = await client.fetch(infiniteCanvasMediaQuery);
     
-    // Flatten all images from all featured work items
-    const allImages: MediaItem[] = [];
+    const allMedia: MediaItem[] = [];
     
-    workItems.forEach((item: any) => {
-      if (item.images && Array.isArray(item.images)) {
-        item.images.forEach((image: any) => {
-          // Only process image assets, skip videos
-          if (image.asset && image.asset.url) {
-            // Check if it's actually an image (not a video)
-            const mimeType = image.asset.mimeType || '';
-            const isVideo = mimeType.startsWith('video/') || image.asset.url.includes('.mp4') || image.asset.url.includes('.webm');
-            
-            if (isVideo) {
-              // Skip video files - the infinite canvas only supports images
-              return;
-            }
-            
-            // Only process if it's an image type or has image metadata
-            if (image._type === 'image' || image.asset.metadata?.dimensions) {
-              // Use the base asset URL directly to avoid issues with rect/crop parameters
-              // Three.js can handle the images directly from Sanity CDN
-              if (image.asset?.url && !image.asset.url.includes('.mp4') && !image.asset.url.includes('.webm')) {
-                // Use the raw asset URL without any query parameters
-                // Proxy through Next.js API route to avoid CORS issues
+    // Process featured work items
+    if (data.featuredWork && Array.isArray(data.featuredWork)) {
+      data.featuredWork.forEach((item: any) => {
+        if (item.images && Array.isArray(item.images)) {
+          item.images.forEach((image: any) => {
+            if (image.asset && image.asset.url) {
+              const mimeType = image.asset.mimeType || '';
+              const isVideo = mimeType.startsWith('video/') || image.asset.url.includes('.mp4') || image.asset.url.includes('.webm');
+              
+              if (isVideo) {
+                // Include videos from featured work
+                // Try to get actual video dimensions from metadata if available
                 const baseUrl = image.asset.url.split('?')[0];
                 const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
                 
-                const width = image.asset.metadata?.dimensions?.width || 1024;
-                const height = image.asset.metadata?.dimensions?.height || 1024;
+                // Use actual dimensions if available, otherwise use common video aspect ratios
+                const width = image.asset.metadata?.dimensions?.width || 1920;
+                const height = image.asset.metadata?.dimensions?.height || 1080;
                 
-                allImages.push({
+                allMedia.push({
                   url: proxiedUrl,
                   width,
                   height,
+                  type: 'video',
+                  autoplay: true,
+                });
+              } else if (image._type === 'image' || image.asset.metadata?.dimensions) {
+                // Include images from featured work
+                const baseUrl = image.asset.url.split('?')[0];
+                const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
+                
+                allMedia.push({
+                  url: proxiedUrl,
+                  width: image.asset.metadata?.dimensions?.width || 1024,
+                  height: image.asset.metadata?.dimensions?.height || 1024,
+                  type: 'image',
                 });
               }
             }
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+    }
     
-    return allImages;
+    // Process spotlight items
+    if (data.spotlight && Array.isArray(data.spotlight)) {
+      data.spotlight.forEach((item: any) => {
+        if (item.media) {
+          if (item.media.type === 'image' && item.media.image?.asset) {
+            const baseUrl = item.media.image.asset.url.split('?')[0];
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
+            
+            allMedia.push({
+              url: proxiedUrl,
+              width: item.media.image.asset.metadata?.dimensions?.width || 1024,
+              height: item.media.image.asset.metadata?.dimensions?.height || 1024,
+              type: 'image',
+            });
+          } else if (item.media.type === 'video' && item.media.video?.asset) {
+            // Include videos from spotlight with autoplay
+            const baseUrl = item.media.video.asset.url.split('?')[0];
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
+            
+            // Use actual video dimensions if available, otherwise use common video aspect ratios
+            const width = item.media.video.asset.metadata?.dimensions?.width || 1920;
+            const height = item.media.video.asset.metadata?.dimensions?.height || 1080;
+            
+            allMedia.push({
+              url: proxiedUrl,
+              width,
+              height,
+              type: 'video',
+              autoplay: true,
+            });
+          }
+        }
+      });
+    }
+    
+    return allMedia;
   } catch (error) {
-    console.error('Error fetching infinite canvas images:', error);
+    console.error('Error fetching infinite canvas media:', error);
     return [];
   }
 }
 
 export default async function InfiniteCanvasPage() {
-  const media = await getInfiniteCanvasImages();
+  const media = await getInfiniteCanvasMedia();
   
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <InfiniteCanvasClient 
         media={media} 
         showControls={true}
-        backgroundColor="#ffffff"
-        fogColor="#ffffff"
+        backgroundColor="#000000"
+        fogColor="#000000"
       />
     </div>
   );

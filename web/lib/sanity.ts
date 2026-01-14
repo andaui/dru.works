@@ -98,7 +98,13 @@ export const spotlightQuery = `*[_type == "spotlight"] | order(order asc) {
         _id,
         _type,
         url,
-        mimeType
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
       }
     }
   }
@@ -368,26 +374,61 @@ export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.cu
   }
 }`
 
-// GROQ query to fetch images for infinite canvas
-// This fetches all images from featuredWork items (excluding videos)
-// We need the asset _ref to build URLs properly
-export const infiniteCanvasImagesQuery = `*[_type == "featuredWork"] {
-  images[] {
-    _type,
-    asset-> {
-      _id,
+// GROQ query to fetch images and videos for infinite canvas
+// This fetches all media from featuredWork items and spotlight items
+export const infiniteCanvasMediaQuery = `{
+  "featuredWork": *[_type == "featuredWork"] {
+    images[] {
       _type,
-      _ref,
-      url,
-      mimeType,
-      metadata {
-        dimensions {
-          width,
-          height
+      asset-> {
+        _id,
+        _type,
+        _ref,
+        url,
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    }
+  },
+  "spotlight": *[_type == "spotlight"] {
+    media {
+      type,
+      image {
+        asset-> {
+          _id,
+          _type,
+          url,
+          mimeType,
+          metadata {
+            dimensions {
+              width,
+              height
+            }
+          }
+        },
+        alt
+      },
+      video {
+        asset-> {
+          _id,
+          _type,
+          url,
+          mimeType,
+          metadata {
+            dimensions {
+              width,
+              height
+            }
+          }
         }
       }
-    },
-    alt
+    }
   }
-} | order(_createdAt desc)`
+}`
 
