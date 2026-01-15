@@ -98,17 +98,19 @@ export default function WorkFeatureCard({
             <div className="flex items-center justify-between w-[48px] font-normal text-[14px] leading-[19px] not-italic text-black text-nowrap">
               <button
                 onClick={handlePrevious}
-                className="relative shrink-0 opacity-30 hover:opacity-100 transition-opacity cursor-pointer"
+                className={`relative shrink-0 transition-opacity cursor-pointer ${currentMediaIndex > 0 ? 'opacity-100' : 'opacity-30'} hover:opacity-100`}
                 aria-label="Previous image"
+                style={{ width: '14px', height: '14px' }}
               >
-                ←
+                <Image src="/arrow-left.svg" alt="" width={14} height={14} className="w-full h-full" />
               </button>
               <button
                 onClick={handleNext}
                 className="relative shrink-0 hover:opacity-70 transition-opacity cursor-pointer"
                 aria-label="Next image"
+                style={{ width: '14px', height: '14px' }}
               >
-                →
+                <Image src="/arrow-right.svg" alt="" width={14} height={14} className="w-full h-full" />
               </button>
             </div>
           </div>
@@ -172,17 +174,19 @@ export default function WorkFeatureCard({
             <div className="flex items-center gap-4">
               <button
                 onClick={handlePrevious}
-                className="relative shrink-0 text-black opacity-80 hover:opacity-100 transition-opacity cursor-pointer text-[20px] leading-[20px]"
+                className={`relative shrink-0 transition-opacity cursor-pointer ${currentMediaIndex > 0 ? 'opacity-100' : 'opacity-30'} hover:opacity-100`}
                 aria-label="Previous image"
+                style={{ width: '14px', height: '14px' }}
               >
-                ←
+                <Image src="/arrow-left.svg" alt="" width={14} height={14} className="w-full h-full" />
               </button>
               <button
                 onClick={handleNext}
-                className="relative shrink-0 text-black opacity-80 hover:opacity-100 transition-opacity cursor-pointer text-[20px] leading-[20px]"
+                className="relative shrink-0 opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
                 aria-label="Next image"
+                style={{ width: '14px', height: '14px' }}
               >
-                →
+                <Image src="/arrow-right.svg" alt="" width={14} height={14} className="w-full h-full" />
               </button>
             </div>
           </div>
