@@ -1,5 +1,5 @@
 import { createClient } from '@sanity/client'
-import imageUrlBuilder from '@sanity/image-url'
+import { createImageUrlBuilder } from '@sanity/image-url'
 
 // Sanity configuration
 export const client = createClient({
@@ -10,7 +10,7 @@ export const client = createClient({
 })
 
 // Set up the image URL builder
-const builder = imageUrlBuilder(client)
+const builder = createImageUrlBuilder(client)
 
 // Helper function to build image URLs
 export function urlFor(source: any) {
@@ -157,6 +157,7 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
     }
   },
   featuredImage {
+    type,
     image {
       asset-> {
         _id,
@@ -170,6 +171,20 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
         }
       },
       alt
+    },
+    video {
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      }
     },
     text
   }
@@ -227,6 +242,7 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
       }
     },
     featuredImage {
+      type,
       image {
         asset-> {
           _id,
@@ -240,6 +256,20 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
           }
         },
         alt
+      },
+      video {
+        asset-> {
+          _id,
+          _type,
+          url,
+          mimeType,
+          metadata {
+            dimensions {
+              width,
+              height
+            }
+          }
+        }
       },
       text
     },
@@ -336,6 +366,7 @@ export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.cu
     }
   },
   featuredImage {
+    type,
     image {
       asset-> {
         _id,
@@ -349,6 +380,20 @@ export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.cu
         }
       },
       alt
+    },
+    video {
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      }
     },
     text
   },
@@ -375,7 +420,7 @@ export const pageSectionsQuery = (slug: string) => `*[_type == "page" && slug.cu
 }`
 
 // GROQ query to fetch images and videos for infinite canvas
-// This fetches all media from featuredWork items and spotlight items
+// This fetches all media from featuredWork items, spotlight items, and research items
 export const infiniteCanvasMediaQuery = `{
   "featuredWork": *[_type == "featuredWork"] {
     images[] {
@@ -428,6 +473,25 @@ export const infiniteCanvasMediaQuery = `{
           }
         }
       }
+    }
+  },
+  "research": *[_type == "research"] {
+    media[] {
+      _type,
+      asset-> {
+        _id,
+        _type,
+        _ref,
+        url,
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
     }
   }
 }`

@@ -212,7 +212,7 @@ export default async function Home() {
           </div>
 
           {/* CTA Button */}
-          <NextLink href="/about#mentorship-and-team-design-sessions" className="flex items-center justify-end gap-[4px] group transition-colors">
+          <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
             <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap group-hover:text-black transition-colors">
               Interested in Team Design Sessions?
             </p>

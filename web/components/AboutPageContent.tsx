@@ -11,12 +11,32 @@ interface AboutPageContentProps {
     sectionTitle?: string;
     blocks?: any[];
     featuredImage?: {
+      type?: 'image' | 'video';
       image?: {
         asset?: {
           url?: string;
           _id?: string;
+          metadata?: {
+            dimensions?: {
+              width?: number;
+              height?: number;
+            };
+          };
         };
         alt?: string;
+      };
+      video?: {
+        asset?: {
+          url?: string;
+          _id?: string;
+          mimeType?: string;
+          metadata?: {
+            dimensions?: {
+              width?: number;
+              height?: number;
+            };
+          };
+        };
       };
       text?: string;
     };

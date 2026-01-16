@@ -87,6 +87,49 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
       });
     }
     
+    // Process research items
+    if (data.research && Array.isArray(data.research)) {
+      data.research.forEach((item: any) => {
+        if (item.media && Array.isArray(item.media)) {
+          item.media.forEach((mediaItem: any) => {
+            if (mediaItem.asset && mediaItem.asset.url) {
+              const mimeType = mediaItem.asset.mimeType || '';
+              const isVideo = mimeType.startsWith('video/') || mediaItem.asset.url.includes('.mp4') || mediaItem.asset.url.includes('.webm');
+              
+              if (isVideo) {
+                // Include videos from research
+                const baseUrl = mediaItem.asset.url.split('?')[0];
+                const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
+                
+                // Use actual dimensions if available, otherwise use common video aspect ratios
+                const width = mediaItem.asset.metadata?.dimensions?.width || 1920;
+                const height = mediaItem.asset.metadata?.dimensions?.height || 1080;
+                
+                allMedia.push({
+                  url: proxiedUrl,
+                  width,
+                  height,
+                  type: 'video',
+                  autoplay: true,
+                });
+              } else if (mediaItem._type === 'image' || mediaItem.asset.metadata?.dimensions) {
+                // Include images from research
+                const baseUrl = mediaItem.asset.url.split('?')[0];
+                const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
+                
+                allMedia.push({
+                  url: proxiedUrl,
+                  width: mediaItem.asset.metadata?.dimensions?.width || 1024,
+                  height: mediaItem.asset.metadata?.dimensions?.height || 1024,
+                  type: 'image',
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+    
     return allMedia;
   } catch (error) {
     console.error('Error fetching infinite canvas media:', error);

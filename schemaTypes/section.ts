@@ -20,9 +20,23 @@ export default defineType({
     }),
     defineField({
       name: 'featuredImage',
-      title: 'Featured Image',
+      title: 'Featured Media',
       type: 'object',
       fields: [
+        defineField({
+          name: 'type',
+          title: 'Media Type',
+          type: 'string',
+          options: {
+            list: [
+              {title: 'Image', value: 'image'},
+              {title: 'Video', value: 'video'},
+            ],
+            layout: 'radio',
+          },
+          initialValue: 'image',
+          validation: (Rule) => Rule.required(),
+        }),
         defineField({
           name: 'image',
           title: 'Image',
@@ -30,12 +44,30 @@ export default defineType({
           options: {
             hotspot: true,
           },
+          fields: [
+            {
+              name: 'alt',
+              type: 'string',
+              title: 'Alternative Text',
+              description: 'Important for accessibility and SEO',
+            },
+          ],
+          hidden: ({parent}) => parent?.type !== 'image',
+        }),
+        defineField({
+          name: 'video',
+          title: 'Video File',
+          type: 'file',
+          options: {
+            accept: 'video/*',
+          },
+          hidden: ({parent}) => parent?.type !== 'video',
         }),
         defineField({
           name: 'text',
           title: 'Text',
           type: 'text',
-          description: 'Optional text to display below the image',
+          description: 'Optional text to display below the media',
         }),
       ],
     }),
