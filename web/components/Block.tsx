@@ -110,7 +110,7 @@ export default function Block({ content, backgroundColor, maxWidth780 = false, m
       className={`flex flex-col items-start w-full ${backgroundColor ? `bg-[${backgroundColor}]` : ""}`}
       style={backgroundColor ? { backgroundColor } : undefined}
     >
-      <div className={`flex flex-col gap-[16px] items-start justify-center ${maxWidth980 ? 'max-w-[980px]' : maxWidth780 ? 'max-w-[780px]' : 'max-w-[600px]'} px-[24px] py-0 w-full`}>
+      <div className={`flex flex-col gap-[16px] items-start justify-center ${maxWidth980 ? 'max-w-[980px]' : maxWidth780 ? 'max-w-[780px]' : 'max-w-[600px]'} px-[2.5%] sm:px-[24px] py-0 w-full`}>
         {content.map((item) => renderComponent(item))}
       </div>
     </div>

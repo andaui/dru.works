@@ -57,7 +57,7 @@ export default function SectionNav({ sections }: SectionNavProps) {
   return (
     <div ref={containerRef} className="relative w-full overflow-visible">
       {/* Scrollable container that extends beyond window */}
-      <div className="flex items-center gap-[16px] font-normal text-[13px] leading-[19px] not-italic text-[#989898] overflow-x-auto scrollbar-hide pl-[24px] pr-[54px] -mx-[24px]">
+      <div className="flex items-center gap-[16px] font-normal text-[13px] leading-[19px] not-italic text-[#989898] overflow-x-auto scrollbar-hide pl-[2.5%] sm:pl-[24px] pr-[54px] -mx-[2.5%] sm:-mx-[24px]">
         {sections.map((section) => {
           const sectionId = section._id || `section-${section.sectionTitle.toLowerCase().replace(/\s+/g, '-')}`;
           return (

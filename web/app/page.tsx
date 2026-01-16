@@ -174,12 +174,20 @@ export default async function Home() {
     : 1000 + carouselHeight + 200;
   
   return (
-    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[200px] px-[2.5%] lg:px-0" style={{ minHeight: `${Math.max(estimatedHeight, 1000)}px` }}>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (min-width: 1024px) {
+          .homepage-container {
+            min-height: ${Math.max(estimatedHeight, 1000)}px;
+          }
+        }
+      `}} />
+      <div className="homepage-container relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" />
 
 
       {/* Hero Section */}
-      <div className="w-full flex justify-start md:justify-center pt-[70px] pb-[76px] lg:pt-[120px] lg:pb-[156px]">
+      <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
           <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-left md:text-center tracking-[-0.25px]">
             <p className="mb-0">Design partner with</p>
@@ -194,7 +202,7 @@ export default async function Home() {
       {/* Content Section - Normal Flow */}
       <div className="w-full">
         {/* Pricing and CTA Section - 22px above line */}
-        <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-0 lg:px-[24px] mb-[22px] gap-[22px] md:gap-0">
+        <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
           {/* Pricing Section - Left Side */}
           <div className="flex items-end gap-[22px]">
             <div className="flex shrink-0 flex-col items-start gap-px font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
@@ -228,17 +236,16 @@ export default async function Home() {
           </NextLink>
         </div>
 
-        {/* Separator Line */}
-        <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" />
+        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
 
         {/* Spotlight Carousel - Only renders on desktop, completely skipped on mobile */}
         {processedSpotlightItems.length > 0 && (
           <SpotlightCarouselWrapper items={processedSpotlightItems} />
         )}
 
-        {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on lg screens) */}
+        {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on sm+ screens) */}
         {aboutPageData?.heroDescription && (
-          <div className="pl-0 lg:pl-[24px] mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
+          <div className="px-[2.5%] sm:pl-[24px] sm:pr-0 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
             <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
               <p className="whitespace-pre-line mb-0">
                 {aboutPageData.heroDescription}
@@ -252,12 +259,12 @@ export default async function Home() {
         )}
 
         {/* Second Separator Line - 170px below about section (or 98px below carousel if no about section) */}
-        <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
+        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
 
       </div>
 
       {/* Work Feature Cards Section */}
-      <div className="w-full px-0 lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[46px] lg:gap-[106px] mt-[40px] lg:mt-[80px]">
+      <div className="w-full px-[2.5%] lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[46px] lg:gap-[106px] mt-[40px] lg:mt-[80px]">
         {workItems.length > 0 ? (
           workItems.map((item: any, index: number) => {
             // Process all images and videos from Sanity
@@ -321,11 +328,11 @@ export default async function Home() {
       {clientLogos.length > 0 && (
         <>
           {/* Horizontal line with 200px gap from featured work */}
-          <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" style={{ marginTop: '200px', marginBottom: '0' }} />
-          <div className="w-full" style={{ marginTop: '0' }}>
+          <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full mt-[80px] lg:mt-[200px]" />
+          <div className="w-full" style={{ marginTop: '32px' }}>
             {/* Clients Title - matching Spotlight styling */}
             <div
-              className="text-left pl-[2.5%] lg:pl-[24px]"
+              className="text-left pl-[2.5%] lg:pl-[24px] mb-4 md:mb-0"
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: '13px',
@@ -337,14 +344,17 @@ export default async function Home() {
             </div>
             {/* Clients Logos - Right Side, aligned to top and far right */}
             <div className="w-full flex flex-col md:flex-row items-start gap-0 px-0">
-              <div className="flex-1 w-full md:w-auto pt-0 flex justify-end" style={{ marginTop: '-33px' }}>
-                <Clients logos={clientLogos} />
+              <div className="flex-1 w-full md:w-auto pt-0 flex justify-start md:justify-start lg:justify-end">
+                <div className="w-full md:w-auto">
+                  <Clients logos={clientLogos} />
+                </div>
               </div>
             </div>
           </div>
         </>
       )}
 
-    </div>
+      </div>
+    </>
   );
 }

@@ -13,29 +13,36 @@ export default function Header({ currentPage = "work" }: HeaderProps) {
 
   return (
     <>
-      <nav className="w-full flex justify-start md:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[12px] pb-[24px] px-[2.5%] lg:px-0 relative">
-        <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-          Work
-        </Link>
-        <Link href="/about" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "about" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-          About
-        </Link>
-        <Link href="/services" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "services" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-          Services & Sessions
-        </Link>
-        <button
-          onClick={() => setIsResearchSidebarOpen(true)}
-          className={`relative shrink-0 z-50 pointer-events-auto cursor-pointer bg-transparent border-none p-0 font-inherit transition-opacity ${currentPage === "intro" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}
-        >
-          Research
-        </button>
+      <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
+        {/* Navigation - Visible on all screen sizes */}
+        <div className="flex items-center gap-[24px]">
+          <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
+            Work
+          </Link>
+          <Link href="/about" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "about" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
+            About
+          </Link>
+          <Link href="/services" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "services" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
+            Services
+          </Link>
+          {/* Research - Desktop only */}
+          <button
+            onClick={() => setIsResearchSidebarOpen(true)}
+            className={`hidden lg:block relative shrink-0 z-50 pointer-events-auto cursor-pointer bg-transparent border-none p-0 font-inherit transition-opacity ${currentPage === "intro" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}
+          >
+            Research
+          </button>
+        </div>
+
+        {/* Contact Link - Visible on all screen sizes */}
         <Link 
           href="/contact" 
-          className="absolute right-[22px] shrink-0 z-50 pointer-events-auto text-black opacity-100"
+          className="absolute right-[2.5%] sm:right-[22px] shrink-0 z-50 pointer-events-auto text-black opacity-100"
         >
           Contact
         </Link>
       </nav>
+
       <ResearchSidebar
         isOpen={isResearchSidebarOpen}
         onClose={() => setIsResearchSidebarOpen(false)}

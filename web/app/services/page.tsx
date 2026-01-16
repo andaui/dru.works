@@ -30,7 +30,7 @@ export default async function Services() {
   const sectionsForNav = await getSectionsForNav();
   
   return (
-    <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden">
+    <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
       <Header currentPage="services" />
 
       <AboutPageLayout

@@ -229,7 +229,7 @@ export default function WorkFeatureCard({
         </div>
         {/* Navigation Controls - Desktop only (in left column) */}
         {showNavigation && (
-          <div className="hidden md:flex flex-col items-end justify-center gap-[12px] px-0 py-0 pl-[30px] pr-0 w-full">
+          <div className="hidden lg:flex flex-col items-end justify-center gap-[12px] px-0 py-0 pl-[30px] pr-0 w-full">
             <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-black text-nowrap">
               {currentMediaIndex + 1}/{totalMedia}
             </p>
@@ -334,9 +334,9 @@ export default function WorkFeatureCard({
           </div>
         )}
         </div>
-        {/* Navigation Controls - Mobile only (below image) */}
+        {/* Navigation Controls - Mobile and Medium (below image) */}
         {showNavigation && (
-          <div className="flex items-center justify-between w-full pt-4 md:hidden">
+          <div className="flex items-center justify-between w-full pt-4 lg:hidden">
             {/* Counter - Left */}
             <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-black text-nowrap">
               {currentMediaIndex + 1}/{totalMedia}

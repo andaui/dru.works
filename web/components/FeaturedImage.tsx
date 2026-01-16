@@ -88,7 +88,7 @@ export default function FeaturedImage({ type = 'image', image, video, text }: Fe
     
     return (
       <div 
-        className="flex flex-col gap-[12px] items-start w-full px-0 lg:px-0 shrink min-w-0 featured-image-responsive" 
+        className="flex flex-col gap-[12px] items-start w-full px-[2.5%] lg:px-0 shrink min-w-0 featured-image-responsive" 
         style={{ 
           '--featured-max-width': `${maxWidth}px`
         } as React.CSSProperties & { '--featured-max-width': string }}
@@ -127,7 +127,7 @@ export default function FeaturedImage({ type = 'image', image, video, text }: Fe
     // Use the same aspect ratio as images (calculated above) to ensure consistent sizing
     return (
       <div 
-        className="flex flex-col gap-[12px] items-start w-full px-0 lg:px-0 shrink min-w-0 featured-image-responsive" 
+        className="flex flex-col gap-[12px] items-start w-full px-[2.5%] lg:px-0 shrink min-w-0 featured-image-responsive" 
         style={{ 
           '--featured-max-width': `${maxWidth}px`
         } as React.CSSProperties & { '--featured-max-width': string }}

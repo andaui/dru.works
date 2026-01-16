@@ -64,8 +64,8 @@ interface SectionProps {
 export default function Section({ sectionTitle, blocks, sectionId, featuredImage }: SectionProps) {
   return (
     <div id={sectionId} className="w-full flex flex-col gap-[24px] items-start">
-      <div className="bg-[#eaeaea] flex items-center px-[24px] py-[3px] w-full">
-        <p className="font-normal leading-[20px] not-italic text-[13px] text-black">
+      <div className="bg-[#eaeaea] flex items-center w-screen -ml-[2.5%] sm:ml-0 sm:w-full py-[3px]">
+        <p className="font-normal leading-[20px] not-italic text-[13px] text-black pl-[5%] sm:pl-[24px]">
           {sectionTitle}
         </p>
       </div>

@@ -62,7 +62,7 @@ function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
   return (
     <div
       ref={itemRef}
-      className={`relative shrink-0 flex flex-col items-start gap-[12px] ${isFirst ? 'pl-[2.5%] lg:pl-[24px]' : ''}`}
+      className="relative shrink-0 flex flex-col items-start gap-[12px]"
     >
       <div className="relative flex items-center" style={{ height: 'clamp(300px, 40vw, 582px)', backgroundColor: 'transparent' }}>
         {item.type === 'video' ? (
@@ -164,11 +164,11 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     // Reduce multiplier from 2 to 1.2 for faster scrolling
     scrollDistanceRef.current = Math.max(calculateScrollableWidth() * 1.4, 1000);
 
-    // Set spacer width to 10% of container width
+    // Set spacer width to 10% of container width minus 30px
     const updateSpacerWidth = () => {
       if (spacerRef.current && containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        spacerRef.current.style.width = `${containerWidth * 0.1}px`;
+        spacerRef.current.style.width = `${Math.max(0, containerWidth * 0.1 - 30)}px`;
       }
     };
     updateSpacerWidth();
@@ -466,9 +466,9 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   }
 
   return (
-    <div className="w-[calc(100%+5%)] lg:w-full -ml-[2.5%] -mr-[2.5%] lg:mx-0" style={{ marginTop: '52px' }}>
+    <div className="w-[calc(100%+5%)] sm:w-full -ml-[2.5%] -mr-[2.5%] sm:mx-0" style={{ marginTop: '52px' }}>
       <div
-        className="hidden md:block text-left pl-[2.5%] lg:pl-[24px]"
+        className="hidden md:block text-left pl-[2.5%] sm:pl-[24px]"
         style={{
           fontFamily: 'Inter, sans-serif',
           fontSize: '13px',
@@ -480,7 +480,7 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
       </div>
       <div 
         ref={containerRef}
-        className="w-full overflow-hidden"
+        className="w-full overflow-hidden pl-[2.5%] sm:pl-[24px]"
         style={{ 
           minHeight: 'clamp(300px, 40vw, 582px)',
         }}

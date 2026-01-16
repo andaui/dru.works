@@ -68,10 +68,10 @@ export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
   return (
     <div className="w-full flex flex-col gap-[75px] items-center" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
       {/* Horizontal Line - Full Width */}
-      <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" />
+      <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
       
       {/* Testimonial Content Container - Full Width, Center Aligned */}
-      <div className="flex flex-col gap-[12px] items-center w-full px-0 lg:px-[24px]">
+      <div className="flex flex-col gap-[12px] items-center w-full px-[4%] lg:px-[24px]">
         {/* Text Content - Max Width 824px, Centered */}
         <div className="flex flex-col gap-[20px] items-center w-full max-w-[780px]">
           <p className="font-inter font-normal text-[16px] leading-[23px] not-italic text-black text-center tracking-[0%] w-full whitespace-pre-line">

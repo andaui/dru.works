@@ -22,9 +22,9 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
   }
 
   return (
-    <div className="w-full overflow-hidden flex justify-end">
+    <div className="w-full overflow-hidden flex justify-start md:justify-start">
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 w-full md:w-auto"
         style={{ 
           border: '0.9px solid #E1E1E1',
           borderRight: 'none',
@@ -32,7 +32,6 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
           maxWidth: maxWidth980 ? '980px' : '986px',
           padding: 0,
           margin: 0,
-          marginLeft: 'auto'
         }}
       >
         {logos.map((client) => {
