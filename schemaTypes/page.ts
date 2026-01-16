@@ -23,8 +23,8 @@ export default defineType({
     defineField({
       name: 'heroTitle',
       title: 'Hero Title',
-      type: 'string',
-      description: 'Title displayed in the hero section of the page',
+      type: 'text',
+      description: 'Title displayed in the hero section of the page. Use line breaks to split into multiple lines.',
     }),
     defineField({
       name: 'heroDescription',
@@ -34,12 +34,12 @@ export default defineType({
     }),
     defineField({
       name: 'sections',
-      title: 'Sections & Testimonials',
+      title: 'Sections, Testimonials & Featured Work',
       type: 'array',
       of: [
         {
           type: 'reference',
-          to: [{type: 'section'}, {type: 'testimonial'}],
+          to: [{type: 'section'}, {type: 'testimonial'}, {type: 'featuredWork'}],
           options: {
             disableNew: false,
           },

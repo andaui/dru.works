@@ -4,11 +4,27 @@ import Link from "next/link";
 import { useState } from "react";
 import ResearchSidebar from "./ResearchSidebar";
 
-interface HeaderProps {
-  currentPage?: "work" | "about" | "services" | "intro";
+interface NavigationPage {
+  slug: string;
+  title: string;
 }
 
-export default function Header({ currentPage = "work" }: HeaderProps) {
+interface HeaderProps {
+  currentPage?: "work" | "about" | "services" | "intro";
+  navigationPages?: NavigationPage[];
+}
+
+export default function Header({ currentPage = "work", navigationPages = [] }: HeaderProps) {
+  // Create a map of slug to title for easy lookup
+  const pageTitles = navigationPages.reduce((acc, page) => {
+    acc[page.slug] = page.title;
+    return acc;
+  }, {} as Record<string, string>);
+  
+  // Fallback titles if not found in Sanity
+  const workTitle = pageTitles['work'] || 'Work';
+  const aboutTitle = pageTitles['about'] || 'About';
+  const servicesTitle = pageTitles['services'] || 'Services';
   const [isResearchSidebarOpen, setIsResearchSidebarOpen] = useState(false);
 
   return (
@@ -17,13 +33,13 @@ export default function Header({ currentPage = "work" }: HeaderProps) {
         {/* Navigation - Visible on all screen sizes */}
         <div className="flex items-center gap-[24px]">
           <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-            Work
+            {workTitle}
           </Link>
           <Link href="/about" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "about" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-            About
+            {aboutTitle}
           </Link>
           <Link href="/services" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "services" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
-            Services
+            {servicesTitle}
           </Link>
           {/* Research - Desktop only */}
           <button

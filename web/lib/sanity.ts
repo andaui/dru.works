@@ -17,6 +17,13 @@ export function urlFor(source: any) {
   return builder.image(source)
 }
 
+// GROQ query to fetch navigation pages (work, about, services)
+export const navigationPagesQuery = `*[_type == "page" && slug.current in ["work", "about", "services"]] {
+  _id,
+  title,
+  "slug": slug.current
+}`
+
 // GROQ query to fetch all featured work items
 export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) {
   _id,
@@ -194,11 +201,35 @@ export const sectionsQuery = `*[_type == "section"] | order(order asc) {
 export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.current == "${slug}"][0] {
   _id,
   _type,
+  title,
   heroTitle,
   heroDescription,
   sections[]-> {
     _id,
     _type,
+    // Featured Work fields
+    projectTitle,
+    projectDescriptionShort,
+    projectDescriptionLong,
+    teamContribution,
+    order,
+    images[] {
+      _type,
+      _key,
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      },
+      alt
+    },
     // Section fields
     sectionTitle,
     blocks[] {

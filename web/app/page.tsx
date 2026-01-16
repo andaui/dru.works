@@ -5,8 +5,9 @@ import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import Link from "@/components/Link";
 import NextLink from "next/link";
 import Clients from "@/components/Clients";
+import Price2Col from "@/components/Price2Col";
 import Image from "next/image";
-import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, urlFor } from "@/lib/sanity";
+import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
 
 async function getFeaturedWork() {
   try {
@@ -38,14 +39,18 @@ async function getSpotlightItems() {
   }
 }
 
-async function getAboutPageData() {
+async function getPageData(slug: string) {
   try {
-    const pageData = await client.fetch(pageDataQuery('about'));
+    const pageData = await client.fetch(pageDataQuery(slug));
     return pageData || null;
   } catch (error) {
-    console.error('Error fetching about page data:', error);
+    console.error(`Error fetching ${slug} page data:`, error);
     return null;
   }
+}
+
+async function getAboutPageData() {
+  return getPageData('about');
 }
 
 async function getClientsSection() {
@@ -73,13 +78,99 @@ async function getClientsSection() {
   }
 }
 
+async function getNavigationPages() {
+  try {
+    const pages = await client.fetch(navigationPagesQuery);
+    return pages || [];
+  } catch (error) {
+    console.error('Error fetching navigation pages:', error);
+    return [];
+  }
+}
+
 export default async function Home() {
-  // Fetch featured work, testimonials, spotlight items, about page data, and clients section from Sanity
-  const workItems = await getFeaturedWork();
+  // Fetch navigation pages, homepage/work page data, testimonials, spotlight items, about page data, and clients section from Sanity
+  const navigationPages = await getNavigationPages();
+  const homepageData = await getPageData('work');
+  
+  // Extract featured work items from sections array (filter by _type === 'featuredWork')
+  const workItems = homepageData?.sections
+    ?.filter((item: any) => item?._type === 'featuredWork')
+    .map((item: any) => ({
+      _id: item._id,
+      _type: item._type,
+      projectTitle: item.projectTitle,
+      projectDescriptionShort: item.projectDescriptionShort,
+      projectDescriptionLong: item.projectDescriptionLong,
+      teamContribution: item.teamContribution,
+      order: item.order,
+      images: item.images || [],
+    })) || await getFeaturedWork();
+  
   const rawTestimonials = await getHeroTestimonials();
   const rawSpotlightItems = await getSpotlightItems();
   const aboutPageData = await getAboutPageData();
   const clientLogos = await getClientsSection();
+  
+  // Get hero title from homepage data, with fallback
+  const heroTitle = homepageData?.heroTitle || "Design partner with\nengineering fluency";
+  
+  // Extract pricing data from pricing section
+  // First try to find it in the work page sections
+  let pricingSection = homepageData?.sections?.find((item: any) => 
+    item?._type === 'section' && item?.sectionTitle?.toLowerCase() === 'pricing'
+  );
+  
+  // If not found in work page, try fetching it directly as a standalone section
+  if (!pricingSection) {
+    try {
+      const pricingSectionData = await client.fetch(`*[_type == "section" && (sectionTitle == "Pricing" || sectionTitle == "pricing")][0] {
+        _id,
+        _type,
+        sectionTitle,
+        blocks[] {
+          _key,
+          content[] {
+            _type,
+            _key,
+            items[] {
+              label,
+              price
+            }
+          }
+        }
+      }`);
+      pricingSection = pricingSectionData;
+    } catch (error) {
+      console.error('Error fetching pricing section:', error);
+    }
+  }
+  
+  // Find price2Col content in the pricing section
+  let pricingItems: Array<{ label: string; price: string }> | null = null;
+  if (pricingSection?.blocks) {
+    for (const block of pricingSection.blocks) {
+      if (block.content) {
+        const priceContent = block.content.find((content: any) => content._type === 'price2Col');
+        if (priceContent?.items && Array.isArray(priceContent.items) && priceContent.items.length > 0) {
+          // Validate items structure
+          const validItems = priceContent.items.filter((item: any) => 
+            item && typeof item === 'object' && 'label' in item && 'price' in item
+          );
+          if (validItems.length > 0) {
+            pricingItems = validItems;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  // Debug logging (remove in production if needed)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Pricing section found:', !!pricingSection);
+    console.log('Pricing items:', pricingItems);
+  }
   
   // Process testimonials data on the server
   const processedTestimonials = rawTestimonials.map((testimonial: any) => {
@@ -167,31 +258,19 @@ export default async function Home() {
     };
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
-  // Calculate approximate height needed: 758px (start) + 500px (carousel space) + (cards * 623px) + (gaps * 106px) + 200px bottom spacing
-  const carouselHeight = 500; // Space for carousel
-  const estimatedHeight = workItems.length > 0 
-    ? 758 + carouselHeight + (workItems.length * 623) + ((workItems.length - 1) * 106) + 200
-    : 1000 + carouselHeight + 200;
-  
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (min-width: 1024px) {
-          .homepage-container {
-            min-height: ${Math.max(estimatedHeight, 1000)}px;
-          }
-        }
-      `}} />
-      <div className="homepage-container relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header currentPage="work" />
+      <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+      <Header currentPage="work" navigationPages={navigationPages} />
 
 
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
           <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-left md:text-center tracking-[-0.25px]">
-            <p className="mb-0">Design partner with</p>
-            <p>engineering fluency</p>
+            {heroTitle.split('\n').map((line: string, index: number) => (
+              <p key={index} className="mb-0">{line}</p>
+            ))}
           </div>
           <HeroTestimonial
             testimonials={processedTestimonials}
@@ -202,39 +281,28 @@ export default async function Home() {
       {/* Content Section - Normal Flow */}
       <div className="w-full">
         {/* Pricing and CTA Section - 22px above line */}
-        <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
-          {/* Pricing Section - Left Side */}
-          <div className="flex items-end gap-[22px]">
-            <div className="flex shrink-0 flex-col items-start gap-px font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
-              <p className="relative shrink-0">Monthly</p>
-              <p className="relative shrink-0">Quarterly</p>
-              <p className="relative shrink-0">Bi-annual</p>
-              <p className="relative shrink-0">Annual</p>
-            </div>
-            <div className="flex shrink-0 w-[67px] flex-col items-start gap-px font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap">
-              <p className="relative shrink-0">GBP 25,000</p>
-              <p className="relative shrink-0">GBP 70,000</p>
-              <p className="relative shrink-0">GBP 135,000</p>
-              <p className="relative shrink-0">GBP 255,000</p>
-            </div>
-          </div>
+        {pricingItems && (
+          <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
+            {/* Pricing Section - Left Side */}
+            <Price2Col items={pricingItems} />
 
-          {/* CTA Button */}
-          <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
-            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap group-hover:text-black transition-colors">
-              Interested in Team Design Sessions?
-            </p>
-            <div className="shrink-0" style={{ width: '14px', height: '14px' }}>
-              <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
-                  fill="#989898"
-                  className="group-hover:fill-black transition-colors"
-                />
-              </svg>
-            </div>
-          </NextLink>
-        </div>
+            {/* CTA Button */}
+            <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
+              <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap group-hover:text-black transition-colors">
+                Interested in Team Design Sessions?
+              </p>
+              <div className="shrink-0" style={{ width: '14px', height: '14px' }}>
+                <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
+                    fill="#989898"
+                    className="group-hover:fill-black transition-colors"
+                  />
+                </svg>
+              </div>
+            </NextLink>
+          </div>
+        )}
 
         <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
 

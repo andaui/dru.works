@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import AboutPageLayout from "@/components/AboutPageLayout";
-import { client, pageDataQuery } from "@/lib/sanity";
+import { client, pageDataQuery, navigationPagesQuery } from "@/lib/sanity";
 
 async function getPageData() {
   try {
@@ -24,14 +24,25 @@ async function getSectionsForNav() {
   }
 }
 
+async function getNavigationPages() {
+  try {
+    const pages = await client.fetch(navigationPagesQuery);
+    return pages || [];
+  } catch (error) {
+    console.error('Error fetching navigation pages:', error);
+    return [];
+  }
+}
+
 export default async function About() {
+  const navigationPages = await getNavigationPages();
   const pageData = await getPageData();
   const sections = pageData?.sections || [];
   const sectionsForNav = await getSectionsForNav();
   
   return (
     <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
-      <Header currentPage="about" />
+      <Header currentPage="about" navigationPages={navigationPages} />
 
       <AboutPageLayout
         heroContent={
