@@ -115,10 +115,16 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   const touchStartYRef = useRef<number>(0);
   const touchStartXRef = useRef<number>(0);
   const lastTouchYRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
   useEffect(() => {
     if (!containerRef.current || !scrollContainerRef.current || items.length === 0) return;
 
+    // Since this component is wrapped by SpotlightCarouselWrapper which prevents mobile mounting,
+    // we can assume we're always on desktop here
+    const isMobile = false; // Always desktop - wrapper handles mobile exclusion
+    
     const container = containerRef.current;
     const scrollContainer = scrollContainerRef.current;
 
@@ -144,9 +150,16 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
       const scrollableWidth = calculateScrollableWidth();
       // Only consider scrollable if there's at least 10px of scrollable content
       isScrollableRef.current = scrollableWidth > 10;
+      // Debug: log scrollable status
+      if (process.env.NODE_ENV === 'development') {
+        console.log('SpotlightCarousel scrollable:', isScrollableRef.current, 'width:', scrollableWidth);
+      }
     };
     
+    // Check immediately and after a short delay to ensure DOM is ready
     checkIfScrollable();
+    setTimeout(checkIfScrollable, 100);
+    setTimeout(checkIfScrollable, 500);
     
     // Reduce multiplier from 2 to 1.2 for faster scrolling
     scrollDistanceRef.current = Math.max(calculateScrollableWidth() * 1.4, 1000);
@@ -370,7 +383,11 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     };
 
     // Lock scroll when active and check trigger continuously
+    // Since wrapper ensures we're always on desktop, we can use full functionality
     const lockScroll = () => {
+      // Only continue if component is still mounted
+      if (!isMountedRef.current) return;
+
       // Check trigger every frame
       checkTrigger();
 
@@ -383,16 +400,24 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
         if (!isAtStart && !isAtEnd) {
           // Always lock to the exact same stored position
           // Check if we've drifted and correct it
-          if (Math.abs(window.scrollY - lockedScrollYRef.current) > 0.5) {
+          const scrollDiff = Math.abs(window.scrollY - lockedScrollYRef.current);
+          const threshold = 0.5; // Desktop threshold
+          if (scrollDiff > threshold) {
             window.scrollTo({ top: lockedScrollYRef.current, behavior: 'auto' });
           }
         }
         // At boundaries - don't lock at all to allow smooth unlock
       }
-      requestAnimationFrame(lockScroll);
+      
+      // Always use requestAnimationFrame on desktop (wrapper ensures we're never on mobile)
+      // Only schedule next frame if component is still mounted
+      if (isMountedRef.current) {
+        animationFrameRef.current = requestAnimationFrame(lockScroll);
+      }
     };
 
-    lockScroll();
+    // Start the animation loop
+    animationFrameRef.current = requestAnimationFrame(lockScroll);
 
     // Check trigger on scroll
     const handleScroll = () => {
@@ -418,6 +443,15 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Mark as unmounted to stop animation loop
+      isMountedRef.current = false;
+      
+      // Cancel any pending animation frame
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
       window.removeEventListener('wheel', handleWheel, { capture: true });
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('touchstart', handleTouchStart);

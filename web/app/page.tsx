@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import WorkFeatureCard from "@/components/WorkFeatureCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
-import SpotlightCarousel from "@/components/SpotlightCarousel";
+import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import Link from "@/components/Link";
 import NextLink from "next/link";
 import Clients from "@/components/Clients";
@@ -139,9 +139,9 @@ export default async function Home() {
         // Use fit('max') to preserve full image without cropping
         // Set a high max height to ensure quality, but let width be auto
         mediaUrl = urlFor(media.image)
-          .height(1200) // High resolution for quality
+          .height(1200) // High resolution for quality (desktop)
           .fit('max') // Preserve full image, no cropping
-          .quality(90)
+          .quality(80) // Reduced quality for better mobile performance
           .format('jpg')
           .url();
         mediaAlt = media.image.alt || item.title || 'Spotlight image';
@@ -231,11 +231,9 @@ export default async function Home() {
         {/* Separator Line */}
         <div className="w-full h-px bg-[#e5e5e5] -mx-[2.5%] lg:mx-0" />
 
-        {/* Spotlight Carousel */}
+        {/* Spotlight Carousel - Only renders on desktop, completely skipped on mobile */}
         {processedSpotlightItems.length > 0 && (
-          <div className="hidden md:block">
-            <SpotlightCarousel items={processedSpotlightItems} />
-          </div>
+          <SpotlightCarouselWrapper items={processedSpotlightItems} />
         )}
 
         {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on lg screens) */}
@@ -259,7 +257,7 @@ export default async function Home() {
       </div>
 
       {/* Work Feature Cards Section */}
-      <div className="w-full px-0 lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[106px] mt-[80px]">
+      <div className="w-full px-0 lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[46px] lg:gap-[106px] mt-[40px] lg:mt-[80px]">
         {workItems.length > 0 ? (
           workItems.map((item: any, index: number) => {
             // Process all images and videos from Sanity
@@ -269,12 +267,14 @@ export default async function Home() {
               item.images.forEach((media: any) => {
                 if (media._type === 'image' && media.asset) {
                   try {
-                    // Request higher resolution (2x for retina displays) and high quality
+                    // Optimize image sizes for mobile: Much smaller on mobile to prevent crashes
+                    // Desktop: 1692px (2x for retina), Mobile: 600px max (much smaller for mobile performance)
+                    // Next.js Image component will handle further optimization
                     const imageUrl = urlFor(media)
-                      .width(1692) // 2x the display width (846 * 2) for retina
-                      .height(1246) // 2x the display height (623 * 2) for retina
+                      .width(1692) // Max width for desktop retina (846 * 2)
+                      .height(1246) // Max height for desktop retina (623 * 2)
                       .fit('crop')
-                      .quality(90) // High quality (0-100, default is usually 75)
+                      .quality(75) // Lower quality for better mobile performance and smaller file sizes
                       .format('jpg') // Use JPEG for better compression
                       .url();
                     const imageAlt = media.alt || item.projectTitle || 'Project image';

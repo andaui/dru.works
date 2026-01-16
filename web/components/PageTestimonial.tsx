@@ -37,11 +37,12 @@ export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
 
   if (testimonial.personPhoto?.asset) {
     try {
+      // Optimize for mobile - use lower quality
       personPhotoUrl = urlFor(testimonial.personPhoto)
         .width(42) // 21px * 2 for retina
         .height(42)
         .fit('crop')
-        .quality(90)
+        .quality(75) // Lower quality for better mobile performance
         .format('jpg')
         .url();
     } catch (error) {
@@ -85,7 +86,8 @@ export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
                   fill
                   className="object-cover"
                   sizes="21px"
-                  quality={90}
+                  quality={75}
+                  loading="lazy"
                 />
               </div>
             ) : (

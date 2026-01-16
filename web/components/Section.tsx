@@ -69,9 +69,9 @@ export default function Section({ sectionTitle, blocks, sectionId, featuredImage
           {sectionTitle}
         </p>
       </div>
-      <div className="flex flex-col gap-[34px] items-start w-full overflow-hidden lg:flex-row lg:items-start">
+      <div className="flex flex-col gap-[34px] items-start w-full overflow-hidden sm:flex-row sm:items-start">
         {/* Left Column - Blocks */}
-        <div className="flex flex-col gap-[34px] items-start flex-1 min-w-0 w-full lg:min-w-[430px]">
+        <div className="flex flex-col gap-[34px] items-start flex-1 min-w-0 w-full sm:min-w-[430px]">
           {blocks.map((block) => (
             <Block key={block._key} content={block.content} backgroundColor={block.backgroundColor} maxWidth780={block.maxWidth780} maxWidth980={block.maxWidth980} />
           ))}

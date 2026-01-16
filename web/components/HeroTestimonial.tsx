@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface ProcessedTestimonial {
   _id: string;
@@ -20,15 +20,64 @@ export default function HeroTestimonial({
   testimonials,
 }: HeroTestimonialProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (testimonials.length <= 1) return;
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
-    }, 5000); // Change every 5 seconds
+    // Detect mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+                    (typeof window !== 'undefined' && window.innerWidth < 768);
 
-    return () => clearInterval(interval);
+    // Use IntersectionObserver to pause when not visible (especially on mobile)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const isVisible = entries[0].isIntersecting;
+        
+        if (isVisible) {
+          // Resume rotation when visible
+          if (!intervalRef.current) {
+            intervalRef.current = setInterval(() => {
+              setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+            }, 5000);
+          }
+        } else {
+          // Pause rotation when not visible (saves battery/CPU on mobile)
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+      },
+      {
+        threshold: 0.1, // Trigger when 10% visible
+        rootMargin: '50px', // Start checking slightly before it's visible
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    // Start interval if visible on mount
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      
+      if (isVisible) {
+        intervalRef.current = setInterval(() => {
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+        }, 5000);
+      }
+    }
+
+    return () => {
+      observer.disconnect();
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [testimonials.length]);
 
   if (testimonials.length === 0) {
@@ -46,7 +95,7 @@ export default function HeroTestimonial({
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <div className="flex w-full max-w-[700px] flex-col items-start md:items-center gap-[12px]">
+    <div ref={containerRef} className="flex w-full max-w-[700px] flex-col items-start md:items-center gap-[12px]">
       <div className="flex items-start md:items-center justify-start w-full">
         <p
           key={currentTestimonial._id}
@@ -65,7 +114,9 @@ export default function HeroTestimonial({
               fill
               className="object-cover"
               sizes="21px"
-              quality={90}
+              quality={75}
+              loading="eager"
+              priority
             />
           </div>
         ) : (

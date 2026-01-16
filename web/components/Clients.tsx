@@ -56,6 +56,8 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
                     width={200}
                     height={100}
                     className="max-w-full max-h-full object-contain"
+                    loading="lazy"
+                    quality={75}
                   />
                 </div>
               ) : (

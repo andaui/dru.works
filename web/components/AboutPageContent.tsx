@@ -66,7 +66,13 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Detect mobile for performance optimizations
+    const isMobile = (typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) || 
+                    (typeof window !== 'undefined' && window.innerWidth < 768);
+
     // Calculate and set page height based on sections
+    // Throttle this on mobile to reduce DOM queries
+    let heightCalculationTimeout: NodeJS.Timeout;
     const calculateHeight = () => {
       if (containerRef.current) {
         // Find the last section or testimonial
@@ -84,31 +90,52 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
       }
     };
 
-    // Calculate immediately and after a short delay to ensure DOM is ready
-    calculateHeight();
-    setTimeout(calculateHeight, 100);
-    setTimeout(calculateHeight, 500);
+    // Calculate immediately, but throttle on mobile
+    if (isMobile) {
+      // On mobile, only calculate once after a delay to reduce initial load
+      heightCalculationTimeout = setTimeout(calculateHeight, 300);
+    } else {
+      // On desktop, calculate multiple times for accuracy
+      calculateHeight();
+      setTimeout(calculateHeight, 100);
+      setTimeout(calculateHeight, 500);
+    }
 
     // Handle hash-based scrolling
+    // Use instant scroll on mobile to prevent crashes
     const handleHashScroll = () => {
       const hash = window.location.hash.slice(1); // Remove the #
       if (hash) {
+        // Use instant scroll on mobile, smooth on desktop
+        const scrollBehavior: ScrollBehavior = isMobile ? 'auto' : 'smooth';
+        const scrollDelay = isMobile ? 0 : 100; // No delay on mobile
+        
         // Try to find section by ID or by matching section title
         const sectionElement = document.getElementById(hash);
         if (sectionElement) {
           // Find the grey header strip (the first child div)
           const headerStrip = sectionElement.firstElementChild as HTMLElement;
           if (headerStrip) {
-            setTimeout(() => {
+            if (scrollDelay > 0) {
+              setTimeout(() => {
+                headerStrip.scrollIntoView({ 
+                  behavior: scrollBehavior, 
+                  block: 'start',
+                  inline: 'nearest'
+                });
+              }, scrollDelay);
+            } else {
+              // Instant scroll on mobile
               headerStrip.scrollIntoView({ 
-                behavior: 'smooth', 
+                behavior: 'auto', 
                 block: 'start',
                 inline: 'nearest'
               });
-            }, 100);
+            }
           }
         } else {
           // Try to find by section title match (case-insensitive, spaces to hyphens)
+          // Limit DOM queries on mobile
           const normalizedHash = hash.toLowerCase().replace(/\s+/g, '-');
           const allSections = document.querySelectorAll('[id]');
           for (const section of Array.from(allSections)) {
@@ -116,13 +143,22 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
             if (sectionTitle === normalizedHash || section.id.toLowerCase().includes(normalizedHash)) {
               const headerStrip = section.firstElementChild as HTMLElement;
               if (headerStrip) {
-                setTimeout(() => {
+                if (scrollDelay > 0) {
+                  setTimeout(() => {
+                    headerStrip.scrollIntoView({ 
+                      behavior: scrollBehavior, 
+                      block: 'start',
+                      inline: 'nearest'
+                    });
+                  }, scrollDelay);
+                } else {
+                  // Instant scroll on mobile
                   headerStrip.scrollIntoView({ 
-                    behavior: 'smooth', 
+                    behavior: 'auto', 
                     block: 'start',
                     inline: 'nearest'
                   });
-                }, 100);
+                }
                 break;
               }
             }
@@ -133,12 +169,14 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
 
     // Handle initial hash on page load
     if (window.location.hash) {
-      setTimeout(handleHashScroll, 300);
+      const initialDelay = isMobile ? 100 : 300; // Faster on mobile
+      setTimeout(handleHashScroll, initialDelay);
     }
 
     // Handle hash changes
     window.addEventListener('hashchange', handleHashScroll);
     return () => {
+      clearTimeout(heightCalculationTimeout);
       window.removeEventListener('hashchange', handleHashScroll);
     };
   }, [sections]);

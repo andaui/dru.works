@@ -3,6 +3,7 @@
 :root {
   --background: #fcfcfc;
   --foreground: #000000;
+  --spacing: 4px;
 }
 
 @theme inline {
@@ -40,7 +41,7 @@ body {
   max-height: none;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
   .featured-image-responsive {
     max-width: var(--featured-max-width, 510px);
   }
