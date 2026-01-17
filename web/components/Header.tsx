@@ -41,10 +41,10 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
           <Link href="/services" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "services" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}>
             {servicesTitle}
           </Link>
-          {/* Research - Desktop only */}
+          {/* Research - Hidden on mobile, visible on tablet and up */}
           <button
             onClick={() => setIsResearchSidebarOpen(true)}
-            className={`hidden lg:block relative shrink-0 z-50 pointer-events-auto cursor-pointer bg-transparent border-none p-0 font-inherit transition-opacity ${currentPage === "intro" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}
+            className={`hidden md:block relative shrink-0 z-50 pointer-events-auto cursor-pointer bg-transparent border-none p-0 font-inherit transition-opacity ${currentPage === "intro" ? "text-black opacity-100" : "text-black opacity-40 hover:opacity-70"}`}
           >
             Research
           </button>
