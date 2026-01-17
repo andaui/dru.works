@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { verifySessionToken } from './lib/auth';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Check if user is authenticated via cookie
   const authCookie = request.cookies.get('site-auth');
-  const isAuthenticated = authCookie?.value === 'authenticated';
+  const isAuthenticated = authCookie?.value 
+    ? await verifySessionToken(authCookie.value)
+    : false;
   
   // Allow access to login page, auth API, and robots.txt
   if (pathname === '/login' || pathname.startsWith('/api/auth') || pathname === '/robots.txt') {
