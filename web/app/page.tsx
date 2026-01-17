@@ -88,6 +88,8 @@ async function getNavigationPages() {
   }
 }
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Home() {
   // Fetch navigation pages, homepage/work page data, testimonials, spotlight items, about page data, and clients section from Sanity
   const navigationPages = await getNavigationPages();

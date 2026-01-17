@@ -34,6 +34,8 @@ async function getNavigationPages() {
   }
 }
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Services() {
   const navigationPages = await getNavigationPages();
   const pageData = await getPageData();
