@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ResearchSidebar from "./ResearchSidebar";
 
 interface NavigationPage {
@@ -26,6 +26,28 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
   const aboutTitle = pageTitles['about'] || 'About';
   const servicesTitle = pageTitles['services'] || 'Services';
   const [isResearchSidebarOpen, setIsResearchSidebarOpen] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  const handleContactClick = async () => {
+    try {
+      await navigator.clipboard.writeText('carterandrew93@gmail.com');
+      setEmailCopied(true);
+    } catch (err) {
+      console.error('Failed to copy email:', err);
+    }
+  };
 
   return (
     <>
@@ -50,13 +72,43 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
           </button>
         </div>
 
-        {/* Contact Link - Visible on all screen sizes */}
-        <Link 
-          href="/contact" 
-          className="absolute right-[2.5%] sm:right-[22px] shrink-0 z-50 pointer-events-auto text-black opacity-100"
-        >
-          Contact
-        </Link>
+        {/* Contact - Visible on all screen sizes */}
+        <div className="absolute right-[2.5%] sm:right-[22px] flex items-center gap-[24px] z-50 pointer-events-auto">
+          {!isMounted ? (
+            <button
+              className="text-black opacity-100 bg-transparent border-none p-0 font-inherit cursor-pointer"
+              disabled
+            >
+              Contact
+            </button>
+          ) : isMobile ? (
+            // Mobile: just open mail directly
+            <a 
+              href="mailto:carterandrew93@gmail.com" 
+              className="text-black opacity-100"
+            >
+              Contact
+            </a>
+          ) : emailCopied ? (
+            // Desktop: show transitions
+            <>
+              <span className="text-black opacity-40">Email copied</span>
+              <a 
+                href="mailto:carterandrew93@gmail.com" 
+                className="text-black opacity-100"
+              >
+                Open mail
+              </a>
+            </>
+          ) : (
+            <button
+              onClick={handleContactClick}
+              className="text-black opacity-100 bg-transparent border-none p-0 font-inherit cursor-pointer"
+            >
+              Contact
+            </button>
+          )}
+        </div>
       </nav>
 
       <ResearchSidebar

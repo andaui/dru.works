@@ -199,25 +199,25 @@ export default function WorkFeatureCard({
             {projectTitle}
           </p>
           {/* Short description - hidden on mobile, visible on desktop. On mobile, only show if expanded and no long description */}
-          <p className={`relative shrink-0 min-w-full w-[min-content] text-[13px] leading-[19px] text-[#5d5d5d] whitespace-pre-line ${isExpanded && !hasLongDescription ? 'block md:hidden' : 'hidden md:block'}`}>
+          <p className={`relative shrink-0 min-w-full w-[min-content] text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] whitespace-pre-line ${isExpanded && !hasLongDescription ? 'block md:hidden' : 'hidden md:block'}`}>
             {projectDescriptionShort}
           </p>
           {/* Long description - only show when expanded. If both exist, show long. If only short exists, it's shown above */}
           {isExpanded && hasLongDescription && (
-            <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] leading-[19px] text-[#5d5d5d] whitespace-pre-line">
+            <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] whitespace-pre-line">
               {projectDescriptionLong}
             </p>
           )}
           {/* Team contribution - hidden on mobile, visible on desktop */}
           {teamContribution && (
-            <p className="hidden md:block relative shrink-0 w-full max-w-[354.667px] text-[13px] leading-[19px] text-[#5d5d5d]">
+            <p className="hidden md:block relative shrink-0 w-full max-w-[354.667px] text-[14px] leading-[20px] text-[#5d5d5d]">
               {teamContribution}
             </p>
           )}
           {showReadMore && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="relative shrink-0 w-full max-w-[354.667px] text-left text-[12px] leading-[19px] text-[#5d5d5d] opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
+              className="relative shrink-0 w-full max-w-[354.667px] text-left text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
             >
               <span className="md:hidden">{isExpanded ? 'Read less' : 'Read description'}</span>
               {/* Desktop: only show if there's a long description */}
