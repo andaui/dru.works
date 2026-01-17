@@ -1,5 +1,5 @@
 import { InfiniteCanvasClient } from "@/components/infinite-canvas/InfiniteCanvasClient";
-import { client, infiniteCanvasMediaQuery, urlFor } from "@/lib/sanity";
+import { client, infiniteCanvasMediaQuery } from "@/lib/sanity";
 import type { MediaItem } from "@/components/infinite-canvas/types";
 
 async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
@@ -18,12 +18,9 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
               const isVideo = mimeType.startsWith('video/') || image.asset.url.includes('.mp4') || image.asset.url.includes('.webm');
               
               if (isVideo) {
-                // Include videos from featured work
-                // Try to get actual video dimensions from metadata if available
                 const baseUrl = image.asset.url.split('?')[0];
                 const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
                 
-                // Use actual dimensions if available, otherwise use common video aspect ratios
                 const width = image.asset.metadata?.dimensions?.width || 1920;
                 const height = image.asset.metadata?.dimensions?.height || 1080;
                 
@@ -35,7 +32,6 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
                   autoplay: true,
                 });
               } else if (image._type === 'image' || image.asset.metadata?.dimensions) {
-                // Include images from featured work
                 const baseUrl = image.asset.url.split('?')[0];
                 const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
                 
@@ -67,11 +63,9 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
               type: 'image',
             });
           } else if (item.media.type === 'video' && item.media.video?.asset) {
-            // Include videos from spotlight with autoplay
             const baseUrl = item.media.video.asset.url.split('?')[0];
             const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
             
-            // Use actual video dimensions if available, otherwise use common video aspect ratios
             const width = item.media.video.asset.metadata?.dimensions?.width || 1920;
             const height = item.media.video.asset.metadata?.dimensions?.height || 1080;
             
@@ -97,11 +91,9 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
               const isVideo = mimeType.startsWith('video/') || mediaItem.asset.url.includes('.mp4') || mediaItem.asset.url.includes('.webm');
               
               if (isVideo) {
-                // Include videos from research
                 const baseUrl = mediaItem.asset.url.split('?')[0];
                 const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
                 
-                // Use actual dimensions if available, otherwise use common video aspect ratios
                 const width = mediaItem.asset.metadata?.dimensions?.width || 1920;
                 const height = mediaItem.asset.metadata?.dimensions?.height || 1080;
                 
@@ -113,7 +105,6 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
                   autoplay: true,
                 });
               } else if (mediaItem._type === 'image' || mediaItem.asset.metadata?.dimensions) {
-                // Include images from research
                 const baseUrl = mediaItem.asset.url.split('?')[0];
                 const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(baseUrl)}`;
                 
@@ -137,14 +128,14 @@ async function getInfiniteCanvasMedia(): Promise<MediaItem[]> {
   }
 }
 
-export default async function InfiniteCanvasPage() {
+export default async function ResearchPage() {
   const media = await getInfiniteCanvasMedia();
   
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <InfiniteCanvasClient 
         media={media} 
-        showControls={true}
+        showControls={false}
         backgroundColor="#000000"
         fogColor="#000000"
       />

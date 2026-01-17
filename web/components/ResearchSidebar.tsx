@@ -169,7 +169,7 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
             {/* Button section */}
             <div className="flex flex-col items-start w-full">
               <Link 
-                href="/infinite-canvas" 
+                href="/research" 
                 className="bg-[#3b3b3b] flex gap-[4px] items-center px-[14px] py-[10px] rounded-[8px] transition-opacity hover:opacity-90" 
                 target="_blank" 
                 rel="noopener noreferrer"
