@@ -85,21 +85,20 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
     };
   }, [isOpen]);
 
-  if (!shouldRender) return null;
-
+  // Always render the same structure to avoid hydration mismatch
   return (
     <>
       {/* Backdrop - click outside to close */}
       <div
         className={`fixed inset-0 z-[9998] transition-opacity duration-300 ${
-          isAnimating ? 'opacity-100' : 'opacity-0'
-        }`}
+          shouldRender && isAnimating ? 'opacity-100' : 'opacity-0'
+        } ${shouldRender ? 'pointer-events-auto' : 'pointer-events-none'} ${shouldRender ? '' : 'hidden'}`}
         onClick={onClose}
         aria-hidden="true"
       />
       
       {/* Cursor text - "Click to close" following cursor when outside sidebar */}
-      {isOpen && !isOverSidebar && isAnimating && hasBeenOverSidebar && (
+      {isOpen && !isOverSidebar && isAnimating && hasBeenOverSidebar && shouldRender && (
         <div
           className="fixed pointer-events-none z-[10000] font-inter text-[14px] leading-[35px] not-italic whitespace-nowrap"
           style={{
@@ -117,13 +116,13 @@ export default function ResearchSidebar({ isOpen, onClose }: ResearchSidebarProp
       <div
         ref={sidebarRef}
         className={`fixed top-0 right-0 bg-black z-[9999] flex flex-col items-center transition-transform duration-300 ease-in-out ${
-          isAnimating ? 'translate-x-0' : 'translate-x-full'
-        }`}
+          shouldRender && isAnimating ? 'translate-x-0' : 'translate-x-full'
+        } ${shouldRender ? '' : 'hidden'}`}
         style={{ 
           width: 'calc(573px * (100vh / 1080px))',
           minWidth: '320px',
           maxWidth: '573px',
-          height: '100vh' 
+          height: '100vh'
         }}
       >
         {/* Close button - 11px from top, 9px from right */}

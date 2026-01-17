@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ResearchSidebar from "./ResearchSidebar";
 
 interface NavigationPage {
@@ -27,18 +27,6 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
   const servicesTitle = pageTitles['services'] || 'Services';
   const [isResearchSidebarOpen, setIsResearchSidebarOpen] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   const handleContactClick = async () => {
     try {
@@ -50,7 +38,7 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
   };
 
   return (
-    <>
+    <div>
       <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
         {/* Navigation - Visible on all screen sizes */}
         <div className="flex items-center gap-[24px]">
@@ -74,40 +62,31 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
 
         {/* Contact - Visible on all screen sizes */}
         <div className="absolute right-[2.5%] sm:right-[22px] flex items-center gap-[24px] z-50 pointer-events-auto">
-          {!isMounted ? (
-            <button
-              className="text-black opacity-100 bg-transparent border-none p-0 font-inherit cursor-pointer"
-              disabled
-            >
-              Contact
-            </button>
-          ) : isMobile ? (
-            // Mobile: just open mail directly
-            <a 
-              href="mailto:carterandrew93@gmail.com" 
-              className="text-black opacity-100"
-            >
-              Contact
-            </a>
-          ) : emailCopied ? (
-            // Desktop: show transitions
-            <>
-              <span className="text-black opacity-40">Email copied</span>
-              <a 
-                href="mailto:carterandrew93@gmail.com" 
-                className="text-black opacity-100"
-              >
-                Open mail
-              </a>
-            </>
-          ) : (
-            <button
-              onClick={handleContactClick}
-              className="text-black opacity-100 bg-transparent border-none p-0 font-inherit cursor-pointer"
-            >
-              Contact
-            </button>
-          )}
+          {/* Always render the same structure to avoid hydration mismatch */}
+          {/* Email copied state - only show on desktop after email copied */}
+          <span className={`text-black opacity-40 ${emailCopied ? 'hidden md:block' : 'hidden'}`}>
+            Email copied
+          </span>
+          <a 
+            href="mailto:carterandrew93@gmail.com" 
+            className={`text-black opacity-100 ${emailCopied ? 'hidden md:block' : 'hidden'}`}
+          >
+            Open mail
+          </a>
+          {/* Button for desktop - hidden on mobile via CSS, hidden when email copied */}
+          <button
+            onClick={handleContactClick}
+            className={`text-black opacity-100 bg-transparent border-none p-0 font-inherit cursor-pointer ${emailCopied ? 'hidden' : 'hidden md:block'}`}
+          >
+            Contact
+          </button>
+          {/* Link for mobile - only visible on mobile via CSS */}
+          <a 
+            href="mailto:carterandrew93@gmail.com" 
+            className={`text-black opacity-100 ${emailCopied ? 'hidden' : 'block md:hidden'}`}
+          >
+            Contact
+          </a>
         </div>
       </nav>
 
@@ -115,7 +94,7 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
         isOpen={isResearchSidebarOpen}
         onClose={() => setIsResearchSidebarOpen(false)}
       />
-    </>
+    </div>
   );
 }
 
