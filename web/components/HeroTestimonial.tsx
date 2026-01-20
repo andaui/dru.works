@@ -95,18 +95,16 @@ export default function HeroTestimonial({
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <div ref={containerRef} className="flex w-full max-w-[700px] flex-col items-start md:items-center gap-[12px]">
-      <div className="flex items-start md:items-center justify-start w-full">
-        <p
-          key={currentTestimonial._id}
-          className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-left md:text-center animate-fade-in"
-        >
-          {currentTestimonial.testimonialShort}
-        </p>
-      </div>
-      <div className="flex items-center gap-[10px] min-h-[19px]">
+    <div ref={containerRef} className="flex w-full max-w-[700px] flex-col items-start md:items-center min-h-[92px]">
+      <p
+        key={currentTestimonial._id}
+        className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-left md:text-center animate-fade-in mb-[16px]"
+      >
+        {currentTestimonial.testimonialShort}
+      </p>
+      <div className="flex items-start gap-[10px] min-h-[19px]">
         {currentTestimonial.personPhotoUrl ? (
-          <div className="relative shrink-0 size-[21px] overflow-hidden rounded-full">
+          <div className="relative shrink-0 size-[21px] overflow-hidden rounded-full mt-[1px]">
             <Image
               key={`photo-${currentTestimonial._id}`}
               src={currentTestimonial.personPhotoUrl}
@@ -120,13 +118,13 @@ export default function HeroTestimonial({
             />
           </div>
         ) : (
-          <div className="relative shrink-0 size-[21px]">
+          <div className="relative shrink-0 size-[21px] mt-[1px]">
             <div className="size-full rounded-full bg-gray-300" />
           </div>
         )}
         <p
           key={`name-${currentTestimonial._id}`}
-          className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap animate-fade-in"
+          className="relative font-normal text-[12px] leading-[19px] not-italic text-[#989898] animate-fade-in line-clamp-2"
         >
           {currentTestimonial.person}
           {currentTestimonial.roleAtCompany ? `, ${currentTestimonial.roleAtCompany}` : ""}
