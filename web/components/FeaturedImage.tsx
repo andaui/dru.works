@@ -64,7 +64,7 @@ export default function FeaturedImage({ type = 'image', image, video, text }: Fe
       // Next.js Image component will handle further optimization based on device
       const imageWidth = maxWidth * 2; // Provide high res, Next.js will optimize
       const imageHeight = maxHeight * 2;
-      const imageQuality = 80; // Balanced quality for all devices
+      const imageQuality = 90;
       
       // Build image URL with optimized resolution
       imageUrl = urlFor(image)
@@ -105,7 +105,7 @@ export default function FeaturedImage({ type = 'image', image, video, text }: Fe
             fill
             className="object-cover object-[50%_50%]"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 510px"
-            quality={75}
+            quality={90}
             loading="lazy"
           />
         </div>

@@ -112,7 +112,7 @@ export default function HeroTestimonial({
               fill
               className="object-cover"
               sizes="21px"
-              quality={75}
+              quality={90}
               loading="eager"
               priority
             />

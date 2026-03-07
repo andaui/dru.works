@@ -314,7 +314,7 @@ export default function WorkFeatureCard({
                           fill
                           className="object-cover object-[50%_50%]"
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 846px"
-                          quality={75} // Consistent quality - Next.js will optimize
+                          quality={90}
                           priority={index === 0 && currentMediaIndex === 0}
                           // Add decoding async for better performance
                           decoding="async"

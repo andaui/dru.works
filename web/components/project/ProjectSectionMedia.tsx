@@ -34,10 +34,11 @@ export default function ProjectSectionMedia({ media, className = "" }: ProjectSe
       <Image
         src={media.url}
         alt={media.alt}
-        width={1200}
-        height={800}
+        width={2800}
+        height={1867}
         className="w-full h-auto object-cover object-center"
         sizes="100vw"
+        quality={95}
       />
     </div>
   );

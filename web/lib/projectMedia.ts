@@ -7,7 +7,7 @@ export function resolveProjectMedia(media: any, fallbackAlt = 'Project media'): 
   if (!media) return null
   if (media.type === 'image' && media.image?.asset) {
     try {
-      const url = urlFor(media.image).width(1600).fit('max').quality(80).format('jpg').url()
+      const url = urlFor(media.image).width(2800).fit('max').quality(95).format('jpg').url()
       return { url, alt: media.image.alt || fallbackAlt, type: 'image' }
     } catch {
       if (media.image.asset?.url) {

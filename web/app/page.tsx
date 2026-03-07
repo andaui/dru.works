@@ -17,7 +17,7 @@ function processOneMedia(media: any, fallbackTitle: string): { url: string; alt:
         .width(1692)
         .height(1246)
         .fit("crop")
-        .quality(75)
+        .quality(90)
         .format("jpg")
         .url();
       return { url: imageUrl, alt: media.alt || fallbackTitle || "Project image", type: "image" };
@@ -309,7 +309,7 @@ export default async function Home() {
         mediaUrl = urlFor(media.image)
           .height(1200) // High resolution for quality (desktop)
           .fit('max') // Preserve full image, no cropping
-          .quality(80) // Reduced quality for better mobile performance
+          .quality(90)
           .format('jpg')
           .url();
         mediaAlt = media.image.alt || item.title || 'Spotlight image';

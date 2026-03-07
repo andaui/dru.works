@@ -44,7 +44,7 @@ export default function PageTestimonial({ testimonial, contained = false }: Page
         .width(42) // 21px * 2 for retina
         .height(42)
         .fit('crop')
-        .quality(75) // Lower quality for better mobile performance
+        .quality(90)
         .format('jpg')
         .url();
     } catch (error) {
@@ -97,7 +97,7 @@ export default function PageTestimonial({ testimonial, contained = false }: Page
                   fill
                   className="object-cover"
                   sizes="21px"
-                  quality={75}
+                  quality={90}
                   loading="lazy"
                 />
               </div>

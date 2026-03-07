@@ -18,7 +18,7 @@ function processOneMedia(media: any, fallbackTitle: string): { url: string; alt:
         .width(1692)
         .height(1246)
         .fit("crop")
-        .quality(75)
+        .quality(90)
         .format("jpg")
         .url();
       return { url: imageUrl, alt: media.alt || fallbackTitle || "Project image", type: "image" };
@@ -80,6 +80,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
   const remainingProjects = allWork
     .filter((w: any) => w._id !== project._id && w.slug !== slug)
+    .filter((w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies")
     .map(toWorkWithMedia);
 
   const title = project.projectTitle || "";
