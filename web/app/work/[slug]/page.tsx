@@ -5,6 +5,7 @@ import ProjectSectionTwoCol30 from "@/components/project/ProjectSectionTwoCol30"
 import ProjectSectionOneCol from "@/components/project/ProjectSectionOneCol";
 import ProjectSectionText from "@/components/project/ProjectSectionText";
 import ProjectSectionWhatIDidOutcomes from "@/components/project/ProjectSectionWhatIDidOutcomes";
+import ProjectSectionSpacer from "@/components/project/ProjectSectionSpacer";
 import PageTestimonial from "@/components/PageTestimonial";
 import { client, projectBySlugQuery, navigationPagesQuery, featuredWorkQuery, urlFor } from "@/lib/sanity";
 import { resolveProjectMedia } from "@/lib/projectMedia";
@@ -91,6 +92,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} showBack />
 
+      <div className="max-w-[1900px] mx-auto w-full">
       {/* Hero: title + description, same styling as homepage but left-aligned */}
       <div className="w-full flex justify-start pt-[50px] pb-[100px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-full max-w-[700px] flex-col items-start gap-[22px]">
@@ -133,7 +135,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       ) : null}
 
       {/* Line separator (same as homepage) */}
-      <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full" />
+      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
 
       {/* Sections: 24px gap between each; min-w-0 so content respects right padding */}
       <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-6 flex flex-col gap-6">
@@ -186,11 +188,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   />
                 </div>
               );
+            case "projectSectionSpacer":
+              return (
+                <ProjectSectionSpacer key={section._key} height={section.height || "24"} />
+              );
             case "projectSectionTestimonial":
               return section.testimonial ? (
                 <div key={section._key} className="w-full min-w-0 my-[128px] flex flex-col gap-0">
                   <PageTestimonial testimonial={section.testimonial} contained />
-                  <div className="w-screen ml-[calc(50%-50vw)] mt-[75px]">
+                  <div className="w-screen relative left-1/2 -translate-x-1/2 mt-[75px]">
                     <div className="h-px bg-border" />
                   </div>
                 </div>
@@ -219,6 +225,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

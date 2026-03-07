@@ -53,7 +53,7 @@ function CardContent({
   if (variant === "grid") {
     return (
       <>
-        <div className="relative w-full aspect-[846/623] overflow-hidden bg-border">
+        <div className="relative w-full aspect-[846/623] overflow-hidden">
           {isVideo ? (
             <video
               src={cover.url}
@@ -86,7 +86,7 @@ function CardContent({
   if (variant === "hero-main") {
     return (
       <>
-        <div className="w-full overflow-hidden bg-border">
+        <div className="w-full overflow-hidden">
           {isVideo ? (
             <video
               src={cover.url}
@@ -115,7 +115,7 @@ function CardContent({
 
   return (
     <>
-      <div className="w-full overflow-hidden bg-border">
+      <div className="w-full overflow-hidden">
         {isVideo ? (
           <video
             src={cover.url}

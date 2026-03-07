@@ -339,7 +339,7 @@ export default async function Home() {
     <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} />
 
-
+      <div className="max-w-[1900px] mx-auto w-full">
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
@@ -379,7 +379,7 @@ export default async function Home() {
           </div>
         )}
 
-        <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full" />
+        <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
 
         {/* Featured projects: 2-col row + main 70%. Configure in Sanity → Homepage Work. */}
         {featuredThree.length >= 3 && (
@@ -423,7 +423,7 @@ export default async function Home() {
         )}
 
         {/* Second Separator Line - 170px below about section (or 98px below carousel if no about section) */}
-        <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
+        <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
 
       </div>
 
@@ -455,7 +455,7 @@ export default async function Home() {
       {clientLogos.length > 0 && (
         <>
           {/* Horizontal line with 200px gap from featured work */}
-          <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full mt-[80px] lg:mt-[200px]" />
+          <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[80px] lg:mt-[200px]" />
           <div className="w-full" style={{ marginTop: '32px' }}>
             {/* Clients Title - matching Spotlight styling */}
             <div
@@ -496,6 +496,7 @@ export default async function Home() {
         </section>
       )}
 
+      </div>
     </div>
   );
 }

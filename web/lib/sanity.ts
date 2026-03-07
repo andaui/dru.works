@@ -120,6 +120,7 @@ export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == 
       outcomesTitle,
       outcomesText
     },
+    _type == "projectSectionSpacer" => { height },
     _type == "projectSectionTestimonial" => {
       testimonial-> {
         _id,
