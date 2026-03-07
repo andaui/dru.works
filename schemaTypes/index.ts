@@ -1,4 +1,5 @@
 import featuredWork from './featuredWork'
+import homepageWork from './homepageWork'
 import testimonial from './testimonial'
 import mainTitle from './mainTitle'
 import text from './text'
@@ -18,6 +19,7 @@ import research from './research'
 
 export const schemaTypes = [
   featuredWork,
+  homepageWork,
   testimonial,
   mainTitle,
   text,

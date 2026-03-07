@@ -43,7 +43,7 @@ export default async function Services() {
   const sectionsForNav = await getSectionsForNav();
   
   return (
-    <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
+    <div data-about-page className="relative w-full bg-background min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
       <Header currentPage="services" navigationPages={navigationPages} />
 
       <AboutPageLayout
@@ -51,7 +51,7 @@ export default async function Services() {
           <>
             {/* Title */}
             {pageData?.heroTitle && (
-              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] max-w-[452px]">
+              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-foreground tracking-[-0.25px] max-w-[452px]">
                 {pageData.heroTitle}
               </h1>
             )}

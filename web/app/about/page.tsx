@@ -43,7 +43,7 @@ export default async function About() {
   const sectionsForNav = await getSectionsForNav();
   
   return (
-    <div data-about-page className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
+    <div data-about-page className="relative w-full bg-background min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
       <Header currentPage="about" navigationPages={navigationPages} />
 
       <AboutPageLayout
@@ -51,14 +51,14 @@ export default async function About() {
           <>
             {/* Title */}
             {pageData?.heroTitle && (
-              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)] mb-[34px]">
+              <h1 className="font-medium text-[40px] leading-[47px] not-italic text-foreground tracking-[-0.25px] w-[356px] max-w-[calc(100%-48px)] mb-[34px]">
                 {pageData.heroTitle}
               </h1>
             )}
 
             {/* Content Text */}
             {pageData?.heroDescription && (
-              <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
+              <div className="font-normal text-[16px] leading-[23px] not-italic text-foreground w-[788px] max-w-[calc(100%-48px)]">
                 <p className="whitespace-pre-line mb-0">
                   {pageData.heroDescription}
                 </p>

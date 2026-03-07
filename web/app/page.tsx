@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import WorkFeatureCard from "@/components/WorkFeatureCard";
+import HomeProjectCard from "@/components/HomeProjectCard";
 import HeroTestimonial from "@/components/HeroTestimonial";
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import Link from "@/components/Link";
@@ -7,7 +7,42 @@ import NextLink from "next/link";
 import Clients from "@/components/Clients";
 import Price2Col from "@/components/Price2Col";
 import Image from "next/image";
-import { client, featuredWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
+import { client, featuredWorkQuery, homepageWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
+
+function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
+  if (!media) return null;
+  if (media._type === "image" && media.asset) {
+    try {
+      const imageUrl = urlFor(media)
+        .width(1692)
+        .height(1246)
+        .fit("crop")
+        .quality(75)
+        .format("jpg")
+        .url();
+      return { url: imageUrl, alt: media.alt || fallbackTitle || "Project image", type: "image" };
+    } catch {
+      if (media.asset?.url) {
+        return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project image", type: "image" };
+      }
+    }
+  }
+  if (media._type === "file" && media.asset?.mimeType?.startsWith?.("video/") && media.asset?.url) {
+    return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project video", type: "video" };
+  }
+  return null;
+}
+
+function processWorkItemImages(item: any) {
+  const processed: Array<{ url: string; alt: string; type: "image" | "video" }> = [];
+  if (!item.images || !Array.isArray(item.images)) return processed;
+  const title = item.projectTitle || "Project";
+  item.images.forEach((media: any) => {
+    const one = processOneMedia(media, title);
+    if (one) processed.push(one);
+  });
+  return processed;
+}
 
 async function getFeaturedWork() {
   try {
@@ -88,32 +123,72 @@ async function getNavigationPages() {
   }
 }
 
+async function getHomepageWork() {
+  try {
+    const data = await client.fetch(homepageWorkQuery);
+    return data || null;
+  } catch (error) {
+    console.error('Error fetching homepage work:', error);
+    return null;
+  }
+}
+
 export const revalidate = 60; // Revalidate every 60 seconds
+
+type WorkWithMedia = { item: any; processed: any[]; cover: { url: string; alt: string; type: "image" | "video" } | null };
+
+function toWorkWithMedia(item: any): WorkWithMedia {
+  const processed = processWorkItemImages(item);
+  const title = item.projectTitle || "Project";
+  const coverFromSchema = item.cover?.[0] ? processOneMedia(item.cover[0], title) : null;
+  return { item, processed, cover: coverFromSchema ?? processed[0] ?? null };
+}
 
 export default async function Home() {
   // Fetch navigation pages, homepage/work page data, testimonials, spotlight items, about page data, and clients section from Sanity
   const navigationPages = await getNavigationPages();
   const homepageData = await getPageData('work');
   
-  // Extract featured work items from sections array (filter by _type === 'featuredWork')
-  const workItems = homepageData?.sections
-    ?.filter((item: any) => item?._type === 'featuredWork')
-    .map((item: any) => ({
-      _id: item._id,
-      _type: item._type,
-      projectTitle: item.projectTitle,
-      projectDescriptionShort: item.projectDescriptionShort,
-      projectDescriptionLong: item.projectDescriptionLong,
-      teamContribution: item.teamContribution,
-      order: item.order,
-      images: item.images || [],
-    })) || await getFeaturedWork();
-  
+  const homepageWork = await getHomepageWork();
   const rawTestimonials = await getHeroTestimonials();
   const rawSpotlightItems = await getSpotlightItems();
   const aboutPageData = await getAboutPageData();
   const clientLogos = await getClientsSection();
-  
+
+  let featuredThree: WorkWithMedia[];
+  let gridItems: WorkWithMedia[];
+
+  if (homepageWork?.featuredTwoCol?.length || homepageWork?.featuredMain || homepageWork?.gridItems?.length) {
+    // Use Homepage Work schema: ordered 2-col, main, grid
+    const twoCol = (homepageWork.featuredTwoCol || []).filter(Boolean).map(toWorkWithMedia);
+    const main = homepageWork.featuredMain ? [toWorkWithMedia(homepageWork.featuredMain)] : [];
+    featuredThree = [...twoCol.slice(0, 2), ...main].slice(0, 3);
+    gridItems = (homepageWork.gridItems || []).filter(Boolean).map(toWorkWithMedia);
+  } else {
+    // Fallback: work from page sections or all featured work, grid by order only
+    const workItems = homepageData?.sections
+      ?.filter((item: any) => item?._type === 'featuredWork')
+        .map((item: any) => ({
+        _id: item._id,
+        _type: item._type,
+        projectTitle: item.projectTitle,
+        projectDescriptionShort: item.projectDescriptionShort,
+        projectDescriptionLong: item.projectDescriptionLong,
+        teamContribution: item.teamContribution,
+        creative: item.creative ?? null,
+        order: item.order,
+        cover: item.cover || [],
+        images: item.images || [],
+      })) || await getFeaturedWork();
+    const allWithMedia = (workItems || []).map((item: any) => toWorkWithMedia(item));
+    featuredThree = allWithMedia.slice(0, 3);
+    gridItems = allWithMedia.slice(3).sort((a: WorkWithMedia, b: WorkWithMedia) => (a.item.order ?? 0) - (b.item.order ?? 0));
+  }
+
+  const belowLogosProject = homepageWork?.belowLogosProject
+    ? toWorkWithMedia(homepageWork.belowLogosProject)
+    : null;
+
   // Get hero title from homepage data, with fallback
   const heroTitle = homepageData?.heroTitle || "Design partner with\nengineering fluency";
   
@@ -261,15 +336,14 @@ export default async function Home() {
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
   return (
-    <>
-      <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} />
 
 
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
-          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-black text-left md:text-center tracking-[-0.25px]">
+          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-foreground text-left md:text-center tracking-[-0.25px]">
             {heroTitle.split('\n').map((line: string, index: number) => (
               <p key={index} className="mb-0">{line}</p>
             ))}
@@ -281,7 +355,7 @@ export default async function Home() {
       </div>
 
       {/* Content Section - Normal Flow */}
-      <div className="w-full">
+      <div className="w-full relative z-0">
         {/* Pricing and CTA Section - 22px above line */}
         {pricingItems && (
           <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
@@ -290,15 +364,14 @@ export default async function Home() {
 
             {/* CTA Button */}
             <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
-              <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-nowrap group-hover:text-black transition-colors">
+              <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-muted text-nowrap group-hover:text-foreground transition-colors">
                 Interested in Team Design Sessions?
               </p>
-              <div className="shrink-0" style={{ width: '14px', height: '14px' }}>
+              <div className="shrink-0 text-muted group-hover:text-foreground transition-colors" style={{ width: '14px', height: '14px' }}>
                 <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
                     d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
-                    fill="#989898"
-                    className="group-hover:fill-black transition-colors"
+                    fill="currentColor"
                   />
                 </svg>
               </div>
@@ -306,17 +379,38 @@ export default async function Home() {
           </div>
         )}
 
-        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
+        <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full" />
 
-        {/* Spotlight Carousel - Only renders on desktop, completely skipped on mobile */}
+        {/* Featured projects: 2-col row + main 70%. Configure in Sanity → Homepage Work. */}
+        {featuredThree.length >= 3 && (
+          <section className="w-full pt-8 lg:pt-12 px-6">
+            <div className="grid grid-cols-2 w-full gap-4">
+              <div className="min-w-0">
+                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} />
+              </div>
+              <div className="min-w-0">
+                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} />
+              </div>
+            </div>
+            <div className="w-full flex justify-center pt-[120px]">
+              <div className="w-full max-w-[70%]">
+                <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Spotlight Carousel - below featured projects */}
         {processedSpotlightItems.length > 0 && (
-          <SpotlightCarouselWrapper items={processedSpotlightItems} />
+          <section className="w-full pt-[130px]">
+            <SpotlightCarouselWrapper items={processedSpotlightItems} />
+          </section>
         )}
 
         {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on sm+ screens) */}
         {aboutPageData?.heroDescription && (
           <div className="px-[2.5%] sm:pl-[24px] sm:pr-0 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
-            <div className="font-normal text-[16px] leading-[23px] not-italic text-black w-[788px] max-w-[calc(100%-48px)]">
+            <div className="font-normal text-[16px] leading-[23px] not-italic text-foreground w-[788px] max-w-[calc(100%-48px)]">
               <p className="whitespace-pre-line mb-0">
                 {aboutPageData.heroDescription}
               </p>
@@ -329,76 +423,39 @@ export default async function Home() {
         )}
 
         {/* Second Separator Line - 170px below about section (or 98px below carousel if no about section) */}
-        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
+        <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
 
       </div>
 
-      {/* Work Feature Cards Section */}
-      <div className="w-full px-[2.5%] lg:pl-[24px] lg:pr-0 flex flex-col items-start gap-[46px] lg:gap-[106px] mt-[40px] lg:mt-[80px]">
-        {workItems.length > 0 ? (
-          workItems.map((item: any, index: number) => {
-            // Process all images and videos from Sanity
-            const processedImages: Array<{ url: string; alt: string; type: 'image' | 'video' }> = [];
-            
-            if (item.images && Array.isArray(item.images)) {
-              item.images.forEach((media: any) => {
-                if (media._type === 'image' && media.asset) {
-                  try {
-                    // Optimize image sizes for mobile: Much smaller on mobile to prevent crashes
-                    // Desktop: 1692px (2x for retina), Mobile: 600px max (much smaller for mobile performance)
-                    // Next.js Image component will handle further optimization
-                    const imageUrl = urlFor(media)
-                      .width(1692) // Max width for desktop retina (846 * 2)
-                      .height(1246) // Max height for desktop retina (623 * 2)
-                      .fit('crop')
-                      .quality(75) // Lower quality for better mobile performance and smaller file sizes
-                      .format('jpg') // Use JPEG for better compression
-                      .url();
-                    const imageAlt = media.alt || item.projectTitle || 'Project image';
-                    processedImages.push({ url: imageUrl, alt: imageAlt, type: 'image' });
-                  } catch (error) {
-                    console.error('Error building image URL:', error);
-                    // Fallback to direct asset URL if URL builder fails
-                    if (media.asset?.url) {
-                      processedImages.push({
-                        url: media.asset.url,
-                        alt: media.alt || item.projectTitle || 'Project image',
-                        type: 'image',
-                      });
-                    }
-                  }
-                } else if (media._type === 'file' && media.asset && media.asset.mimeType?.startsWith('video/')) {
-                  // Process video files - check mimeType to confirm it's a video
-                  const videoUrl = media.asset.url;
-                  const videoAlt = media.alt || item.projectTitle || 'Project video';
-                  if (videoUrl) {
-                    processedImages.push({ url: videoUrl, alt: videoAlt, type: 'video' });
-                  }
-                }
-              });
-            }
-
-            return (
-              <WorkFeatureCard
-                key={item._id || index}
-                projectTitle={item.projectTitle}
-                projectDescriptionShort={item.projectDescriptionShort}
-                projectDescriptionLong={item.projectDescriptionLong}
-                teamContribution={item.teamContribution}
-                images={processedImages}
-              />
-            );
-          })
-        ) : (
-          <div className="text-[#989898] text-sm">No featured work items found. Please add items in Sanity Studio.</div>
-        )}
+      {/* Work grid: first row 2 cols, then rows of 3 cols. Order controlled by Order field in Sanity. */}
+      <div className="w-full px-[2.5%] lg:px-[24px] mt-[40px] lg:mt-[80px]">
+        {gridItems.length > 0 ? (
+          <div className="flex flex-col">
+            {/* First row: 2 projects; 78px gap to second row; 16px col gap */}
+            <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
+              {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
+                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} />
+              ))}
+            </div>
+            {/* Following rows: 3 per row; 52px between rows */}
+            {gridItems.slice(2).length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
+                {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
+                  <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : featuredThree.length === 0 && gridItems.length === 0 ? (
+          <div className="text-muted text-sm">No featured work items found. Please add items in Sanity Studio.</div>
+        ) : null}
       </div>
 
       {/* Clients Section */}
       {clientLogos.length > 0 && (
         <>
           {/* Horizontal line with 200px gap from featured work */}
-          <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full mt-[80px] lg:mt-[200px]" />
+          <div className="w-screen h-px bg-border -ml-[2.5%] sm:ml-0 sm:w-full mt-[80px] lg:mt-[200px]" />
           <div className="w-full" style={{ marginTop: '32px' }}>
             {/* Clients Title - matching Spotlight styling */}
             <div
@@ -424,7 +481,20 @@ export default async function Home() {
         </>
       )}
 
-      </div>
-    </>
+      {/* Project below logos: 60% width, links to work */}
+      {belowLogosProject && (
+        <section className="w-full flex justify-center px-6 pt-[240px] pb-[40px] lg:pb-[200px]">
+          <NextLink href="/work" className="w-full max-w-[40%] block">
+            <HomeProjectCard
+              cover={belowLogosProject.cover}
+              variant="hero-main"
+              title={belowLogosProject.item.projectTitle}
+              creative={belowLogosProject.item.creative}
+            />
+          </NextLink>
+        </section>
+      )}
+
+    </div>
   );
 }

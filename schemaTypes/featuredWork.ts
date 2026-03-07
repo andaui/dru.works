@@ -31,6 +31,33 @@ export default defineType({
       description: 'Optional text to show team contribution (e.g., "Team contribution")',
     }),
     defineField({
+      name: 'creative',
+      title: 'Creative',
+      type: 'text',
+      description: 'Shown on the homepage below the project title (e.g. creative role or credit).',
+    }),
+    defineField({
+      name: 'cover',
+      title: 'Homepage cover',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            { name: 'alt', type: 'string', title: 'Alternative Text' },
+          ],
+        },
+        {
+          type: 'file',
+          title: 'Video',
+          options: { accept: 'video/*' },
+        },
+      ],
+      validation: (Rule) => Rule.max(1),
+      description: 'Optional image or video used on the homepage. If empty, the first item from Images/Videos is used.',
+    }),
+    defineField({
       name: 'images',
       title: 'Images/Videos',
       type: 'array',
@@ -63,7 +90,7 @@ export default defineType({
       name: 'order',
       title: 'Order',
       type: 'number',
-      description: 'Order in which this work appears (lower numbers appear first)',
+      description: 'Used only when homepage work is not set via "Homepage Work". Lower numbers appear first in the grid.',
       validation: (Rule) => Rule.integer().min(0),
     }),
   ],
@@ -72,12 +99,15 @@ export default defineType({
       title: 'projectTitle',
       subtitle: 'projectDescriptionShort',
     },
+    prepare({ title, subtitle }) {
+      return { title, subtitle }
+    },
   },
   orderings: [
     {
       title: 'Order',
       name: 'orderAsc',
-      by: [{field: 'order', direction: 'asc'}],
+      by: [{ field: 'order', direction: 'asc' }],
     },
   ],
 })

@@ -24,15 +24,32 @@ export const navigationPagesQuery = `*[_type == "page" && slug.current in ["work
   "slug": slug.current
 }`
 
-// GROQ query to fetch all featured work items
-export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) {
-  _id,
+// Fragment for featuredWork fields (cover, images, etc.) so we can reuse in queries
+const featuredWorkFields = `_id,
   _type,
   projectTitle,
   projectDescriptionShort,
   projectDescriptionLong,
   teamContribution,
+  creative,
   order,
+  cover[] {
+    _type,
+    _key,
+    asset-> {
+      _id,
+      _type,
+      url,
+      mimeType,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt
+  },
   images[] {
     _type,
     _key,
@@ -49,7 +66,20 @@ export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) 
       }
     },
     alt
-  }
+  }`
+
+// GROQ query to fetch all featured work items
+export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) {
+  ${featuredWorkFields}
+}`
+
+// Homepage Work singleton: 2-col row, main 70%, grid, below-logos project. Order = array order.
+export const homepageWorkQuery = `*[_type == "homepageWork"][0] {
+  _id,
+  "featuredTwoCol": featuredTwoCol[]-> { ${featuredWorkFields} },
+  "featuredMain": featuredMain-> { ${featuredWorkFields} },
+  "gridItems": gridItems[]-> { ${featuredWorkFields} },
+  "belowLogosProject": belowLogosProject-> { ${featuredWorkFields} }
 }`
 
 // GROQ query to fetch all testimonials (for hero section carousel)
@@ -212,7 +242,20 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
     projectDescriptionShort,
     projectDescriptionLong,
     teamContribution,
+    creative,
     order,
+    cover[] {
+      _type,
+      _key,
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType,
+        metadata { dimensions { width, height } }
+      },
+      alt
+    },
     images[] {
       _type,
       _key,
