@@ -12,11 +12,12 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
-  /** When true, show "Back" on the left and don't mark Work as selected (e.g. on project detail page) */
+  /** When true, show "Back" on the left; use backHref to set target (default /work) */
   showBack?: boolean;
+  backHref?: string;
 }
 
-export default function Header({ currentPage = "work", navigationPages = [], showBack = false }: HeaderProps) {
+export default function Header({ currentPage, navigationPages = [], showBack = false, backHref = "/work" }: HeaderProps) {
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -43,14 +44,14 @@ export default function Header({ currentPage = "work", navigationPages = [], sho
         {/* Back - far left when on project detail */}
         {showBack && (
           <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto">
-            <Link href="/" className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70">
+            <Link href={backHref} className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70">
               Back
             </Link>
           </div>
         )}
         {/* Navigation - Visible on all screen sizes */}
         <div className="flex items-center gap-[24px]">
-          <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${!showBack && currentPage === "work" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>
+          <Link href="/work" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>
             {workTitle}
           </Link>
           <Link href="/about" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "about" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>

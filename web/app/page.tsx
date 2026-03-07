@@ -337,7 +337,7 @@ export default async function Home() {
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header currentPage="work" navigationPages={navigationPages} />
+      <Header navigationPages={navigationPages} />
 
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
