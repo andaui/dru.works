@@ -17,7 +17,7 @@ export default function ProjectSectionMedia({ media, className = "" }: ProjectSe
       <div className={`w-full overflow-hidden bg-transparent ${className}`}>
         <video
           src={media.url}
-          className="w-full h-auto block object-cover object-center"
+          className="w-full h-auto block object-cover object-center origin-center scale-[1.01]"
           autoPlay
           muted
           loop

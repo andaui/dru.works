@@ -89,10 +89,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const fallbackAlt = title || "Project";
 
   return (
-    <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} showBack />
 
-      <div className="max-w-[1900px] mx-auto w-full">
       {/* Hero: title + description, same styling as homepage but left-aligned */}
       <div className="w-full flex justify-start pt-[50px] pb-[100px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-full max-w-[700px] flex-col items-start gap-[22px]">
@@ -225,7 +224,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           </div>
         </>
       )}
-      </div>
     </div>
   );
 }

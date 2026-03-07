@@ -336,10 +336,9 @@ export default async function Home() {
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
   return (
-    <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} />
 
-      <div className="max-w-[1900px] mx-auto w-full">
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
@@ -495,8 +494,6 @@ export default async function Home() {
           </div>
         </section>
       )}
-
-      </div>
     </div>
   );
 }
