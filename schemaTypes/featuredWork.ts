@@ -1,4 +1,4 @@
-import {defineField, defineType} from 'sanity'
+import { defineArrayMember, defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'featuredWork',
@@ -10,6 +10,13 @@ export default defineType({
       title: 'Project Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'projectTitle' },
+      description: 'URL for the project details page (e.g. /work/my-project). Add to enable project detail page and links from homepage.',
     }),
     defineField({
       name: 'projectDescriptionShort',
@@ -93,14 +100,28 @@ export default defineType({
       description: 'Used only when homepage work is not set via "Homepage Work". Lower numbers appear first in the grid.',
       validation: (Rule) => Rule.integer().min(0),
     }),
+    defineField({
+      name: 'sections',
+      title: 'Project detail sections',
+      type: 'array',
+      of: [
+        defineArrayMember({ type: 'projectSectionTwoCol50' }),
+        defineArrayMember({ type: 'projectSectionTwoCol30' }),
+        defineArrayMember({ type: 'projectSectionOneCol' }),
+        defineArrayMember({ type: 'projectSectionText' }),
+        defineArrayMember({ type: 'projectSectionWhatIDidOutcomes' }),
+      ],
+      description: 'Sections for the project details page. 24px spacing between sections.',
+    }),
   ],
   preview: {
     select: {
       title: 'projectTitle',
       subtitle: 'projectDescriptionShort',
+      slug: 'slug.current',
     },
-    prepare({ title, subtitle }) {
-      return { title, subtitle }
+    prepare({ title, subtitle, slug }) {
+      return { title, subtitle: slug ? `/${slug}` : subtitle }
     },
   },
   orderings: [

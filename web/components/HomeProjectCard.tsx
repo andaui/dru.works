@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import NextLink from "next/link";
 
 interface CoverMedia {
   url: string;
@@ -16,6 +17,8 @@ interface HomeProjectCardProps {
   title?: string | null;
   /** Shown below title for hero variants (creative credit) */
   creative?: string | null;
+  /** When set, the card links to this href (e.g. project detail page) */
+  href?: string | null;
 }
 
 const captionBlock = (title?: string | null, creative?: string | null) =>
@@ -34,27 +37,22 @@ const captionBlock = (title?: string | null, creative?: string | null) =>
     </div>
   ) : null;
 
-export default function HomeProjectCard({ cover, variant, title, creative }: HomeProjectCardProps) {
-  if (!cover) {
-    return (
-      <div
-        className="bg-border flex items-center justify-center text-muted text-sm"
-        style={
-          variant === "grid"
-            ? { aspectRatio: "846/623" }
-            : undefined
-        }
-      >
-        No image
-      </div>
-    );
-  }
-
+function CardContent({
+  cover,
+  variant,
+  title,
+  creative,
+}: {
+  cover: CoverMedia;
+  variant: HomeProjectCardProps["variant"];
+  title?: string | null;
+  creative?: string | null;
+}) {
   const isVideo = cover.type === "video";
 
   if (variant === "grid") {
     return (
-      <div className="w-full">
+      <>
         <div className="relative w-full aspect-[846/623] overflow-hidden bg-border">
           {isVideo ? (
             <video
@@ -81,14 +79,13 @@ export default function HomeProjectCard({ cover, variant, title, creative }: Hom
             {title}
           </div>
         )}
-      </div>
+      </>
     );
   }
 
-  // hero-main: 70% width (parent), height auto from image
   if (variant === "hero-main") {
     return (
-      <div className="w-full">
+      <>
         <div className="w-full overflow-hidden bg-border">
           {isVideo ? (
             <video
@@ -112,13 +109,12 @@ export default function HomeProjectCard({ cover, variant, title, creative }: Hom
           )}
         </div>
         {captionBlock(title, creative)}
-      </div>
+      </>
     );
   }
 
-  // Hero half/center: auto height from image/video
   return (
-    <div className="w-full">
+    <>
       <div className="w-full overflow-hidden bg-border">
         {isVideo ? (
           <video
@@ -142,6 +138,39 @@ export default function HomeProjectCard({ cover, variant, title, creative }: Hom
         )}
       </div>
       {captionBlock(title, creative)}
-    </div>
+    </>
   );
+}
+
+export default function HomeProjectCard({ cover, variant, title, creative, href }: HomeProjectCardProps) {
+  if (!cover) {
+    return (
+      <div
+        className="bg-border flex items-center justify-center text-muted text-sm"
+        style={
+          variant === "grid"
+            ? { aspectRatio: "846/623" }
+            : undefined
+        }
+      >
+        No image
+      </div>
+    );
+  }
+
+  const content = (
+    <CardContent cover={cover} variant={variant} title={title} creative={creative} />
+  );
+
+  const wrapperClass = "w-full block";
+
+  if (href) {
+    return (
+      <NextLink href={href} className={wrapperClass}>
+        {content}
+      </NextLink>
+    );
+  }
+
+  return <div className={wrapperClass}>{content}</div>;
 }

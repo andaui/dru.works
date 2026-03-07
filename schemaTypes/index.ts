@@ -1,5 +1,11 @@
 import featuredWork from './featuredWork'
 import homepageWork from './homepageWork'
+import projectMedia from './projectMedia'
+import projectSectionTwoCol50 from './projectSectionTwoCol50'
+import projectSectionTwoCol30 from './projectSectionTwoCol30'
+import projectSectionOneCol from './projectSectionOneCol'
+import projectSectionText from './projectSectionText'
+import projectSectionWhatIDidOutcomes from './projectSectionWhatIDidOutcomes'
 import testimonial from './testimonial'
 import mainTitle from './mainTitle'
 import text from './text'
@@ -20,6 +26,12 @@ import research from './research'
 export const schemaTypes = [
   featuredWork,
   homepageWork,
+  projectMedia,
+  projectSectionTwoCol50,
+  projectSectionTwoCol30,
+  projectSectionOneCol,
+  projectSectionText,
+  projectSectionWhatIDidOutcomes,
   testimonial,
   mainTitle,
   text,

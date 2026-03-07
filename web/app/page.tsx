@@ -386,15 +386,15 @@ export default async function Home() {
           <section className="w-full pt-8 lg:pt-12 px-6">
             <div className="grid grid-cols-2 w-full gap-4">
               <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} />
+                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} href={featuredThree[0].item.slug ? `/work/${featuredThree[0].item.slug}` : null} />
               </div>
               <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} />
+                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} href={featuredThree[1].item.slug ? `/work/${featuredThree[1].item.slug}` : null} />
               </div>
             </div>
             <div className="w-full flex justify-center pt-[120px]">
               <div className="w-full max-w-[70%]">
-                <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} />
+                <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} />
               </div>
             </div>
           </section>
@@ -434,14 +434,14 @@ export default async function Home() {
             {/* First row: 2 projects; 78px gap to second row; 16px col gap */}
             <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
               {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} />
+                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
               ))}
             </div>
             {/* Following rows: 3 per row; 52px between rows */}
             {gridItems.slice(2).length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
                 {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                  <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} />
+                  <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
                 ))}
               </div>
             )}
@@ -481,17 +481,18 @@ export default async function Home() {
         </>
       )}
 
-      {/* Project below logos: 60% width, links to work */}
+      {/* Project below logos: 40% width, links to project detail or work */}
       {belowLogosProject && (
         <section className="w-full flex justify-center px-6 pt-[240px] pb-[40px] lg:pb-[200px]">
-          <NextLink href="/work" className="w-full max-w-[40%] block">
+          <div className="w-full max-w-[40%]">
             <HomeProjectCard
               cover={belowLogosProject.cover}
               variant="hero-main"
               title={belowLogosProject.item.projectTitle}
               creative={belowLogosProject.item.creative}
+              href={belowLogosProject.item.slug ? `/work/${belowLogosProject.item.slug}` : "/work"}
             />
-          </NextLink>
+          </div>
         </section>
       )}
 

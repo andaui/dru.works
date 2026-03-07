@@ -33,6 +33,7 @@ const featuredWorkFields = `_id,
   teamContribution,
   creative,
   order,
+  "slug": slug.current,
   cover[] {
     _type,
     _key,
@@ -71,6 +72,53 @@ const featuredWorkFields = `_id,
 // GROQ query to fetch all featured work items
 export const featuredWorkQuery = `*[_type == "featuredWork"] | order(order asc) {
   ${featuredWorkFields}
+}`
+
+// Fragment for projectMedia (image or video) used in project detail sections
+const projectMediaFields = `_type,
+  type,
+  image {
+    _type,
+    asset-> { _id, _type, url, metadata { dimensions { width, height } } },
+    alt
+  },
+  video {
+    asset-> { _id, _type, url, mimeType }
+  }`
+
+// GROQ query to fetch a single featured work (project) by slug for the project details page
+export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == $slug][0] {
+  _id,
+  _type,
+  projectTitle,
+  projectDescriptionShort,
+  projectDescriptionLong,
+  "slug": slug.current,
+  sections[] {
+    _key,
+    _type,
+    _type == "projectSectionTwoCol50" => {
+      leftMedia { ${projectMediaFields} },
+      rightMedia { ${projectMediaFields} }
+    },
+    _type == "projectSectionTwoCol30" => {
+      ratio,
+      narrowSide,
+      leftMedia { ${projectMediaFields} },
+      rightMedia { ${projectMediaFields} }
+    },
+    _type == "projectSectionOneCol" => {
+      width,
+      media { ${projectMediaFields} }
+    },
+    _type == "projectSectionText" => { text },
+    _type == "projectSectionWhatIDidOutcomes" => {
+      whatIDidTitle,
+      whatIDidText,
+      outcomesTitle,
+      outcomesText
+    }
+  }
 }`
 
 // Homepage Work singleton: 2-col row, main 70%, grid, below-logos project. Order = array order.
