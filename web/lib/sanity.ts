@@ -93,6 +93,8 @@ export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == 
   projectTitle,
   projectDescriptionShort,
   projectDescriptionLong,
+  year,
+  client,
   "slug": slug.current,
   sections[] {
     _key,

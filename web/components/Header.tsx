@@ -12,9 +12,11 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
+  /** When true, show "Back" on the left and don't mark Work as selected (e.g. on project detail page) */
+  showBack?: boolean;
 }
 
-export default function Header({ currentPage = "work", navigationPages = [] }: HeaderProps) {
+export default function Header({ currentPage = "work", navigationPages = [], showBack = false }: HeaderProps) {
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -38,9 +40,17 @@ export default function Header({ currentPage = "work", navigationPages = [] }: H
 
   return (
     <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
+        {/* Back - far left when on project detail */}
+        {showBack && (
+          <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto">
+            <Link href="/" className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70">
+              Back
+            </Link>
+          </div>
+        )}
         {/* Navigation - Visible on all screen sizes */}
         <div className="flex items-center gap-[24px]">
-          <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>
+          <Link href="/" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${!showBack && currentPage === "work" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>
             {workTitle}
           </Link>
           <Link href="/about" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "about" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>

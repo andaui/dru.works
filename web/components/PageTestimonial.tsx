@@ -2,6 +2,8 @@ import Image from "next/image";
 import { urlFor } from "@/lib/sanity";
 
 interface PageTestimonialProps {
+  /** When true, stay within parent padding (e.g. on project page). When false, full-bleed to viewport. */
+  contained?: boolean;
   testimonial: {
     _id: string;
     _type: string;
@@ -26,7 +28,7 @@ interface PageTestimonialProps {
   };
 }
 
-export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
+export default function PageTestimonial({ testimonial, contained = false }: PageTestimonialProps) {
   if (!testimonial) {
     return null;
   }
@@ -66,9 +68,18 @@ export default function PageTestimonial({ testimonial }: PageTestimonialProps) {
   const testimonialText = testimonial.testimonialLong || testimonial.testimonialShort || '';
 
   return (
-    <div className="w-full flex flex-col gap-[75px] items-center" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
-      {/* Horizontal Line - Full Width */}
-      <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
+    <div
+      className="w-full flex flex-col gap-[75px] items-center"
+      style={contained ? undefined : { width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+    >
+      {/* Horizontal Line - full viewport when not contained; when contained, full-bleed (edge to edge) */}
+      {contained ? (
+        <div className="w-screen ml-[calc(50%-50vw)]">
+          <div className="h-px bg-[#e5e5e5]" />
+        </div>
+      ) : (
+        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
+      )}
       
       {/* Testimonial Content Container - Full Width, Center Aligned */}
       <div className="flex flex-col gap-[12px] items-center w-full px-[4%] lg:px-[24px]">

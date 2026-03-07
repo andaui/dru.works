@@ -44,6 +44,18 @@ export default defineType({
       description: 'Shown on the homepage below the project title (e.g. creative role or credit).',
     }),
     defineField({
+      name: 'year',
+      title: 'Year',
+      type: 'string',
+      description: 'Project year. Shown above the first line on the project detail page (left side).',
+    }),
+    defineField({
+      name: 'client',
+      title: 'Client',
+      type: 'string',
+      description: 'Client name. Shown above the first line on the project detail page (right side).',
+    }),
+    defineField({
       name: 'cover',
       title: 'Homepage cover',
       type: 'array',
