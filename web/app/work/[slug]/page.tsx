@@ -4,6 +4,7 @@ import ProjectSectionTwoCol30 from "@/components/project/ProjectSectionTwoCol30"
 import ProjectSectionOneCol from "@/components/project/ProjectSectionOneCol";
 import ProjectSectionText from "@/components/project/ProjectSectionText";
 import ProjectSectionWhatIDidOutcomes from "@/components/project/ProjectSectionWhatIDidOutcomes";
+import PageTestimonial from "@/components/PageTestimonial";
 import { client, projectBySlugQuery, navigationPagesQuery } from "@/lib/sanity";
 import { resolveProjectMedia } from "@/lib/projectMedia";
 import { notFound } from "next/navigation";
@@ -112,6 +113,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   outcomesText={section.outcomesText}
                 />
               );
+            case "projectSectionTestimonial":
+              return section.testimonial ? (
+                <div key={section._key} className="w-full">
+                  <PageTestimonial testimonial={section.testimonial} />
+                </div>
+              ) : null;
             default:
               return null;
           }

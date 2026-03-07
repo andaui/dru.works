@@ -110,6 +110,7 @@ export default defineType({
         defineArrayMember({ type: 'projectSectionOneCol' }),
         defineArrayMember({ type: 'projectSectionText' }),
         defineArrayMember({ type: 'projectSectionWhatIDidOutcomes' }),
+        defineArrayMember({ type: 'projectSectionTestimonial' }),
       ],
       description: 'Sections for the project details page. 24px spacing between sections.',
     }),

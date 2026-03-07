@@ -117,6 +117,27 @@ export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == 
       whatIDidText,
       outcomesTitle,
       outcomesText
+    },
+    _type == "projectSectionTestimonial" => {
+      testimonial-> {
+        _id,
+        _type,
+        testimonialShort,
+        testimonialLong,
+        person,
+        role,
+        company,
+        personPhoto {
+          _type,
+          asset-> {
+            _id,
+            _type,
+            url,
+            metadata { dimensions { width, height } }
+          },
+          alt
+        }
+      }
     }
   }
 }`

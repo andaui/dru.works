@@ -6,6 +6,7 @@ import projectSectionTwoCol30 from './projectSectionTwoCol30'
 import projectSectionOneCol from './projectSectionOneCol'
 import projectSectionText from './projectSectionText'
 import projectSectionWhatIDidOutcomes from './projectSectionWhatIDidOutcomes'
+import projectSectionTestimonial from './projectSectionTestimonial'
 import testimonial from './testimonial'
 import mainTitle from './mainTitle'
 import text from './text'
@@ -32,6 +33,7 @@ export const schemaTypes = [
   projectSectionOneCol,
   projectSectionText,
   projectSectionWhatIDidOutcomes,
+  projectSectionTestimonial,
   testimonial,
   mainTitle,
   text,
