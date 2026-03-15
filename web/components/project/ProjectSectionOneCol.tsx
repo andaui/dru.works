@@ -8,10 +8,14 @@ interface ProjectSectionOneColProps {
   media: ProjectMediaResult;
 }
 
-/** 1 column: 100%, 70%, or 40% width. Center aligned. Empty still reserves width. */
+/** 1 column: 100%, 70%, or 40% width (70/40 only from md up). On mobile always full width. */
 export default function ProjectSectionOneCol({ width, media }: ProjectSectionOneColProps) {
   const widthClass =
-    width === "100" ? "w-full" : width === "70" ? "w-full max-w-[70%] mx-auto" : "w-full max-w-[40%] mx-auto";
+    width === "100"
+      ? "w-full"
+      : width === "70"
+        ? "w-full md:max-w-[70%] md:mx-auto"
+        : "w-full md:max-w-[40%] md:mx-auto";
 
   return (
     <div className={widthClass}>

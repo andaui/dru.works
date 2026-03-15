@@ -443,7 +443,7 @@ export default async function Home() {
 
       </div>
 
-      {/* Work grid: on mobile = 1 col (featured 3 + grid items); on desktop = 2 cols then 3 cols (grid items only). */}
+      {/* Work grid: on mobile = 1 col (featured 3 + grid items); on desktop = 2 cols then 3 cols (grid items only). Extra bottom padding on mobile when no clients section, for gap above footer. */}
       <div className="w-full px-[2.5%] lg:px-[24px] mt-[40px] lg:mt-[80px]">
         {(featuredThree.length >= 3 || gridItems.length > 0) ? (
           <div className="flex flex-col">
@@ -509,20 +509,23 @@ export default async function Home() {
         </>
       )}
 
-      {/* Project below logos: 40% width, links to project detail or work */}
+      {/* Project below logos: desktop only, 40% width (hero-main) */}
       {belowLogosProject && (
-        <section className="w-full flex justify-center px-6 pt-[240px] pb-[40px] lg:pb-[200px]">
-          <div className="w-full max-w-[40%]">
-            <HomeProjectCard
-              cover={belowLogosProject.cover}
-              variant="hero-main"
-              title={belowLogosProject.item.projectTitle}
-              creative={belowLogosProject.item.creative}
-              href={belowLogosProject.item.slug ? `/work/${belowLogosProject.item.slug}` : "/work"}
-            />
+        <section className="hidden md:block w-full pt-[240px] pb-[40px] lg:pb-[200px]">
+          <div className="w-full flex justify-center px-6">
+            <div className="w-full max-w-[40%]">
+              <HomeProjectCard
+                cover={belowLogosProject.cover}
+                variant="hero-main"
+                title={belowLogosProject.item.projectTitle}
+                creative={belowLogosProject.item.creative}
+                href={belowLogosProject.item.slug ? `/work/${belowLogosProject.item.slug}` : "/work"}
+              />
+            </div>
           </div>
         </section>
       )}
+
     </div>
   );
 }

@@ -40,9 +40,9 @@ export default function Header({ currentPage, navigationPages = [] }: HeaderProp
 
   return (
     <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
-        {/* Home - far left on all pages except homepage */}
+        {/* Home - far left on all pages except homepage (hidden on mobile) */}
         {showHome && (
-          <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto">
+          <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto hidden md:block">
             <Link
               href="/"
               className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70 text-[14px] leading-[35px] font-inter"

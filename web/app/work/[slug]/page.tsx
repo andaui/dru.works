@@ -95,7 +95,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
       {/* Hero: title + description, same styling as homepage but left-aligned */}
       <div className="w-full flex justify-start pt-[50px] pb-[100px] px-[2.5%] sm:px-[24px]">
-        <div className="flex w-full max-w-[700px] flex-col items-start gap-[22px]">
+        <div className="flex w-full max-w-full md:max-w-[700px] flex-col items-start gap-[22px]">
           <div
             className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-foreground text-left tracking-[-0.25px]"
             style={{ letterSpacing: "-0.25px" }}
@@ -173,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               );
             case "projectSectionText":
               return (
-                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px]">
+                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px] mt-[100px] mb-[100px] md:mt-0 md:mb-0">
                   <ProjectSectionText text={section.text || ""} />
                 </div>
               );
@@ -213,7 +213,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       {remainingProjects.length > 0 && (
         <>
           <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] mt-[40px] lg:mt-[80px]">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-[52px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-[52px]">
               {remainingProjects.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
                 <HomeProjectCard
                   key={item._id}

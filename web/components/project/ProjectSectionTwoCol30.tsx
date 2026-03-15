@@ -19,21 +19,21 @@ export default function ProjectSectionTwoCol30({
   leftMedia,
   rightMedia,
 }: ProjectSectionTwoCol30Props) {
-  const gridCols =
+  const mdGridCols =
     narrowSide === "left"
       ? ratio === "40-60"
-        ? "grid-cols-[0.4fr_0.6fr]"
+        ? "md:grid-cols-[0.4fr_0.6fr]"
         : ratio === "35-65"
-          ? "grid-cols-[0.35fr_0.65fr]"
-          : "grid-cols-[0.3fr_0.7fr]"
+          ? "md:grid-cols-[0.35fr_0.65fr]"
+          : "md:grid-cols-[0.3fr_0.7fr]"
       : ratio === "40-60"
-        ? "grid-cols-[0.6fr_0.4fr]"
+        ? "md:grid-cols-[0.6fr_0.4fr]"
         : ratio === "35-65"
-          ? "grid-cols-[0.65fr_0.35fr]"
-          : "grid-cols-[0.7fr_0.3fr]";
+          ? "md:grid-cols-[0.65fr_0.35fr]"
+          : "md:grid-cols-[0.7fr_0.3fr]";
 
   return (
-    <div className={`grid w-full gap-4 min-w-0 ${gridCols}`}>
+    <div className={`grid grid-cols-1 w-full gap-4 min-w-0 ${mdGridCols}`}>
       <div className="min-w-0 w-full">
         <ProjectSectionMedia media={leftMedia} />
       </div>
