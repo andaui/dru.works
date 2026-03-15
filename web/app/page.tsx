@@ -342,7 +342,7 @@ export default async function Home() {
       {/* Hero Section */}
       <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
         <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
-          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-foreground text-left md:text-center tracking-[-0.25px]">
+          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[32px] leading-[38px] md:text-[40px] md:leading-[47px] not-italic text-foreground text-left md:text-center tracking-[-0.25px]">
             {heroTitle.split('\n').map((line: string, index: number) => (
               <p key={index} className="mb-0">{line}</p>
             ))}
@@ -379,7 +379,7 @@ export default async function Home() {
             </div>
 
             {/* CTA Button */}
-            <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
+            <NextLink href="/about#mentorship" className="hidden md:flex items-center justify-end gap-[4px] group transition-colors">
               <p className="relative shrink-0 font-normal text-[13px] leading-[19px] not-italic text-muted text-nowrap group-hover:text-foreground transition-colors">
                 Interested in Team Design Sessions?
               </p>
@@ -397,28 +397,28 @@ export default async function Home() {
 
         <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
 
-        {/* Featured projects: 2-col row + main 70%. Configure in Sanity → Homepage Work. */}
+        {/* Featured projects: desktop only (2-col row + main 70%). On mobile these appear in the grid below. */}
         {featuredThree.length >= 3 && (
-          <section className="w-full pt-8 lg:pt-12 px-6">
-            <div className="grid grid-cols-2 w-full gap-4">
+          <section className="hidden md:block w-full pt-8 lg:pt-12 px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4">
               <div className="min-w-0">
                 <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} href={featuredThree[0].item.slug ? `/work/${featuredThree[0].item.slug}` : null} />
               </div>
               <div className="min-w-0">
                 <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} href={featuredThree[1].item.slug ? `/work/${featuredThree[1].item.slug}` : null} />
               </div>
-            </div>
-            <div className="w-full flex justify-center pt-[120px]">
-              <div className="w-full max-w-[70%]">
-                <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} />
+              <div className="min-w-0 w-full md:col-span-2 flex md:justify-center pt-0 md:pt-[120px]">
+                <div className="w-full md:max-w-[70%]">
+                  <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} />
+                </div>
               </div>
             </div>
           </section>
         )}
 
-        {/* Spotlight Carousel - below featured projects */}
+        {/* Spotlight Carousel - below featured projects (desktop only) */}
         {processedSpotlightItems.length > 0 && (
-          <section className="w-full pt-[130px]">
+          <section className="hidden md:block w-full pt-[130px]">
             <SpotlightCarouselWrapper items={processedSpotlightItems} />
           </section>
         )}
@@ -443,28 +443,40 @@ export default async function Home() {
 
       </div>
 
-      {/* Work grid: first row 2 cols, then rows of 3 cols. Order controlled by Order field in Sanity. */}
+      {/* Work grid: on mobile = 1 col (featured 3 + grid items); on desktop = 2 cols then 3 cols (grid items only). */}
       <div className="w-full px-[2.5%] lg:px-[24px] mt-[40px] lg:mt-[80px]">
-        {gridItems.length > 0 ? (
+        {(featuredThree.length >= 3 || gridItems.length > 0) ? (
           <div className="flex flex-col">
-            {/* First row: 2 projects; 78px gap to second row; 16px col gap */}
-            <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
-              {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
+            {/* Mobile: single column, featured 3 on top then all grid items (same as grid style) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {featuredThree.length >= 3 && featuredThree.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
+                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+              ))}
+              {gridItems.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
                 <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
               ))}
             </div>
-            {/* Following rows: 3 per row; 52px between rows */}
-            {gridItems.slice(2).length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
-                {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                  <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
-                ))}
+            {/* Desktop: first row 2 projects; then rows of 3 cols (grid items only) */}
+            {gridItems.length > 0 && (
+              <div className="hidden md:flex flex-col">
+                <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
+                  {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
+                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                  ))}
+                </div>
+                {gridItems.slice(2).length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
+                    {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
+                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        ) : featuredThree.length === 0 && gridItems.length === 0 ? (
+        ) : (
           <div className="text-muted text-sm">No featured work items found. Please add items in Sanity Studio.</div>
-        ) : null}
+        )}
       </div>
 
       {/* Clients Section */}
