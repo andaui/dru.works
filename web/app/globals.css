@@ -9,6 +9,7 @@
   --client-logo-filter: none;
   --client-logo-opacity: 1;
   --section-strip-bg: #eaeaea;
+  --section-nav-gradient: linear-gradient(to left, #fcfcfc 0%, rgba(252, 252, 252, 0.8) 40%, rgba(252, 252, 252, 0.4) 70%, transparent 100%);
 }
 
 html.dark {
@@ -19,6 +20,7 @@ html.dark {
   --client-logo-filter: invert(1);
   --client-logo-opacity: 0.8;
   --section-strip-bg: var(--border);
+  --section-nav-gradient: linear-gradient(to left, #0f0f0f 0%, rgba(15, 15, 15, 0.8) 40%, rgba(15, 15, 15, 0.4) 70%, transparent 100%);
 }
 
 @theme inline {

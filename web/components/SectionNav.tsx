@@ -77,7 +77,7 @@ export default function SectionNav({ sections }: SectionNavProps) {
         ref={gradientRef}
         className="fixed w-[40px] pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to left, #fcfcfc 0%, rgba(252, 252, 252, 0.8) 40%, rgba(252, 252, 252, 0.4) 70%, transparent 100%)',
+          background: 'var(--section-nav-gradient)',
           right: '0px',
         }}
       />
