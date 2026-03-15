@@ -26,9 +26,8 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
       <div 
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 w-full md:w-auto"
         style={{ 
-          border: '0.9px solid #E1E1E1',
-          borderRight: 'none',
-          borderBottom: 'none',
+          borderTop: '0.9px solid var(--border)',
+          borderLeft: '0.9px solid var(--border)',
           maxWidth: maxWidth980 ? '980px' : '986px',
           padding: 0,
           margin: 0,
@@ -43,12 +42,19 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
               key={client._key}
               className="aspect-[2/1]"
               style={{
-                borderRight: '0.9px solid #E1E1E1',
-                borderBottom: '0.9px solid #E1E1E1',
+                borderRight: '0.9px solid var(--border)',
+                borderBottom: '0.9px solid var(--border)',
               }}
             >
               {logoUrl ? (
-                <div className="w-full h-full flex items-center justify-center" style={{ padding: 0 }}>
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{
+                    padding: 0,
+                    filter: 'var(--client-logo-filter)',
+                    opacity: 'var(--client-logo-opacity)',
+                  }}
+                >
                   <Image
                     src={logoUrl}
                     alt={altText}
@@ -61,7 +67,7 @@ export default function Clients({ logos, maxWidth980 = false }: ClientsProps) {
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ padding: 0 }}>
-                  <span className="text-[#5d5d5d] text-[13px]">{client.companyName || 'Logo'}</span>
+                  <span className="text-muted-foreground text-[13px]">{client.companyName || 'Logo'}</span>
                 </div>
               )}
             </div>

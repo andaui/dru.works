@@ -221,6 +221,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   variant="grid"
                   title={item.projectTitle}
                   href={item.slug ? `/work/${item.slug}` : null}
+                  comingSoon={item.comingSoon}
                 />
               ))}
             </div>

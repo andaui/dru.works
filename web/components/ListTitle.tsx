@@ -4,7 +4,7 @@ interface ListTitleProps {
 
 export default function ListTitle({ title }: ListTitleProps) {
   return (
-    <p className="font-normal leading-[19px] not-italic text-[#151515] text-[13px] text-nowrap">
+    <p className="font-normal leading-[19px] not-italic text-foreground text-[13px] text-nowrap">
       {title}
     </p>
   );

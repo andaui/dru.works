@@ -83,7 +83,7 @@ export default function PageTestimonial({ testimonial, contained = false, hideTo
       <div className="flex flex-col gap-[12px] items-center w-full px-[4%] lg:px-[24px]">
         {/* Text Content - Max Width 824px, Centered */}
         <div className="flex flex-col gap-[20px] items-center w-full max-w-[780px]">
-          <p className="font-inter font-normal text-[16px] leading-[23px] not-italic text-black text-center tracking-[0%] w-full whitespace-pre-line">
+          <p className="font-inter font-normal text-[16px] leading-[23px] not-italic text-[#989898] dark:text-foreground text-center tracking-[0%] w-full whitespace-pre-line">
             {testimonialText}
           </p>
           <div className="flex flex-col md:flex-row items-center gap-[10px] min-h-[19px]">
@@ -104,7 +104,7 @@ export default function PageTestimonial({ testimonial, contained = false, hideTo
                 <div className="size-full rounded-full bg-gray-300" />
               </div>
             )}
-            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] text-center md:text-left w-full md:w-auto">
+            <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-[#989898] dark:text-muted-foreground text-center md:text-left w-full md:w-auto">
               {testimonial.person}
               {roleAtCompany ? `, ${roleAtCompany}` : ""}
             </p>

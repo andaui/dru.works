@@ -19,6 +19,13 @@ export default defineType({
       description: 'URL for the project details page (e.g. /work/my-project). Add to enable project detail page and links from homepage.',
     }),
     defineField({
+      name: 'comingSoon',
+      title: 'Coming soon',
+      type: 'boolean',
+      initialValue: false,
+      description: 'When enabled, "Coming soon" is shown on the project cover next to the project title.',
+    }),
+    defineField({
       name: 'projectDescriptionShort',
       title: 'Project Description Short',
       type: 'text',

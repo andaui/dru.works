@@ -45,7 +45,7 @@ export default function Header({ currentPage, navigationPages = [] }: HeaderProp
           <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto hidden md:block">
             <Link
               href="/"
-              className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70 text-[14px] leading-[35px] font-inter"
+              className="relative shrink-0 z-50 pointer-events-auto transition-opacity text-foreground opacity-40 hover:opacity-70 text-[14px] leading-[35px] font-inter"
             >
               Home
             </Link>

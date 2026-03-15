@@ -79,11 +79,8 @@ export default async function WorkPage() {
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} />
 
-      {/* Line separator */}
-      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[28px] sm:mt-[12px]" />
-
       {/* All projects in 4-col grid */}
-      <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-6">
+      <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-[120px]">
         {projects.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-[52px]">
             {projects.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
@@ -93,6 +90,7 @@ export default async function WorkPage() {
                 variant="grid"
                 title={item.projectTitle}
                 href={item.slug ? `/work/${item.slug}` : null}
+                comingSoon={item.comingSoon}
               />
             ))}
           </div>

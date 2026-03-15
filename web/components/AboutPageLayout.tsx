@@ -35,7 +35,7 @@ export default function AboutPageLayout({
 
         {/* Separator Line - 24px below navigation */}
         {sectionsForNav.length > 0 && (
-          <div className="w-screen h-px bg-[#e5e5e5] mt-[24px] -ml-[2.5%] sm:ml-0 sm:w-full" />
+          <div className="w-screen h-px bg-border mt-[24px] -ml-[2.5%] sm:ml-0 sm:w-full" />
         )}
 
         {/* Sections - Uses normal flow */}

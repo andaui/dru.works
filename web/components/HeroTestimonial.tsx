@@ -98,7 +98,7 @@ export default function HeroTestimonial({
     <div ref={containerRef} className="flex w-full max-w-[700px] flex-col items-start md:items-center min-h-[92px]">
       <p
         key={currentTestimonial._id}
-        className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] text-left md:text-center animate-fade-in mb-[16px]"
+        className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-[#989898] dark:text-muted-foreground text-left md:text-center animate-fade-in mb-[16px]"
       >
         {currentTestimonial.testimonialShort}
       </p>
@@ -124,7 +124,7 @@ export default function HeroTestimonial({
         )}
         <p
           key={`name-${currentTestimonial._id}`}
-          className="relative font-normal text-[12px] leading-[19px] not-italic text-[#989898] animate-fade-in line-clamp-2"
+          className="relative font-normal text-[12px] leading-[19px] not-italic text-[#989898] dark:text-muted-foreground animate-fade-in line-clamp-2"
         >
           {currentTestimonial.person}
           {currentTestimonial.roleAtCompany ? `, ${currentTestimonial.roleAtCompany}` : ""}

@@ -402,14 +402,14 @@ export default async function Home() {
           <section className="hidden md:block w-full pt-8 lg:pt-12 px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4">
               <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} href={featuredThree[0].item.slug ? `/work/${featuredThree[0].item.slug}` : null} />
+                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} href={featuredThree[0].item.slug ? `/work/${featuredThree[0].item.slug}` : null} comingSoon={featuredThree[0].item.comingSoon} />
               </div>
               <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} href={featuredThree[1].item.slug ? `/work/${featuredThree[1].item.slug}` : null} />
+                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} href={featuredThree[1].item.slug ? `/work/${featuredThree[1].item.slug}` : null} comingSoon={featuredThree[1].item.comingSoon} />
               </div>
               <div className="min-w-0 w-full md:col-span-2 flex md:justify-center pt-0 md:pt-[120px]">
                 <div className="w-full md:max-w-[70%]">
-                  <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} />
+                  <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} comingSoon={featuredThree[2].item.comingSoon} />
                 </div>
               </div>
             </div>
@@ -450,10 +450,10 @@ export default async function Home() {
             {/* Mobile: single column, featured 3 on top then all grid items (same as grid style) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {featuredThree.length >= 3 && featuredThree.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
-                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
               ))}
               {gridItems.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
               ))}
             </div>
             {/* Desktop: first row 2 projects; then rows of 3 cols (grid items only) */}
@@ -461,13 +461,13 @@ export default async function Home() {
               <div className="hidden md:flex flex-col">
                 <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
                   {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
                   ))}
                 </div>
                 {gridItems.slice(2).length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
                     {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} />
+                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
                     ))}
                   </div>
                 )}
@@ -520,6 +520,7 @@ export default async function Home() {
                 title={belowLogosProject.item.projectTitle}
                 creative={belowLogosProject.item.creative}
                 href={belowLogosProject.item.slug ? `/work/${belowLogosProject.item.slug}` : "/work"}
+                comingSoon={belowLogosProject.item.comingSoon}
               />
             </div>
           </div>

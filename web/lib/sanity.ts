@@ -28,6 +28,7 @@ export const navigationPagesQuery = `*[_type == "page" && slug.current in ["work
 const featuredWorkFields = `_id,
   _type,
   projectTitle,
+  comingSoon,
   projectDescriptionShort,
   projectDescriptionLong,
   teamContribution,
@@ -91,6 +92,7 @@ export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == 
   _id,
   _type,
   projectTitle,
+  comingSoon,
   projectDescriptionShort,
   projectDescriptionLong,
   year,
@@ -319,6 +321,7 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
     _type,
     // Featured Work fields
     projectTitle,
+    comingSoon,
     projectDescriptionShort,
     projectDescriptionLong,
     teamContribution,

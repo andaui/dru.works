@@ -19,14 +19,23 @@ interface HomeProjectCardProps {
   creative?: string | null;
   /** When set, the card links to this href (e.g. project detail page) */
   href?: string | null;
+  /** When true, show "Coming soon" on the right aligned with the project title */
+  comingSoon?: boolean | null;
 }
 
-const captionBlock = (title?: string | null, creative?: string | null) =>
-  (title || creative) ? (
+const captionBlock = (title?: string | null, creative?: string | null, comingSoon?: boolean | null) =>
+  (title || creative || comingSoon) ? (
     <div className="mt-4 flex flex-col gap-1.5">
-      {title && (
-        <div className="text-foreground" style={{ fontSize: 16, lineHeight: "19px" }}>
-          {title}
+      {(title || comingSoon) && (
+        <div className="flex justify-between items-baseline gap-2 w-full" style={{ fontSize: 16, lineHeight: "19px" }}>
+          {title ? (
+            <span className="text-foreground">{title}</span>
+          ) : (
+            <span />
+          )}
+          {comingSoon && (
+            <span className="text-muted-foreground shrink-0 pr-3 opacity-80">Coming soon</span>
+          )}
         </div>
       )}
       {creative && (
@@ -42,11 +51,13 @@ function CardContent({
   variant,
   title,
   creative,
+  comingSoon,
 }: {
   cover: CoverMedia;
   variant: HomeProjectCardProps["variant"];
   title?: string | null;
   creative?: string | null;
+  comingSoon?: boolean | null;
 }) {
   const isVideo = cover.type === "video";
 
@@ -74,9 +85,10 @@ function CardContent({
             />
           )}
         </div>
-        {title && (
-          <div className="mt-3 font-inter font-normal text-muted" style={{ fontSize: 13, lineHeight: "19px" }}>
-            {title}
+        {(title || comingSoon) && (
+          <div className="mt-3 flex justify-between items-baseline gap-2 w-full font-inter font-normal text-muted" style={{ fontSize: 13, lineHeight: "19px" }}>
+            {title ? <span>{title}</span> : <span />}
+            {comingSoon && <span className="text-muted-foreground shrink-0 pr-3 opacity-80">Coming soon</span>}
           </div>
         )}
       </>
@@ -108,7 +120,7 @@ function CardContent({
             />
           )}
         </div>
-        {captionBlock(title, creative)}
+        {captionBlock(title, creative, comingSoon)}
       </>
     );
   }
@@ -137,12 +149,12 @@ function CardContent({
           />
         )}
       </div>
-      {captionBlock(title, creative)}
+      {captionBlock(title, creative, comingSoon)}
     </>
   );
 }
 
-export default function HomeProjectCard({ cover, variant, title, creative, href }: HomeProjectCardProps) {
+export default function HomeProjectCard({ cover, variant, title, creative, href, comingSoon }: HomeProjectCardProps) {
   if (!cover) {
     return (
       <div
@@ -159,7 +171,7 @@ export default function HomeProjectCard({ cover, variant, title, creative, href 
   }
 
   const content = (
-    <CardContent cover={cover} variant={variant} title={title} creative={creative} />
+    <CardContent cover={cover} variant={variant} title={title} creative={creative} comingSoon={comingSoon} />
   );
 
   const wrapperClass = "w-full block";
