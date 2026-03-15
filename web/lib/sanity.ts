@@ -154,6 +154,14 @@ export const homepageWorkQuery = `*[_type == "homepageWork"][0] {
   "belowLogosProject": belowLogosProject-> { ${featuredWorkFields} }
 }`
 
+// Works Page Projects: same shape as Homepage Work (2-col, main, grid) for /work page.
+export const worksPageProjectsQuery = `*[_type == "worksPageProjects"][0] {
+  _id,
+  "featuredTwoCol": featuredTwoCol[]-> { ${featuredWorkFields} },
+  "featuredMain": featuredMain-> { ${featuredWorkFields} },
+  "gridItems": gridItems[]-> { ${featuredWorkFields} }
+}`
+
 // GROQ query to fetch all testimonials (for hero section carousel)
 export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order asc) {
   _id,

@@ -1,5 +1,6 @@
 import featuredWork from './featuredWork'
 import homepageWork from './homepageWork'
+import worksPageProjects from './worksPageProjects'
 import projectMedia from './projectMedia'
 import projectSectionTwoCol50 from './projectSectionTwoCol50'
 import projectSectionTwoCol30 from './projectSectionTwoCol30'
@@ -28,6 +29,7 @@ import research from './research'
 export const schemaTypes = [
   featuredWork,
   homepageWork,
+  worksPageProjects,
   projectMedia,
   projectSectionTwoCol50,
   projectSectionTwoCol30,

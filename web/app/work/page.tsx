@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import HomeProjectCard from "@/components/HomeProjectCard";
-import { client, featuredWorkQuery, homepageWorkQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
+import { client, featuredWorkQuery, navigationPagesQuery, urlFor, worksPageProjectsQuery } from "@/lib/sanity";
 
 function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
   if (!media) return null;
@@ -52,31 +52,28 @@ async function getNavigationPages() {
 export const revalidate = 60;
 
 export default async function WorkPage() {
-  const [navigationPages, homepageWork, allWorkFallback] = await Promise.all([
+  const [navigationPages, worksPageData, allFeaturedWorkFallback] = await Promise.all([
     getNavigationPages(),
-    client.fetch(homepageWorkQuery).then((r: any) => r || null),
+    client.fetch(worksPageProjectsQuery).then((r: any) => r || null),
     client.fetch(featuredWorkQuery).then((r: any[]) => r || []),
   ]);
 
-  // Same order as homepage: Featured 2-col (2), Featured main (1), then grid items. Dedupe by _id.
-  let projects: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }[];
-  if (homepageWork?.featuredTwoCol?.length || homepageWork?.featuredMain || homepageWork?.gridItems?.length) {
-    const twoCol = (homepageWork.featuredTwoCol || []).filter(Boolean).map(toWorkWithMedia);
-    const main = homepageWork.featuredMain ? [toWorkWithMedia(homepageWork.featuredMain)] : [];
-    const grid = (homepageWork.gridItems || []).filter(Boolean).map(toWorkWithMedia);
-    const ordered = [...twoCol.slice(0, 2), ...main, ...grid];
-    const seen = new Set<string>();
-    projects = ordered.filter(({ item }) => {
-      if (!item?._id || (item.projectTitle || "").trim().toLowerCase() === "motion studies") return false;
-      if (seen.has(item._id)) return false;
-      seen.add(item._id);
-      return true;
-    });
+  // Flatten Works Page Projects (same schema shape as Homepage Work) into one ordered list for the grid.
+  const filterMotion = (w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies";
+  let orderedItems: any[];
+
+  if (worksPageData?.featuredTwoCol?.length || worksPageData?.featuredMain || worksPageData?.gridItems?.length) {
+    const twoCol = (worksPageData.featuredTwoCol || []).filter(Boolean);
+    const main = worksPageData.featuredMain ? [worksPageData.featuredMain] : [];
+    const grid = (worksPageData.gridItems || []).filter(Boolean);
+    orderedItems = [...twoCol, ...main, ...grid];
   } else {
-    projects = allWorkFallback
-      .filter((w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies")
-      .map(toWorkWithMedia);
+    orderedItems = allFeaturedWorkFallback;
   }
+
+  const projects = orderedItems
+    .filter(filterMotion)
+    .map(toWorkWithMedia);
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
