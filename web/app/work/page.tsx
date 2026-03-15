@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import HomeProjectCard from "@/components/HomeProjectCard";
-import { client, featuredWorkQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
+import { client, featuredWorkQuery, homepageWorkQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
 
 function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
   if (!media) return null;
@@ -52,42 +52,38 @@ async function getNavigationPages() {
 export const revalidate = 60;
 
 export default async function WorkPage() {
-  const [navigationPages, allWork] = await Promise.all([
+  const [navigationPages, homepageWork, allWorkFallback] = await Promise.all([
     getNavigationPages(),
+    client.fetch(homepageWorkQuery).then((r: any) => r || null),
     client.fetch(featuredWorkQuery).then((r: any[]) => r || []),
   ]);
 
-  const projects = allWork
-    .filter((w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies")
-    .map(toWorkWithMedia);
+  // Same order as homepage: Featured 2-col (2), Featured main (1), then grid items. Dedupe by _id.
+  let projects: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }[];
+  if (homepageWork?.featuredTwoCol?.length || homepageWork?.featuredMain || homepageWork?.gridItems?.length) {
+    const twoCol = (homepageWork.featuredTwoCol || []).filter(Boolean).map(toWorkWithMedia);
+    const main = homepageWork.featuredMain ? [toWorkWithMedia(homepageWork.featuredMain)] : [];
+    const grid = (homepageWork.gridItems || []).filter(Boolean).map(toWorkWithMedia);
+    const ordered = [...twoCol.slice(0, 2), ...main, ...grid];
+    const seen = new Set<string>();
+    projects = ordered.filter(({ item }) => {
+      if (!item?._id || (item.projectTitle || "").trim().toLowerCase() === "motion studies") return false;
+      if (seen.has(item._id)) return false;
+      seen.add(item._id);
+      return true;
+    });
+  } else {
+    projects = allWorkFallback
+      .filter((w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies")
+      .map(toWorkWithMedia);
+  }
 
   return (
-    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} showBack backHref="/" />
 
-      {/* Hero: title only, same styling as project detail */}
-      <div className="w-full flex justify-start pt-[50px] pb-[100px] px-[2.5%] sm:px-[24px]">
-        <div className="flex w-full max-w-[700px] flex-col items-start gap-[22px]">
-          <div
-            className="relative shrink-0 min-w-full w-[min-content] font-medium text-[40px] leading-[47px] not-italic text-foreground text-left tracking-[-0.25px]"
-            style={{ letterSpacing: "-0.25px" }}
-          >
-            <p className="mb-0">All work</p>
-          </div>
-        </div>
-      </div>
-
-      {/* [n] projects above the line - same layout as Year/Client on project detail */}
-      <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
-        <div className="flex flex-row gap-5 items-baseline leading-[19px] text-muted text-[12px]">
-          <p className="relative shrink-0 font-normal">
-            {projects.length} {projects.length === 1 ? "project" : "projects"}
-          </p>
-        </div>
-      </div>
-
-      {/* Line separator (same as project detail) */}
-      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
+      {/* Line separator */}
+      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[28px] sm:mt-[12px]" />
 
       {/* All projects in 4-col grid */}
       <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-6">

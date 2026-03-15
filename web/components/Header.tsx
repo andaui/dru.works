@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -12,12 +13,14 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
-  /** When true, show "Back" on the left; use backHref to set target (default /work) */
+  /** When true, show "Back" on the left (uses browser history; falls back to backHref if no history) */
   showBack?: boolean;
+  /** Fallback when user has no history (e.g. opened in new tab). Default /work */
   backHref?: string;
 }
 
 export default function Header({ currentPage, navigationPages = [], showBack = false, backHref = "/work" }: HeaderProps) {
+  const router = useRouter();
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -29,6 +32,14 @@ export default function Header({ currentPage, navigationPages = [], showBack = f
   const aboutTitle = pageTitles['about'] || 'About';
   const servicesTitle = pageTitles['services'] || 'Services';
   const [emailCopied, setEmailCopied] = useState(false);
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(backHref);
+    }
+  };
   
   const handleContactClick = async () => {
     try {
@@ -44,9 +55,13 @@ export default function Header({ currentPage, navigationPages = [], showBack = f
         {/* Back - far left when on project detail */}
         {showBack && (
           <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto">
-            <Link href={backHref} className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70 bg-transparent border-none p-0 font-inherit cursor-pointer text-[14px] leading-[35px] font-inter"
+            >
               Back
-            </Link>
+            </button>
           </div>
         )}
         {/* Navigation - Visible on all screen sizes */}

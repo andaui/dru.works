@@ -4,6 +4,8 @@ import { urlFor } from "@/lib/sanity";
 interface PageTestimonialProps {
   /** When true, stay within parent padding (e.g. on project page). When false, full-bleed to viewport. */
   contained?: boolean;
+  /** When true, do not render the top horizontal line (caller renders it for full-bleed). */
+  hideTopLine?: boolean;
   testimonial: {
     _id: string;
     _type: string;
@@ -28,7 +30,7 @@ interface PageTestimonialProps {
   };
 }
 
-export default function PageTestimonial({ testimonial, contained = false }: PageTestimonialProps) {
+export default function PageTestimonial({ testimonial, contained = false, hideTopLine = false }: PageTestimonialProps) {
   if (!testimonial) {
     return null;
   }
@@ -72,13 +74,9 @@ export default function PageTestimonial({ testimonial, contained = false }: Page
       className="w-full flex flex-col gap-[75px] items-center"
       style={contained ? undefined : { width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
     >
-      {/* Horizontal Line - full viewport when not contained; when contained, full-bleed (edge to edge) */}
-      {contained ? (
-        <div className="w-screen ml-[calc(50%-50vw)]">
-          <div className="h-px bg-[#e5e5e5]" />
-        </div>
-      ) : (
-        <div className="w-screen h-px bg-[#e5e5e5] -ml-[2.5%] sm:ml-0 sm:w-full" />
+      {/* Horizontal Line - edge to edge (omit when hideTopLine so caller can render full-bleed) */}
+      {!hideTopLine && (
+        <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
       )}
       
       {/* Testimonial Content Container - Full Width, Center Aligned */}

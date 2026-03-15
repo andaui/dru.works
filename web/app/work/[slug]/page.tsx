@@ -10,6 +10,7 @@ import PageTestimonial from "@/components/PageTestimonial";
 import { client, projectBySlugQuery, navigationPagesQuery, featuredWorkQuery, urlFor } from "@/lib/sanity";
 import { resolveProjectMedia } from "@/lib/projectMedia";
 import { notFound } from "next/navigation";
+import { Fragment } from "react";
 
 function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
   if (!media) return null;
@@ -89,7 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const fallbackAlt = title || "Project";
 
   return (
-    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <Header currentPage="work" navigationPages={navigationPages} showBack />
 
       {/* Hero: title + description, same styling as homepage but left-aligned */}
@@ -136,14 +137,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       {/* Line separator (same as homepage) */}
       <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
 
-      {/* Sections: 24px gap between each; min-w-0 so content respects right padding */}
-      <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-6 flex flex-col gap-6">
+      {/* Sections: no horizontal padding on container so full-bleed lines can stretch; padding on each section. */}
+      <div className="w-full min-w-0 pt-6 flex flex-col gap-6">
         {(project.sections || []).map((section: any) => {
           if (!section?._key) return null;
           switch (section._type) {
             case "projectSectionTwoCol50":
               return (
-                <div key={section._key} className="w-full min-w-0">
+                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px]">
                   <ProjectSectionTwoCol50
                   leftMedia={resolveProjectMedia(section.leftMedia, fallbackAlt)}
                   rightMedia={resolveProjectMedia(section.rightMedia, fallbackAlt)}
@@ -152,7 +153,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               );
             case "projectSectionTwoCol30":
               return (
-                <div key={section._key} className="w-full min-w-0">
+                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px]">
                   <ProjectSectionTwoCol30
                     ratio={section.ratio === "40-60" ? "40-60" : section.ratio === "35-65" ? "35-65" : "30-70"}
                     narrowSide={section.narrowSide === "right" ? "right" : "left"}
@@ -163,7 +164,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               );
             case "projectSectionOneCol":
               return (
-                <div key={section._key} className="w-full min-w-0">
+                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px]">
                   <ProjectSectionOneCol
                     width={section.width === "70" ? "70" : section.width === "40" ? "40" : "100"}
                     media={resolveProjectMedia(section.media, fallbackAlt)}
@@ -172,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               );
             case "projectSectionText":
               return (
-                <div key={section._key} className="w-full min-w-0">
+                <div key={section._key} className="w-full min-w-0 px-[2.5%] sm:px-[24px]">
                   <ProjectSectionText text={section.text || ""} />
                 </div>
               );
@@ -193,12 +194,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               );
             case "projectSectionTestimonial":
               return section.testimonial ? (
-                <div key={section._key} className="w-full min-w-0 my-[128px] flex flex-col gap-0">
-                  <PageTestimonial testimonial={section.testimonial} contained />
-                  <div className="w-screen relative left-1/2 -translate-x-1/2 mt-[75px]">
-                    <div className="h-px bg-border" />
+                <Fragment key={section._key}>
+                  {/* Top line: direct child of sections container so it stretches edge to edge */}
+                  <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[128px]" />
+                  <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] mt-[75px] flex flex-col gap-0">
+                    <PageTestimonial testimonial={section.testimonial} contained hideTopLine />
                   </div>
-                </div>
+                  <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[75px] mb-[128px]" />
+                </Fragment>
               ) : null;
             default:
               return null;

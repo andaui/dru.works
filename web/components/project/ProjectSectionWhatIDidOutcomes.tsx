@@ -19,12 +19,10 @@ export default function ProjectSectionWhatIDidOutcomes({
 
   return (
     <section className="w-full flex flex-col my-3">
-      {/* Top line - full bleed */}
-      <div className="w-screen ml-[calc(50%-50vw)]">
-        <div className="h-px bg-border" />
-      </div>
-      {/* Content - 100px gap from lines */}
-      <div className="flex flex-col gap-[34px] mt-[100px] mb-[100px]">
+      {/* Top line - edge to edge, ignores max-width */}
+      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
+      {/* Content - 100px gap from lines, 24px side padding (lines stay edge-to-edge) */}
+      <div className="flex flex-col gap-[34px] mt-[100px] mb-[100px] px-6">
         <div className="flex flex-col gap-3">
           {whatIDidTitle != null && whatIDidTitle !== "" && (
             <p className="font-normal m-0" style={titleStyle}>
@@ -50,10 +48,8 @@ export default function ProjectSectionWhatIDidOutcomes({
           )}
         </div>
       </div>
-      {/* Bottom line - full bleed */}
-      <div className="w-screen ml-[calc(50%-50vw)]">
-        <div className="h-px bg-border" />
-      </div>
+      {/* Bottom line - edge to edge, ignores max-width */}
+      <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
     </section>
   );
 }
