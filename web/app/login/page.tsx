@@ -23,10 +23,10 @@ async function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden flex items-center justify-center px-[2.5%] sm:px-[24px]">
+      <div className="fixed inset-0 w-full bg-white overflow-x-hidden overflow-y-auto flex items-center justify-center px-[24px] min-h-[100dvh] min-h-screen">
         <div className="w-full flex flex-col gap-[59px] items-center text-center">
           <div className="flex flex-col gap-[19px] items-center w-full">
-            <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
+            <h1 className="font-medium text-[32px] leading-[38px] sm:text-[40px] sm:leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
               <p className="mb-0">Design partner</p>
               <p className="mb-0">with technical skills</p>
             </h1>

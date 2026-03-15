@@ -91,7 +91,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header currentPage="work" navigationPages={navigationPages} showBack />
+      <Header currentPage="work" navigationPages={navigationPages} />
 
       {/* Hero: title + description, same styling as homepage but left-aligned */}
       <div className="w-full flex justify-start pt-[50px] pb-[100px] px-[2.5%] sm:px-[24px]">

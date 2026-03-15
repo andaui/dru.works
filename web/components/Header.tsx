@@ -1,7 +1,6 @@
 'use client';
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -13,14 +12,9 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
-  /** When true, show "Back" on the left (uses browser history; falls back to backHref if no history) */
-  showBack?: boolean;
-  /** Fallback when user has no history (e.g. opened in new tab). Default /work */
-  backHref?: string;
 }
 
-export default function Header({ currentPage, navigationPages = [], showBack = false, backHref = "/work" }: HeaderProps) {
-  const router = useRouter();
+export default function Header({ currentPage, navigationPages = [] }: HeaderProps) {
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -33,13 +27,7 @@ export default function Header({ currentPage, navigationPages = [], showBack = f
   const servicesTitle = pageTitles['services'] || 'Services';
   const [emailCopied, setEmailCopied] = useState(false);
 
-  const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(backHref);
-    }
-  };
+  const showHome = currentPage != null;
   
   const handleContactClick = async () => {
     try {
@@ -52,16 +40,15 @@ export default function Header({ currentPage, navigationPages = [], showBack = f
 
   return (
     <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
-        {/* Back - far left when on project detail */}
-        {showBack && (
+        {/* Home - far left on all pages except homepage */}
+        {showHome && (
           <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70 bg-transparent border-none p-0 font-inherit cursor-pointer text-[14px] leading-[35px] font-inter"
+            <Link
+              href="/"
+              className="relative shrink-0 transition-opacity text-foreground opacity-40 hover:opacity-70 text-[14px] leading-[35px] font-inter"
             >
-              Back
-            </button>
+              Home
+            </Link>
           </div>
         )}
         {/* Navigation - Visible on all screen sizes */}

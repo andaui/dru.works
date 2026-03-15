@@ -50,12 +50,12 @@ export default function LoginForm({ heroTitle, heroDescription }: LoginFormProps
   const displayDescription = heroDescription || "I take on a limited number of projects and share details directly.";
 
   return (
-    <div className="relative w-full bg-[#fcfcfc] min-h-screen overflow-x-hidden flex items-center justify-center px-[2.5%] sm:px-[24px]">
+    <div className="fixed inset-0 w-full bg-white overflow-x-hidden overflow-y-auto flex items-center justify-center px-[24px] min-h-[100dvh] min-h-screen">
       <div className="w-full flex flex-col gap-[59px] items-center text-center">
         {/* Title Section */}
         <div className="flex flex-col gap-[19px] items-center w-full">
           {/* Title - split into multiple lines */}
-          <h1 className="font-medium text-[40px] leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
+          <h1 className="font-medium text-[32px] leading-[38px] sm:text-[40px] sm:leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
             {displayTitle.split('\n').map((line: string, index: number) => (
               <p key={index} className="mb-0">{line}</p>
             ))}
@@ -68,7 +68,7 @@ export default function LoginForm({ heroTitle, heroDescription }: LoginFormProps
         </div>
 
         {/* Form Section */}
-        <form onSubmit={handleSubmit} className="w-full flex flex-col items-center px-[100px] sm:px-0">
+        <form onSubmit={handleSubmit} className="w-full flex flex-col items-center">
           <input
             id="password"
             type="password"
@@ -88,6 +88,9 @@ export default function LoginForm({ heroTitle, heroDescription }: LoginFormProps
           >
             {isLoading ? 'Verifying...' : 'Submit'}
           </button>
+          <p className="font-normal text-[12px] leading-[19px] not-italic text-[#989898] w-full block sm:hidden mt-[28px]">
+            Use desktop for better experience
+          </p>
           
           {error && (
             <div className="font-normal text-[13px] leading-[19px] not-italic text-[#D30505] mt-[38px]">

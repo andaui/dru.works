@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import Section from './Section';
 import PageTestimonial from './PageTestimonial';
 
@@ -65,6 +65,13 @@ interface AboutPageContentProps {
 export default function AboutPageContent({ sections }: AboutPageContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to top before paint when landing with a hash (avoids "jump" from browser's hash scroll)
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [sections]);
+
   useEffect(() => {
     // Detect mobile for performance optimizations
     const isMobile = (typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) || 
@@ -101,75 +108,61 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
       setTimeout(calculateHeight, 500);
     }
 
-    // Handle hash-based scrolling
-    // Use instant scroll on mobile to prevent crashes
-    const handleHashScroll = () => {
-      const hash = window.location.hash.slice(1); // Remove the #
-      if (hash) {
-        // Use instant scroll on mobile, smooth on desktop
-        const scrollBehavior: ScrollBehavior = isMobile ? 'auto' : 'smooth';
-        const scrollDelay = isMobile ? 0 : 100; // No delay on mobile
-        
-        // Try to find section by ID or by matching section title
+    // Handle hash-based scrolling: show top of page first, then scroll to section
+    const scrollToSection = (hash: string) => {
+      const scrollBehavior: ScrollBehavior = isMobile ? 'auto' : 'smooth';
+      const scrollDelay = isMobile ? 0 : 100;
+
+      const doScrollToSection = () => {
         const sectionElement = document.getElementById(hash);
         if (sectionElement) {
-          // Find the grey header strip (the first child div)
           const headerStrip = sectionElement.firstElementChild as HTMLElement;
           if (headerStrip) {
-            if (scrollDelay > 0) {
-              setTimeout(() => {
-                headerStrip.scrollIntoView({ 
-                  behavior: scrollBehavior, 
-                  block: 'start',
-                  inline: 'nearest'
-                });
-              }, scrollDelay);
-            } else {
-              // Instant scroll on mobile
-              headerStrip.scrollIntoView({ 
-                behavior: 'auto', 
+            headerStrip.scrollIntoView({
+              behavior: scrollBehavior,
+              block: 'start',
+              inline: 'nearest',
+            });
+          }
+          return;
+        }
+        const normalizedHash = hash.toLowerCase().replace(/\s+/g, '-');
+        const allSections = document.querySelectorAll('[id]');
+        for (const section of Array.from(allSections)) {
+          const sectionTitle = section.querySelector('p')?.textContent?.toLowerCase().replace(/\s+/g, '-');
+          if (sectionTitle === normalizedHash || section.id.toLowerCase().includes(normalizedHash)) {
+            const headerStrip = section.firstElementChild as HTMLElement;
+            if (headerStrip) {
+              headerStrip.scrollIntoView({
+                behavior: scrollBehavior,
                 block: 'start',
-                inline: 'nearest'
+                inline: 'nearest',
               });
             }
-          }
-        } else {
-          // Try to find by section title match (case-insensitive, spaces to hyphens)
-          // Limit DOM queries on mobile
-          const normalizedHash = hash.toLowerCase().replace(/\s+/g, '-');
-          const allSections = document.querySelectorAll('[id]');
-          for (const section of Array.from(allSections)) {
-            const sectionTitle = section.querySelector('p')?.textContent?.toLowerCase().replace(/\s+/g, '-');
-            if (sectionTitle === normalizedHash || section.id.toLowerCase().includes(normalizedHash)) {
-              const headerStrip = section.firstElementChild as HTMLElement;
-              if (headerStrip) {
-                if (scrollDelay > 0) {
-                  setTimeout(() => {
-                    headerStrip.scrollIntoView({ 
-                      behavior: scrollBehavior, 
-                      block: 'start',
-                      inline: 'nearest'
-                    });
-                  }, scrollDelay);
-                } else {
-                  // Instant scroll on mobile
-                  headerStrip.scrollIntoView({ 
-                    behavior: 'auto', 
-                    block: 'start',
-                    inline: 'nearest'
-                  });
-                }
-                break;
-              }
-            }
+            break;
           }
         }
+      };
+
+      if (scrollDelay > 0) {
+        setTimeout(doScrollToSection, scrollDelay);
+      } else {
+        doScrollToSection();
       }
     };
 
-    // Handle initial hash on page load
+    const handleHashScroll = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        // Top already forced in useLayoutEffect; wait at top then scroll to section
+        const delayBeforeScroll = isMobile ? 150 : 500;
+        setTimeout(() => scrollToSection(hash), delayBeforeScroll);
+      }
+    };
+
+    // Handle initial hash on page load (scroll to top was done in useLayoutEffect)
     if (window.location.hash) {
-      const initialDelay = isMobile ? 100 : 300; // Faster on mobile
+      const initialDelay = isMobile ? 100 : 50; // Short delay so DOM is ready
       setTimeout(handleHashScroll, initialDelay);
     }
 
@@ -193,8 +186,9 @@ export default function AboutPageContent({ sections }: AboutPageContentProps) {
           );
         }
 
-        // It's a section
-        const sectionId = item._id || `section-${item.sectionTitle?.toLowerCase().replace(/\s+/g, '-') || index}`;
+        // It's a section - use slug-based id so anchor links (e.g. /about#section-how-i-work) work
+        const sectionSlug = item.sectionTitle?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
+        const sectionId = sectionSlug.startsWith('section-') ? sectionSlug : `section-${sectionSlug}`;
         return (
           <Section
             key={item._id || index}

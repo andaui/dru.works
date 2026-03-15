@@ -77,7 +77,7 @@ export default async function WorkPage() {
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header currentPage="work" navigationPages={navigationPages} showBack backHref="/" />
+      <Header currentPage="work" navigationPages={navigationPages} />
 
       {/* Line separator */}
       <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[28px] sm:mt-[12px]" />

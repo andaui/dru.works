@@ -358,12 +358,29 @@ export default async function Home() {
         {/* Pricing and CTA Section - 22px above line */}
         {pricingItems && (
           <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
-            {/* Pricing Section - Left Side */}
-            <Price2Col items={pricingItems} />
+            {/* Pricing Section - Left Side: price columns + "Pricing" link (homepage only) */}
+            <div id="pricing" className="flex items-start scroll-mt-4" style={{ gap: "38px" }}>
+              <Price2Col items={pricingItems} />
+              <NextLink
+                href="/about#section-pricing"
+                className="flex items-center gap-[4px] group transition-colors font-normal not-italic text-nowrap shrink-0"
+                style={{ color: "#989898", fontSize: "13px", lineHeight: "19px" }}
+              >
+                <span className="group-hover:text-foreground transition-colors">Pricing</span>
+                <div className="shrink-0 transition-colors group-hover:text-foreground" style={{ width: "14px", height: "14px" }}>
+                  <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </NextLink>
+            </div>
 
             {/* CTA Button */}
             <NextLink href="/about#mentorship" className="flex items-center justify-end gap-[4px] group transition-colors">
-              <p className="relative shrink-0 font-normal text-[12px] leading-[19px] not-italic text-muted text-nowrap group-hover:text-foreground transition-colors">
+              <p className="relative shrink-0 font-normal text-[13px] leading-[19px] not-italic text-muted text-nowrap group-hover:text-foreground transition-colors">
                 Interested in Team Design Sessions?
               </p>
               <div className="shrink-0 text-muted group-hover:text-foreground transition-colors" style={{ width: '14px', height: '14px' }}>
