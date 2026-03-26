@@ -106,7 +106,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               </p>
             ))}
           </div>
-          <p className="relative w-full font-normal text-[13px] leading-[19px] not-italic text-muted text-left m-0">
+          <p className="relative w-full font-normal text-[13px] leading-[19px] not-italic !text-[#8a8a8a] dark:!text-muted text-left m-0">
             {description}
           </p>
         </div>

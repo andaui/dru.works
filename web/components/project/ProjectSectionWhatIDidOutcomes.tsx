@@ -27,7 +27,7 @@ export default function ProjectSectionWhatIDidOutcomes({
             </p>
           )}
           {whatIDidText != null && whatIDidText !== "" && (
-            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] text-[#5d5d5d] dark:text-[#a3a3a3]">
+            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
               {whatIDidText}
             </p>
           )}
@@ -39,7 +39,7 @@ export default function ProjectSectionWhatIDidOutcomes({
             </p>
           )}
           {outcomesText != null && outcomesText !== "" && (
-            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] text-[#5d5d5d] dark:text-[#a3a3a3]">
+            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
               {outcomesText}
             </p>
           )}
