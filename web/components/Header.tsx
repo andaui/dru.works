@@ -12,11 +12,9 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
-  /** Homepage: no centered Work/About/Services — Index lives in the hero */
-  isHome?: boolean;
 }
 
-export default function Header({ currentPage, navigationPages = [], isHome = false }: HeaderProps) {
+export default function Header({ currentPage, navigationPages = [] }: HeaderProps) {
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -41,9 +39,9 @@ export default function Header({ currentPage, navigationPages = [], isHome = fal
   };
 
   return (
-    <nav className={`w-full flex items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative ${isHome ? "justify-end" : "justify-start sm:justify-center"}`}>
-        {/* Home - far left on all pages except homepage (hidden on mobile) */}
-        {showHome && !isHome && (
+    <nav className="w-full flex justify-start sm:justify-center items-center gap-[24px] text-[14px] leading-[35px] not-italic font-inter pt-[28px] sm:pt-[12px] pb-[24px] px-[2.5%] sm:px-0 relative">
+        {/* Home - far left (hidden on mobile) */}
+        {showHome && (
           <div className="absolute left-[2.5%] sm:left-[22px] z-50 pointer-events-auto hidden md:block">
             <Link
               href="/"
@@ -53,8 +51,6 @@ export default function Header({ currentPage, navigationPages = [], isHome = fal
             </Link>
           </div>
         )}
-        {/* Navigation - hidden on homepage (Index is in hero) */}
-        {!isHome && (
         <div className="flex items-center gap-[24px]">
           <Link href="/work" className={`relative shrink-0 z-50 pointer-events-auto transition-opacity ${currentPage === "work" ? "text-foreground opacity-100" : "text-foreground opacity-40 hover:opacity-70"}`}>
             {workTitle}
@@ -66,7 +62,6 @@ export default function Header({ currentPage, navigationPages = [], isHome = fal
             {servicesTitle}
           </Link>
         </div>
-        )}
 
         {/* Contact - Visible on all screen sizes */}
         <div className="absolute right-[2.5%] sm:right-[22px] flex items-center gap-[24px] z-50 pointer-events-auto">

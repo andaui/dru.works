@@ -54,11 +54,15 @@ const listClass =
 type HomeLandingHeroProps = {
   heroTitle: string;
   heroDescription?: string | null;
+  aboutLabel?: string;
+  servicesLabel?: string;
 };
 
 export default function HomeLandingHero({
   heroTitle,
   heroDescription,
+  aboutLabel = "About",
+  servicesLabel = "Services",
 }: HomeLandingHeroProps) {
   const description = (heroDescription && heroDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
   const titleLines = heroTitle.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -77,6 +81,18 @@ export default function HomeLandingHero({
           >
             <NextLink href="/" className="text-foreground">
               Index
+            </NextLink>
+            <NextLink
+              href="/about"
+              className="text-[#989898] dark:text-muted hover:text-foreground transition-colors"
+            >
+              {aboutLabel}
+            </NextLink>
+            <NextLink
+              href="/services"
+              className="text-[#989898] dark:text-muted hover:text-foreground transition-colors"
+            >
+              {servicesLabel}
             </NextLink>
           </nav>
 

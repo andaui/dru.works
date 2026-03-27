@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import HomeProjectCard from "@/components/HomeProjectCard";
 import HomeLandingHero from "@/components/HomeLandingHero";
 import HomePricingCalculator from "@/components/HomePricingCalculator";
@@ -240,6 +239,16 @@ export default async function Home() {
 
   // Get hero title from homepage data, with fallback
   const heroTitle = homepageData?.heroTitle || "Design partner with\nengineering fluency";
+
+  const pageTitles = (navigationPages as { slug: string; title: string }[]).reduce(
+    (acc, page) => {
+      acc[page.slug] = page.title;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+  const navAboutTitle = pageTitles.about || "About";
+  const navServicesTitle = pageTitles.services || "Services";
   
   // Extract pricing data from pricing section
   // First try to find it in the work page sections
@@ -372,11 +381,11 @@ export default async function Home() {
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header navigationPages={navigationPages} isHome />
-
       <HomeLandingHero
         heroTitle={heroTitle}
         heroDescription={homepageData?.heroDescription}
+        aboutLabel={navAboutTitle}
+        servicesLabel={navServicesTitle}
       />
 
       <div className="w-full px-[2.5%] sm:px-6 flex flex-col gap-16 lg:gap-20 pb-12 lg:pb-16">
