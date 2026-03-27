@@ -1,13 +1,72 @@
 import Header from "@/components/Header";
 import HomeProjectCard from "@/components/HomeProjectCard";
-import HeroTestimonial from "@/components/HeroTestimonial";
+import HomeLandingHero from "@/components/HomeLandingHero";
+import HomePricingCalculator from "@/components/HomePricingCalculator";
+import HomeTestimonialsGrid, {
+  type HomeTestimonialItem,
+} from "@/components/HomeTestimonialsGrid";
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import Link from "@/components/Link";
-import NextLink from "next/link";
 import Clients from "@/components/Clients";
-import Price2Col from "@/components/Price2Col";
-import Image from "next/image";
-import { client, featuredWorkQuery, homepageWorkQuery, heroTestimonialsQuery, spotlightQuery, pageDataQuery, clientsSectionQuery, navigationPagesQuery, urlFor } from "@/lib/sanity";
+import {
+  client,
+  featuredWorkQuery,
+  homepageWorkQuery,
+  heroTestimonialsQuery,
+  spotlightQuery,
+  pageDataQuery,
+  clientsSectionQuery,
+  navigationPagesQuery,
+  urlFor,
+} from "@/lib/sanity";
+
+function digitsFromPriceString(s: string): number | null {
+  const digits = s.replace(/[^\d]/g, "");
+  if (!digits) return null;
+  return parseInt(digits, 10);
+}
+
+function pricingForCalculator(
+  items: Array<{ label: string; price: string }> | null,
+): {
+  baseMonthly: number;
+  perAdditionalDesigner: number;
+  savingPerAdditional: number;
+  headlineMonthlyValue?: string;
+} {
+  const out = {
+    baseMonthly: 20_000,
+    perAdditionalDesigner: 13_000,
+    savingPerAdditional: 7_000,
+    headlineMonthlyValue: undefined as string | undefined,
+  };
+  if (!items?.length) return out;
+  for (const row of items) {
+    const lab = row.label.toLowerCase();
+    const n = digitsFromPriceString(row.price);
+    if (n == null) continue;
+    if (lab.includes("monthly") || lab.includes("base") || (lab.includes("rate") && !lab.includes("additional"))) {
+      out.baseMonthly = n;
+      out.headlineMonthlyValue = row.price.trim();
+    }
+    if (lab.includes("additional")) out.perAdditionalDesigner = n;
+    if (lab.includes("saving")) out.savingPerAdditional = n;
+  }
+  if (!out.headlineMonthlyValue) {
+    const monthlyRow = items.find((r) => r.label.toLowerCase().includes("monthly"));
+    if (monthlyRow) out.headlineMonthlyValue = monthlyRow.price.trim();
+  }
+  return out;
+}
+
+async function getHomeTestimonials() {
+  try {
+    return (await client.fetch(heroTestimonialsQuery)) || [];
+  } catch (error) {
+    console.error("Error fetching testimonials:", error);
+    return [];
+  }
+}
 
 function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
   if (!media) return null;
@@ -50,16 +109,6 @@ async function getFeaturedWork() {
     return workItems || [];
   } catch (error) {
     console.error('Error fetching featured work:', error);
-    return [];
-  }
-}
-
-async function getHeroTestimonials() {
-  try {
-    const testimonials = await client.fetch(heroTestimonialsQuery);
-    return testimonials || [];
-  } catch (error) {
-    console.error('Error fetching hero testimonials:', error);
     return [];
   }
 }
@@ -145,13 +194,13 @@ function toWorkWithMedia(item: any): WorkWithMedia {
 }
 
 export default async function Home() {
-  // Fetch navigation pages, homepage/work page data, testimonials, spotlight items, about page data, and clients section from Sanity
+  // Fetch navigation pages, homepage/work page data, spotlight, testimonials, about page data, and clients section from Sanity
   const navigationPages = await getNavigationPages();
   const homepageData = await getPageData('work');
   
   const homepageWork = await getHomepageWork();
-  const rawTestimonials = await getHeroTestimonials();
   const rawSpotlightItems = await getSpotlightItems();
+  const rawTestimonials = await getHomeTestimonials();
   const aboutPageData = await getAboutPageData();
   const clientLogos = await getClientsSection();
 
@@ -243,57 +292,43 @@ export default async function Home() {
     }
   }
   
-  // Debug logging (remove in production if needed)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Pricing section found:', !!pricingSection);
-    console.log('Pricing items:', pricingItems);
-  }
-  
-  // Process testimonials data on the server
-  const processedTestimonials = rawTestimonials.map((testimonial: any) => {
-    // Process person photo
-    let personPhotoUrl: string | null = null;
-    let personPhotoAlt: string = '';
-    
-    if (testimonial?.personPhoto?.asset) {
-      try {
-        personPhotoUrl = urlFor(testimonial.personPhoto)
-          .width(42) // 21px * 2 for retina
-          .height(42)
-          .fit('crop')
-          .quality(90)
-          .format('jpg')
-          .url();
-        personPhotoAlt = testimonial.personPhoto.alt || testimonial.person || 'Person photo';
-      } catch (error) {
-        console.error('Error building person photo URL:', error);
-        if (testimonial.personPhoto.asset?.url) {
-          personPhotoUrl = testimonial.personPhoto.asset.url;
-          personPhotoAlt = testimonial.personPhoto.alt || testimonial.person || 'Person photo';
+  const calculatorPricing = pricingForCalculator(pricingItems);
+
+  const homeGridTestimonials: HomeTestimonialItem[] = rawTestimonials.map(
+    (testimonial: any) => {
+      let photoUrl: string | null = null;
+      const photoAlt =
+        testimonial?.personPhoto?.alt || testimonial?.person || "Person photo";
+      if (testimonial?.personPhoto?.asset) {
+        try {
+          photoUrl = urlFor(testimonial.personPhoto)
+            .width(114)
+            .height(114)
+            .fit("crop")
+            .quality(90)
+            .format("jpg")
+            .url();
+        } catch {
+          if (testimonial.personPhoto.asset?.url) {
+            photoUrl = testimonial.personPhoto.asset.url;
+          }
         }
       }
-    }
-    
-    // Format role and company
-    // Use "of" for founder roles, "at" for other roles
-    const role = testimonial?.role || '';
-    const company = testimonial?.company || '';
-    const isFounderRole = role.toLowerCase().includes('founder') || role.toLowerCase().includes('co-founder');
-    const roleAtCompany = role && company 
-      ? isFounderRole 
-        ? `${role} of ${company}`
-        : `${role} at ${company}`
-      : '';
-    
-    return {
-      _id: testimonial._id,
-      testimonialShort: testimonial.testimonialShort || '',
-      person: testimonial.person || '',
-      roleAtCompany,
-      personPhotoUrl,
-      personPhotoAlt,
-    };
-  });
+      const body =
+        (testimonial.testimonialLong && testimonial.testimonialLong.trim()) ||
+        testimonial.testimonialShort ||
+        "";
+      return {
+        _id: testimonial._id,
+        person: testimonial.person || "",
+        role: testimonial.role || "",
+        company: testimonial.company || "",
+        body,
+        photoUrl,
+        photoAlt,
+      };
+    },
+  );
 
   // Process spotlight items from Sanity
   const processedSpotlightItems = rawSpotlightItems.map((item: any) => {
@@ -337,64 +372,25 @@ export default async function Home() {
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header navigationPages={navigationPages} />
+      <Header navigationPages={navigationPages} isHome />
 
-      {/* Hero Section */}
-      <div className="w-full flex justify-start md:justify-center pt-[30px] pb-[76px] lg:pt-[120px] lg:pb-[156px] px-[2.5%] sm:px-[24px]">
-        <div className="flex w-[90%] max-w-[700px] flex-col items-start md:items-center gap-[22px]">
-          <div className="relative shrink-0 min-w-full w-[min-content] font-medium text-[32px] leading-[38px] md:text-[40px] md:leading-[47px] not-italic text-foreground text-left md:text-center tracking-[-0.25px]">
-            {heroTitle.split('\n').map((line: string, index: number) => (
-              <p key={index} className="mb-0">{line}</p>
-            ))}
-          </div>
-          <HeroTestimonial
-            testimonials={processedTestimonials}
-          />
-        </div>
+      <HomeLandingHero
+        heroTitle={heroTitle}
+        heroDescription={homepageData?.heroDescription}
+      />
+
+      <div className="w-full px-[2.5%] sm:px-6 flex flex-col gap-16 lg:gap-20 pb-12 lg:pb-16">
+        <HomePricingCalculator
+          headlineMonthlyValue={calculatorPricing.headlineMonthlyValue}
+          baseMonthly={calculatorPricing.baseMonthly}
+          perAdditionalDesigner={calculatorPricing.perAdditionalDesigner}
+          savingPerAdditional={calculatorPricing.savingPerAdditional}
+        />
+        <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
       </div>
 
       {/* Content Section - Normal Flow */}
       <div className="w-full relative z-0">
-        {/* Pricing and CTA Section - 22px above line */}
-        {pricingItems && (
-          <div className="w-full flex flex-col md:flex-row justify-start md:justify-between items-start md:items-end px-[2.5%] sm:px-[24px] mb-[22px] gap-[22px] md:gap-0">
-            {/* Pricing Section - Left Side: price columns + "Pricing" link (homepage only) */}
-            <div id="pricing" className="flex items-start scroll-mt-4" style={{ gap: "38px" }}>
-              <Price2Col items={pricingItems} />
-              <NextLink
-                href="/about#section-pricing"
-                className="flex items-center gap-[4px] group transition-colors font-normal not-italic text-nowrap shrink-0"
-                style={{ color: "#989898", fontSize: "13px", lineHeight: "19px" }}
-              >
-                <span className="group-hover:text-foreground transition-colors">Pricing</span>
-                <div className="shrink-0 transition-colors group-hover:text-foreground" style={{ width: "14px", height: "14px" }}>
-                  <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
-              </NextLink>
-            </div>
-
-            {/* CTA Button */}
-            <NextLink href="/about#mentorship" className="hidden md:flex items-center justify-end gap-[4px] group transition-colors">
-              <p className="relative shrink-0 font-normal text-[13px] leading-[19px] not-italic text-muted text-nowrap group-hover:text-foreground transition-colors">
-                Interested in Team Design Sessions?
-              </p>
-              <div className="shrink-0 text-muted group-hover:text-foreground transition-colors" style={{ width: '14px', height: '14px' }}>
-                <svg className="block size-full max-w-none" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M4.046 9.49858L3.42871 8.88129L8.01881 4.28328H4.47335L4.48127 3.42857H9.49081V8.44602H8.62818L8.6361 4.90057L4.046 9.49858Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-            </NextLink>
-          </div>
-        )}
-
         <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
 
         {/* Featured projects: desktop only (2-col row + main 70%). On mobile these appear in the grid below. */}

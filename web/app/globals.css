@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Test Söhne";
+  src: url("/fonts/test-soehne-buch.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #fcfcfc;
   --foreground: #000000;
@@ -31,6 +39,7 @@ html.dark {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-inter: var(--font-inter);
+  --font-soehne: "Test Söhne", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {

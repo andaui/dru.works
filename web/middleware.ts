@@ -2,9 +2,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifySessionToken } from './lib/auth';
 
+/** Files in /public — must not hit auth (otherwise <img src="/x.svg"> gets HTML login redirect). */
+const PUBLIC_ASSET = /\.(?:svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|mp4|webm|txt|xml|json|map)$/i;
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
+  if (PUBLIC_ASSET.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // Check if user is authenticated via cookie
   const authCookie = request.cookies.get('site-auth');
   const isAuthenticated = authCookie?.value 
@@ -35,13 +42,6 @@ export async function middleware(request: NextRequest) {
 // Configure which routes the middleware runs on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files (but we want to protect these too)
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
