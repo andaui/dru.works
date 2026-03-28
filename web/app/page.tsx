@@ -1,6 +1,9 @@
 import HomeProjectCard from "@/components/HomeProjectCard";
 import HomeLandingHero from "@/components/HomeLandingHero";
-import HomePricingCalculator from "@/components/HomePricingCalculator";
+import HomePricingCalculator, {
+  type HomePricingSideImage,
+  type HomePricingTierRates,
+} from "@/components/HomePricingCalculator";
 import HomeTestimonialsGrid, {
   type HomeTestimonialItem,
 } from "@/components/HomeTestimonialsGrid";
@@ -16,6 +19,7 @@ import {
   pageDataQuery,
   clientsSectionQuery,
   navigationPagesQuery,
+  pricingAndDesignersQuery,
   urlFor,
 } from "@/lib/sanity";
 
@@ -142,6 +146,38 @@ async function getHomepageWork() {
   }
 }
 
+async function getPricingAndDesigners() {
+  try {
+    return await client.fetch(pricingAndDesignersQuery);
+  } catch (error) {
+    console.error("Error fetching pricing & designers:", error);
+    return null;
+  }
+}
+
+function sanityImageToSideImage(
+  imageField: { asset?: unknown; alt?: string | null } | null | undefined,
+  fallbackAlt: string,
+): HomePricingSideImage | undefined {
+  if (!imageField?.asset) return undefined;
+  try {
+    const src = urlFor(imageField as Parameters<typeof urlFor>[0])
+      .width(106)
+      .height(112)
+      .fit("crop")
+      .quality(90)
+      .format("jpg")
+      .url();
+    const alt =
+      (imageField.alt && String(imageField.alt).trim()) || fallbackAlt;
+    return { src, alt };
+  } catch {
+    const url = (imageField.asset as { url?: string })?.url;
+    if (!url) return undefined;
+    return { src: url, alt: fallbackAlt };
+  }
+}
+
 export const revalidate = 60; // Revalidate every 60 seconds
 
 type WorkWithMedia = { item: any; processed: any[]; cover: { url: string; alt: string; type: "image" | "video" } | null };
@@ -163,6 +199,56 @@ export default async function Home() {
   const rawTestimonials = await getHomeTestimonials();
   const aboutPageData = await getAboutPageData();
   const clientLogos = await getClientsSection();
+  const pricingDoc = await getPricingAndDesigners();
+
+  let monthlyRateSideImage: HomePricingSideImage | undefined;
+  let teamPricingSideImages: HomePricingSideImage[] | undefined;
+  let pricingRates: Partial<HomePricingTierRates> | undefined;
+  let pricingMaxTeamSize = 8;
+
+  if (pricingDoc) {
+    const dru = sanityImageToSideImage(pricingDoc.druPortrait, "Dru");
+    monthlyRateSideImage = dru;
+
+    const extras = (pricingDoc.additionalDesignerPhotos || [])
+      .map((row: { photo?: unknown }, index: number) =>
+        sanityImageToSideImage(
+          row.photo as { asset?: unknown; alt?: string | null },
+          `Designer ${index + 1}`,
+        ),
+      )
+      .filter(Boolean) as HomePricingSideImage[];
+
+    if (dru) {
+      teamPricingSideImages = [dru, ...extras];
+    } else if (extras.length > 0) {
+      teamPricingSideImages = extras;
+    }
+
+    const partial: Partial<HomePricingTierRates> = {};
+    if (Number.isFinite(pricingDoc.baseMonthlyLead)) {
+      partial.baseMonthly = pricingDoc.baseMonthlyLead as number;
+    }
+    if (Number.isFinite(pricingDoc.rateAdditional1)) {
+      partial.rateAdditional1 = pricingDoc.rateAdditional1 as number;
+    }
+    if (Number.isFinite(pricingDoc.rateAdditional2)) {
+      partial.rateAdditional2 = pricingDoc.rateAdditional2 as number;
+    }
+    if (Number.isFinite(pricingDoc.rateAdditional3Plus)) {
+      partial.rateAdditional3Plus = pricingDoc.rateAdditional3Plus as number;
+    }
+    if (Object.keys(partial).length > 0) {
+      pricingRates = partial;
+    }
+
+    if (
+      typeof pricingDoc.maxTeamSize === "number" &&
+      pricingDoc.maxTeamSize >= 1
+    ) {
+      pricingMaxTeamSize = Math.min(50, pricingDoc.maxTeamSize);
+    }
+  }
 
   let featuredThree: WorkWithMedia[];
   let gridItems: WorkWithMedia[];
@@ -297,7 +383,12 @@ export default async function Home() {
       />
 
       <div className="w-full px-[2.5%] sm:px-6 flex flex-col gap-16 lg:gap-20 pb-12 lg:pb-16">
-        <HomePricingCalculator />
+        <HomePricingCalculator
+          maxDesigners={pricingMaxTeamSize}
+          pricingRates={pricingRates}
+          monthlyRateSideImage={monthlyRateSideImage}
+          teamPricingSideImages={teamPricingSideImages}
+        />
         <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
       </div>
 

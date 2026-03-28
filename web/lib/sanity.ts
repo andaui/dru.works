@@ -190,6 +190,46 @@ export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order as
   }
 }`
 
+/** Singleton `pricingAndDesigners` — homepage calculator amounts + stripe images */
+export const pricingAndDesignersQuery = `*[_type == "pricingAndDesigners" && _id == "pricingAndDesigners"][0] {
+  baseMonthlyLead,
+  rateAdditional1,
+  rateAdditional2,
+  rateAdditional3Plus,
+  maxTeamSize,
+  druPortrait {
+    _type,
+    asset-> {
+      _id,
+      _type,
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    }
+  },
+  additionalDesignerPhotos[] {
+    _key,
+    photo {
+      _type,
+      asset-> {
+        _id,
+        _type,
+        url,
+        metadata {
+          dimensions {
+            width,
+            height
+          }
+        }
+      }
+    }
+  }
+}`
+
 // GROQ query to fetch all spotlight items
 export const spotlightQuery = `*[_type == "spotlight"] | order(order asc) {
   _id,

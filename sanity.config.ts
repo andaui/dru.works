@@ -19,8 +19,19 @@ export default defineConfig({
             S.listItem()
               .title('Homepage Work')
               .child(S.document().schemaType('homepageWork').documentId('homepageWork')),
+            S.listItem()
+              .title('Pricing & designers')
+              .child(
+                S.document()
+                  .schemaType('pricingAndDesigners')
+                  .documentId('pricingAndDesigners'),
+              ),
             S.divider(),
-            ...S.documentTypeListItems().filter((item) => item.getId() !== 'homepageWork'),
+            ...S.documentTypeListItems().filter(
+              (item) =>
+                item.getId() !== 'homepageWork' &&
+                item.getId() !== 'pricingAndDesigners',
+            ),
           ]),
     }),
     visionTool(),

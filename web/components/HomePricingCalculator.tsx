@@ -1,33 +1,79 @@
 "use client";
 
+import Image from "next/image";
 import NextLink from "next/link";
 import { useMemo, useState } from "react";
 
 const accent = "#DE2475";
 
-/** Core monthly (you / partner capacity only) */
-const BASE_MONTHLY = 20_000;
-/** Baseline per additional designer — tier discounts are measured against this */
-const BASELINE_ADDITIONAL = 13_500;
+export type HomePricingSideImage = {
+  src: string;
+  alt: string;
+};
+
+/** Amounts for the calculator; merge with defaults when passing partial CMS values. */
+export type HomePricingTierRates = {
+  baseMonthly: number;
+  rateAdditional1: number;
+  rateAdditional2: number;
+  rateAdditional3Plus: number;
+};
+
+export const DEFAULT_HOME_PRICING_RATES: HomePricingTierRates = {
+  baseMonthly: 20_000,
+  rateAdditional1: 13_500,
+  rateAdditional2: 13_000,
+  rateAdditional3Plus: 12_500,
+};
 
 function formatGbp(n: number): string {
   return `GBP ${n.toLocaleString("en-GB")}`;
 }
 
-/**
- * Tiered rate per *additional* designer (count = team size minus one).
- * 1 additional → £13,500 · 2 → £13,000 each · 3+ → £12,500 each.
- */
-function tieredRatePerAdditionalDesigner(additionalCount: number): number {
-  if (additionalCount === 1) return 13_500;
-  if (additionalCount === 2) return 13_000;
-  return 12_500;
+function tierRatePerAdditional(
+  additionalCount: number,
+  r: HomePricingTierRates,
+): number {
+  if (additionalCount <= 1) return r.rateAdditional1;
+  if (additionalCount === 2) return r.rateAdditional2;
+  return r.rateAdditional3Plus;
 }
 
 type HomePricingCalculatorProps = {
   minDesigners?: number;
   maxDesigners?: number;
+  /** Optional overrides from Sanity `pricingAndDesigners` (partial allowed). */
+  pricingRates?: Partial<HomePricingTierRates>;
+  /** Left stripe beside “Monthly rate” — usually Dru’s portrait from CMS. */
+  monthlyRateSideImage?: HomePricingSideImage;
+  /**
+   * Second-row stripe: Dru first, then additional designer photos (any length).
+   * If empty/omitted, five gray placeholders are shown.
+   */
+  teamPricingSideImages?: HomePricingSideImage[];
 };
+
+function SideStripeThumb({ image }: { image?: HomePricingSideImage }) {
+  if (image?.src) {
+    return (
+      <div className="relative h-14 w-[53px] shrink-0 overflow-hidden rounded-sm bg-border dark:bg-white/10">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          fill
+          className="object-cover"
+          sizes="53px"
+        />
+      </div>
+    );
+  }
+  return (
+    <div
+      className="h-14 w-[53px] shrink-0 rounded-sm bg-border dark:bg-white/10"
+      aria-hidden
+    />
+  );
+}
 
 function Rule() {
   return <div className="h-px w-full bg-border shrink-0" aria-hidden />;
@@ -93,23 +139,39 @@ function IconPlus({ className }: { className?: string }) {
 export default function HomePricingCalculator({
   minDesigners = 1,
   maxDesigners = 8,
+  pricingRates: pricingRatesProp,
+  monthlyRateSideImage,
+  teamPricingSideImages,
 }: HomePricingCalculatorProps) {
   const [teamSize, setTeamSize] = useState(1);
   const [teamPricingOpen, setTeamPricingOpen] = useState(false);
 
+  const rates = useMemo(
+    () => ({ ...DEFAULT_HOME_PRICING_RATES, ...pricingRatesProp }),
+    [pricingRatesProp],
+  );
+
   const { additionalCount, rateEach, totalMonthly } = useMemo(() => {
     const add = Math.max(0, teamSize - 1);
     const tierRate =
-      add === 0 ? BASELINE_ADDITIONAL : tieredRatePerAdditionalDesigner(add);
+      add <= 0 ? rates.rateAdditional1 : tierRatePerAdditional(add, rates);
     const additionalCost =
-      add === 0 ? 0 : add * tieredRatePerAdditionalDesigner(add);
-    const totalMonthly = BASE_MONTHLY + additionalCost;
+      add === 0 ? 0 : add * tierRatePerAdditional(add, rates);
+    const totalMonthly = rates.baseMonthly + additionalCost;
     return {
       additionalCount: add,
       rateEach: tierRate,
       totalMonthly,
     };
-  }, [teamSize]);
+  }, [teamSize, rates]);
+
+  const teamStripeSlots =
+    teamPricingSideImages && teamPricingSideImages.some((img) => img?.src)
+      ? teamPricingSideImages
+      : (Array.from({ length: 5 }, () => undefined) as (
+          | HomePricingSideImage
+          | undefined
+        )[]);
 
   const additionalRowLabel =
     additionalCount >= 2 ? "Additional designers" : "Additional designer";
@@ -128,9 +190,9 @@ export default function HomePricingCalculator({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 px-0 sm:px-0 w-full">
           <div
             className="flex items-center pt-2 shrink-0 gap-[11px]"
-            aria-hidden
+            {...(!monthlyRateSideImage?.src ? { "aria-hidden": true } : {})}
           >
-            <div className="h-14 w-[53px] rounded-sm bg-border dark:bg-white/10" />
+            <SideStripeThumb image={monthlyRateSideImage} />
           </div>
           <div className="flex flex-col w-full sm:max-w-[815px] sm:ml-auto gap-0">
             <div className="pt-1 pb-0">
@@ -148,7 +210,7 @@ export default function HomePricingCalculator({
                 style={{ color: accent }}
                 aria-live="polite"
               >
-                {formatGbp(BASE_MONTHLY)}
+                {formatGbp(rates.baseMonthly)}
               </p>
               <Rule />
             </div>
@@ -171,11 +233,16 @@ export default function HomePricingCalculator({
       <div className="flex flex-col gap-1 w-full">
         <Rule />
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 w-full">
-          <div className="flex items-center pt-2 gap-[11px] shrink-0" aria-hidden>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-14 w-[53px] rounded-sm bg-border dark:bg-white/10"
+          <div
+            className="flex items-center pt-2 gap-[11px] shrink-0"
+            {...(!teamPricingSideImages?.some((img) => img?.src)
+              ? { "aria-hidden": true }
+              : {})}
+          >
+            {teamStripeSlots.map((img, i) => (
+              <SideStripeThumb
+                key={`${i}-${img?.src ?? "placeholder"}`}
+                image={img}
               />
             ))}
           </div>
@@ -269,7 +336,7 @@ export default function HomePricingCalculator({
                       <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
                         <span className="text-foreground">Lead Designer (Dru)</span>
                         <span className="text-foreground/50 tabular-nums">
-                          {formatGbp(BASE_MONTHLY)}
+                          {formatGbp(rates.baseMonthly)}
                         </span>
                       </div>
                       <Rule />

@@ -25,6 +25,7 @@ import section from './section'
 import page from './page'
 import spotlight from './spotlight'
 import research from './research'
+import pricingAndDesigners from './pricingAndDesigners'
 
 export const schemaTypes = [
   featuredWork,
@@ -54,4 +55,5 @@ export const schemaTypes = [
   page,
   spotlight,
   research,
+  pricingAndDesigners,
 ]
