@@ -16,9 +16,9 @@ const THEME_KEY = 'dru-theme';
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
-  const stored = localStorage.getItem(THEME_KEY) as Theme | null;
-  if (stored === 'dark' || stored === 'light') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored === 'dark') return 'dark';
+  return 'light';
 }
 
 function applyTheme(theme: Theme) {

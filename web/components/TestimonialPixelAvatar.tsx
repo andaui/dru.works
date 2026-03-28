@@ -231,7 +231,7 @@ export default function TestimonialPixelAvatar({
 
   if (useFallbackImg) {
     return (
-      <div className="relative shrink-0 size-[57px] rounded-sm overflow-hidden bg-border dark:bg-white/10">
+      <div className="relative shrink-0 size-[57px] rounded-none overflow-hidden bg-border dark:bg-white/10">
         <Image
           src={src}
           alt={alt}
@@ -246,7 +246,7 @@ export default function TestimonialPixelAvatar({
   return (
     <div
       ref={wrapRef}
-      className="relative shrink-0 size-[57px] rounded-sm overflow-hidden bg-border dark:bg-white/10"
+      className="relative shrink-0 size-[57px] rounded-none overflow-hidden bg-border dark:bg-white/10"
     >
       <canvas
         ref={canvasRef}

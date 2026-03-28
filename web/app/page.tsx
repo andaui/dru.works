@@ -389,6 +389,8 @@ export default async function Home() {
           pricingRates={pricingRates}
           monthlyRateSideImage={monthlyRateSideImage}
           teamPricingSideImages={teamPricingSideImages}
+          moreInfoTitle={pricingDoc?.moreInfoTitle ?? null}
+          moreInfoDescription={pricingDoc?.moreInfoDescription ?? null}
         />
       </div>
 

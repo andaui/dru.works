@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Match ThemeProvider: dark:* only when html has .dark, not OS prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: "Test Söhne";
   src: url("/fonts/test-soehne-buch.woff2") format("woff2");
@@ -12,6 +15,7 @@
   --background: #fcfcfc;
   --foreground: #000000;
   --muted: #989898;
+  --accent: #de2475;
   --border: #e5e5e5;
   --spacing: 4px;
   --client-logo-filter: none;
@@ -24,6 +28,7 @@ html.dark {
   --background: #0f0f0f;
   --foreground: rgba(255, 255, 255, 0.8);
   --muted: #737373;
+  --accent: #ff0064;
   --border: #2a2a2a;
   --client-logo-filter: invert(1);
   --client-logo-opacity: 0.8;
@@ -35,6 +40,7 @@ html.dark {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-accent: var(--accent);
   --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -47,6 +53,16 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Home hero client / services lists — html.dark matches ThemeProvider */
+.home-hero-list-col {
+  color: #000000;
+  opacity: 0.6;
+}
+
+html.dark .home-hero-list-col {
+  color: #ffffff;
 }
 
 @keyframes fade-in {

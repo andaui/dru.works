@@ -197,6 +197,8 @@ export const pricingAndDesignersQuery = `*[_type == "pricingAndDesigners" && _id
   rateAdditional2,
   rateAdditional3Plus,
   maxTeamSize,
+  moreInfoTitle,
+  moreInfoDescription,
   druPortrait {
     _type,
     asset-> {

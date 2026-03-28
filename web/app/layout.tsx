@@ -51,7 +51,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themeScript = `(function(){var t=localStorage.getItem('dru-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}})();`;
+  const themeScript = `(function(){if(localStorage.getItem('dru-theme')==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}})();`;
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
       <head>

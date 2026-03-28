@@ -22,7 +22,7 @@ export default function TestimonialCard({ t }: { t: HomeTestimonialItem }) {
           />
         ) : (
           <div
-            className="relative shrink-0 size-[57px] rounded-sm bg-border dark:bg-white/10"
+            className="relative shrink-0 size-[57px] rounded-none bg-border dark:bg-white/10"
             aria-hidden
           />
         )}

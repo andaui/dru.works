@@ -1,4 +1,5 @@
 import NextLink from "next/link";
+import ThemeLabelToggle from "@/components/ThemeLabelToggle";
 
 const DEFAULT_HERO_DESCRIPTION =
   "I bridge the gap between complex product requirements and world-class visual execution. I bring the precision and craft of a top-tier studio to every engagement. I care deeply about the 'invisible' details—the clarity, consistency, and refinement that transform a functional interface into a trusted brand experience.";
@@ -49,7 +50,7 @@ const SERVICES_COLS: [string[], string[]] = [
 ];
 
 const listClass =
-  "flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px] text-[rgba(0,0,0,0.7)]";
+  "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px]";
 
 type HomeLandingHeroProps = {
   heroTitle: string;
@@ -73,10 +74,10 @@ export default function HomeLandingHero({
       className="w-full px-[2.5%] sm:px-6 pt-[22px] pb-[64px] lg:pb-[104px]"
       aria-label="Introduction"
     >
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 lg:gap-8 w-full max-w-[1900px] mx-auto">
-        <div className="flex flex-col gap-8 w-full max-w-[441px] shrink-0">
+      <div className="flex flex-col gap-10 lg:gap-8 w-full max-w-[1900px] mx-auto">
+        <div className="flex w-full items-center justify-between gap-4 pl-2">
           <nav
-            className="flex items-center gap-[15px] pl-2 font-inter font-normal text-[13px] leading-[19px]"
+            className="flex items-center gap-[15px] font-inter font-normal text-[13px] leading-[19px]"
             aria-label="Page"
           >
             <NextLink href="/" className="text-foreground">
@@ -95,56 +96,61 @@ export default function HomeLandingHero({
               {servicesLabel}
             </NextLink>
           </nav>
-
-          <div className="flex flex-col gap-[34px] w-full pl-1">
-            <h1 className="font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
-              {displayTitle}
-            </h1>
-
-            <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start">
-              {CLIENT_COLS.map((col, i) => (
-                <div key={i} className={listClass}>
-                  {col.map((name) => (
-                    <p key={name} className="m-0 whitespace-nowrap">
-                      {name}
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            <a
-              href="mailto:carterandrew93@gmail.com"
-              className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
-            >
-              Contact
-            </a>
-
-            <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
-              {SERVICES_COLS.map((col, i) => (
-                <div key={i} className={listClass}>
-                  {col.map((name) => (
-                    <p key={name} className="m-0 whitespace-nowrap">
-                      {name}
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
+          <ThemeLabelToggle />
         </div>
 
-        <div className="flex flex-col gap-8 lg:gap-[31px] w-full lg:max-w-[812px] lg:pt-[52px] shrink-0">
-          <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
-            {description}
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 lg:gap-8 w-full">
+          <div className="flex flex-col gap-8 w-full max-w-[441px] shrink-0">
+            <div className="flex flex-col gap-[34px] w-full pl-1">
+              <h1 className="font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                {displayTitle}
+              </h1>
 
-          {/* Swap this container for a &lt;video&gt; (or poster + controls) when the asset is ready */}
-          <div
-            className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
-            aria-label="Video placeholder"
-          >
-            <span className="sr-only">Video placeholder</span>
+              <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start">
+                {CLIENT_COLS.map((col, i) => (
+                  <div key={i} className={listClass}>
+                    {col.map((name) => (
+                      <p key={name} className="m-0 whitespace-nowrap">
+                        {name}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <a
+                href="mailto:carterandrew93@gmail.com"
+                className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
+              >
+                Contact
+              </a>
+
+              <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
+                {SERVICES_COLS.map((col, i) => (
+                  <div key={i} className={listClass}>
+                    {col.map((name) => (
+                      <p key={name} className="m-0 whitespace-nowrap">
+                        {name}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-8 lg:gap-[31px] w-full lg:max-w-[812px] shrink-0">
+            <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
+              {description}
+            </p>
+
+            {/* Swap this container for a &lt;video&gt; (or poster + controls) when the asset is ready */}
+            <div
+              className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
+              aria-label="Video placeholder"
+            >
+              <span className="sr-only">Video placeholder</span>
+            </div>
           </div>
         </div>
       </div>

@@ -4,8 +4,6 @@ import Image from "next/image";
 import NextLink from "next/link";
 import { useMemo, useState } from "react";
 
-const accent = "#DE2475";
-
 export type HomePricingSideImage = {
   src: string;
   alt: string;
@@ -51,12 +49,15 @@ type HomePricingCalculatorProps = {
    * If empty/omitted, five gray placeholders are shown.
    */
   teamPricingSideImages?: HomePricingSideImage[];
+  /** From Sanity “More info” fields; row hidden if both empty. */
+  moreInfoTitle?: string | null;
+  moreInfoDescription?: string | null;
 };
 
 function SideStripeThumb({ image }: { image?: HomePricingSideImage }) {
   if (image?.src) {
     return (
-      <div className="relative h-14 w-[53px] shrink-0 overflow-hidden rounded-sm bg-border dark:bg-white/10">
+      <div className="relative h-14 w-[53px] shrink-0 overflow-hidden rounded-none bg-border dark:bg-white/10">
         <Image
           src={image.src}
           alt={image.alt}
@@ -69,7 +70,7 @@ function SideStripeThumb({ image }: { image?: HomePricingSideImage }) {
   }
   return (
     <div
-      className="h-14 w-[53px] shrink-0 rounded-sm bg-border dark:bg-white/10"
+      className="h-14 w-[53px] shrink-0 rounded-none bg-border dark:bg-white/10"
       aria-hidden
     />
   );
@@ -142,6 +143,8 @@ export default function HomePricingCalculator({
   pricingRates: pricingRatesProp,
   monthlyRateSideImage,
   teamPricingSideImages,
+  moreInfoTitle,
+  moreInfoDescription,
 }: HomePricingCalculatorProps) {
   const [teamSize, setTeamSize] = useState(1);
   const [teamPricingOpen, setTeamPricingOpen] = useState(false);
@@ -176,6 +179,11 @@ export default function HomePricingCalculator({
   const additionalRowLabel =
     additionalCount >= 2 ? "Additional designers" : "Additional designer";
 
+  const moreInfoTitleTrim = moreInfoTitle?.trim() ?? "";
+  const moreInfoDescriptionTrim = moreInfoDescription?.trim() ?? "";
+  const showMoreInfoRow =
+    moreInfoTitleTrim.length > 0 || moreInfoDescriptionTrim.length > 0;
+
   const dec = () => setTeamSize((c) => Math.max(minDesigners, c - 1));
   const inc = () => setTeamSize((c) => Math.min(maxDesigners, c + 1));
 
@@ -207,7 +215,7 @@ export default function HomePricingCalculator({
             <div className="pt-1">
               <p
                 className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] m-0 whitespace-pre-wrap"
-                style={{ color: accent }}
+                style={{ color: "var(--accent)" }}
                 aria-live="polite"
               >
                 {formatGbp(rates.baseMonthly)}
@@ -360,13 +368,29 @@ export default function HomePricingCalculator({
                         </div>
                         <span
                           className="shrink-0 tabular-nums whitespace-nowrap leading-[37px]"
-                          style={{ color: accent }}
+                          style={{ color: "var(--accent)" }}
                         >
                           {formatGbp(totalMonthly)}
                         </span>
                       </div>
                       <Rule />
                     </div>
+                    {showMoreInfoRow && (
+                      <div className="mt-[52px]">
+                        <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
+                          <div className="flex flex-col gap-[12px] min-w-0 pr-2 flex-1">
+                            {moreInfoTitleTrim ? (
+                              <span className="text-foreground">{moreInfoTitleTrim}</span>
+                            ) : null}
+                            {moreInfoDescriptionTrim ? (
+                              <span className="text-foreground/50 whitespace-pre-line text-[20px] leading-[29px]">
+                                {moreInfoDescriptionTrim}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

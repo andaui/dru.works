@@ -79,6 +79,20 @@ export default defineType({
         }),
       ],
     }),
+    defineField({
+      name: 'moreInfoTitle',
+      title: 'More info title',
+      type: 'string',
+      description:
+        'Shown below “Monthly total” / volume note in the team pricing breakdown (same layout as that row). Leave empty to hide the block.',
+    }),
+    defineField({
+      name: 'moreInfoDescription',
+      title: 'More info description',
+      type: 'text',
+      rows: 4,
+      description: 'Secondary line under the more info title (muted). Supports line breaks.',
+    }),
   ],
   preview: {
     prepare() {
