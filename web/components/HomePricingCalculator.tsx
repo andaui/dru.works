@@ -95,6 +95,7 @@ export default function HomePricingCalculator({
   maxDesigners = 8,
 }: HomePricingCalculatorProps) {
   const [teamSize, setTeamSize] = useState(1);
+  const [teamPricingOpen, setTeamPricingOpen] = useState(false);
 
   const { additionalCount, rateEach, totalMonthly } = useMemo(() => {
     const add = Math.max(0, teamSize - 1);
@@ -147,7 +148,7 @@ export default function HomePricingCalculator({
                 style={{ color: accent }}
                 aria-live="polite"
               >
-                {formatGbp(totalMonthly)}
+                {formatGbp(BASE_MONTHLY)}
               </p>
               <Rule />
             </div>
@@ -187,95 +188,120 @@ export default function HomePricingCalculator({
                 <Rule />
               </div>
               <div className="pt-1">
-                <NextLink
-                  href="/about#mentorship"
-                  className="flex items-center justify-between gap-4 w-full text-left group"
+                <button
+                  type="button"
+                  id="pricing-team-toggle"
+                  aria-expanded={teamPricingOpen}
+                  aria-controls="pricing-team-details"
+                  onClick={() => setTeamPricingOpen((o) => !o)}
+                  className="flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer"
                 >
                   <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
-                    Learn more
+                    {teamPricingOpen ? "Show less" : "Learn more"}
                   </span>
-                  <IconArrowRight className="shrink-0 w-6 h-6 text-muted opacity-60 group-hover:opacity-100 group-hover:text-foreground transition-all" />
-                </NextLink>
+                  <IconArrowRight
+                    className={`shrink-0 w-6 h-6 text-muted opacity-60 group-hover:opacity-100 group-hover:text-foreground transition-transform duration-200 ${
+                      teamPricingOpen ? "-rotate-90" : ""
+                    }`}
+                  />
+                </button>
                 <Rule />
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 w-full">
-              <p
-                className="font-soehne font-normal text-foreground tracking-[-0.25px] m-0 tabular-nums leading-none"
-                style={{ fontSize: "clamp(3rem, 15vw, 7.8125rem)" }}
-                aria-live="polite"
-              >
-                {teamSize}
-              </p>
-              <div className="flex items-center gap-8 sm:gap-10 shrink-0">
-                <button
-                  type="button"
-                  onClick={dec}
-                  disabled={teamSize <= minDesigners}
-                  className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
-                  aria-label="Decrease team size"
+            <div
+              className={`grid w-full transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:transition-none ${
+                teamPricingOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              }`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  id="pricing-team-details"
+                  className="flex flex-col gap-[52px] w-full"
+                  role="region"
+                  aria-labelledby="pricing-team-toggle"
+                  aria-hidden={!teamPricingOpen}
+                  {...(!teamPricingOpen ? { inert: true } : {})}
                 >
-                  <IconMinus className="w-6 h-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={inc}
-                  disabled={teamSize >= maxDesigners}
-                  className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
-                  aria-label="Increase team size"
-                >
-                  <IconPlus className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col w-full max-w-[815px]">
-              <div className="pt-1">
-                <div className="flex items-center justify-between gap-4 text-[18px] sm:text-[24px] tracking-[-0.25px] w-full">
-                  <p className="font-soehne font-normal m-0 leading-[37px] text-foreground">
-                    Team size
-                  </p>
-                  <p className="font-soehne font-normal text-foreground/50 m-0 leading-[37px] tabular-nums">
-                    {teamSize}
-                  </p>
-                </div>
-                <Rule />
-              </div>
-              <div className="pt-1">
-                <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
-                  <span className="text-foreground">Lead Designer (Dru)</span>
-                  <span className="text-foreground/50 tabular-nums">
-                    {formatGbp(BASE_MONTHLY)}
-                  </span>
-                </div>
-                <Rule />
-              </div>
-              <div className="pt-1">
-                <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
-                  <span className="text-foreground">{additionalRowLabel}</span>
-                  <span className="text-foreground/50 tabular-nums">
-                    {teamSize > 1 ? formatGbp(rateEach) : "—"}
-                  </span>
-                </div>
-                <Rule />
-              </div>
-              <div className="pt-1">
-                <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
-                  <div className="flex flex-col gap-[12px] min-w-0 pr-2">
-                    <span className="text-foreground">Monthly total</span>
-                    <span className="text-foreground/50">
-                      Volume pricing applied automatically
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-4 w-full">
+                    <p
+                      className="font-soehne font-normal text-foreground tracking-[-0.25px] m-0 tabular-nums leading-none"
+                      style={{ fontSize: "clamp(3rem, 15vw, 7.8125rem)" }}
+                      aria-live="polite"
+                    >
+                      {teamSize}
+                    </p>
+                    <div className="flex items-center gap-8 sm:gap-10 shrink-0">
+                      <button
+                        type="button"
+                        onClick={dec}
+                        disabled={teamSize <= minDesigners}
+                        className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
+                        aria-label="Decrease team size"
+                      >
+                        <IconMinus className="w-6 h-6" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={inc}
+                        disabled={teamSize >= maxDesigners}
+                        className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
+                        aria-label="Increase team size"
+                      >
+                        <IconPlus className="w-6 h-6" />
+                      </button>
+                    </div>
                   </div>
-                  <span
-                    className="shrink-0 tabular-nums whitespace-nowrap leading-[37px]"
-                    style={{ color: accent }}
-                  >
-                    {formatGbp(totalMonthly)}
-                  </span>
+
+                  <div className="flex flex-col w-full max-w-[815px]">
+                    <div className="pt-1">
+                      <div className="flex items-center justify-between gap-4 text-[18px] sm:text-[24px] tracking-[-0.25px] w-full">
+                        <p className="font-soehne font-normal m-0 leading-[37px] text-foreground">
+                          Team size
+                        </p>
+                        <p className="font-soehne font-normal text-foreground/50 m-0 leading-[37px] tabular-nums">
+                          {teamSize}
+                        </p>
+                      </div>
+                      <Rule />
+                    </div>
+                    <div className="pt-1">
+                      <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
+                        <span className="text-foreground">Lead Designer (Dru)</span>
+                        <span className="text-foreground/50 tabular-nums">
+                          {formatGbp(BASE_MONTHLY)}
+                        </span>
+                      </div>
+                      <Rule />
+                    </div>
+                    <div className="pt-1">
+                      <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
+                        <span className="text-foreground">{additionalRowLabel}</span>
+                        <span className="text-foreground/50 tabular-nums">
+                          {teamSize > 1 ? formatGbp(rateEach) : "—"}
+                        </span>
+                      </div>
+                      <Rule />
+                    </div>
+                    <div className="pt-1">
+                      <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
+                        <div className="flex flex-col gap-[12px] min-w-0 pr-2">
+                          <span className="text-foreground">Monthly total</span>
+                          <span className="text-foreground/50">
+                            Volume pricing applied automatically
+                          </span>
+                        </div>
+                        <span
+                          className="shrink-0 tabular-nums whitespace-nowrap leading-[37px]"
+                          style={{ color: accent }}
+                        >
+                          {formatGbp(totalMonthly)}
+                        </span>
+                      </div>
+                      <Rule />
+                    </div>
+                  </div>
                 </div>
-                <Rule />
               </div>
             </div>
           </div>
