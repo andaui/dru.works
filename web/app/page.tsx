@@ -19,45 +19,6 @@ import {
   urlFor,
 } from "@/lib/sanity";
 
-function digitsFromPriceString(s: string): number | null {
-  const digits = s.replace(/[^\d]/g, "");
-  if (!digits) return null;
-  return parseInt(digits, 10);
-}
-
-function pricingForCalculator(
-  items: Array<{ label: string; price: string }> | null,
-): {
-  baseMonthly: number;
-  perAdditionalDesigner: number;
-  savingPerAdditional: number;
-  headlineMonthlyValue?: string;
-} {
-  const out = {
-    baseMonthly: 20_000,
-    perAdditionalDesigner: 13_000,
-    savingPerAdditional: 7_000,
-    headlineMonthlyValue: undefined as string | undefined,
-  };
-  if (!items?.length) return out;
-  for (const row of items) {
-    const lab = row.label.toLowerCase();
-    const n = digitsFromPriceString(row.price);
-    if (n == null) continue;
-    if (lab.includes("monthly") || lab.includes("base") || (lab.includes("rate") && !lab.includes("additional"))) {
-      out.baseMonthly = n;
-      out.headlineMonthlyValue = row.price.trim();
-    }
-    if (lab.includes("additional")) out.perAdditionalDesigner = n;
-    if (lab.includes("saving")) out.savingPerAdditional = n;
-  }
-  if (!out.headlineMonthlyValue) {
-    const monthlyRow = items.find((r) => r.label.toLowerCase().includes("monthly"));
-    if (monthlyRow) out.headlineMonthlyValue = monthlyRow.price.trim();
-  }
-  return out;
-}
-
 async function getHomeTestimonials() {
   try {
     return (await client.fetch(heroTestimonialsQuery)) || [];
@@ -249,59 +210,6 @@ export default async function Home() {
   );
   const navAboutTitle = pageTitles.about || "About";
   const navServicesTitle = pageTitles.services || "Services";
-  
-  // Extract pricing data from pricing section
-  // First try to find it in the work page sections
-  let pricingSection = homepageData?.sections?.find((item: any) => 
-    item?._type === 'section' && item?.sectionTitle?.toLowerCase() === 'pricing'
-  );
-  
-  // If not found in work page, try fetching it directly as a standalone section
-  if (!pricingSection) {
-    try {
-      const pricingSectionData = await client.fetch(`*[_type == "section" && (sectionTitle == "Pricing" || sectionTitle == "pricing")][0] {
-        _id,
-        _type,
-        sectionTitle,
-        blocks[] {
-          _key,
-          content[] {
-            _type,
-            _key,
-            items[] {
-              label,
-              price
-            }
-          }
-        }
-      }`);
-      pricingSection = pricingSectionData;
-    } catch (error) {
-      console.error('Error fetching pricing section:', error);
-    }
-  }
-  
-  // Find price2Col content in the pricing section
-  let pricingItems: Array<{ label: string; price: string }> | null = null;
-  if (pricingSection?.blocks) {
-    for (const block of pricingSection.blocks) {
-      if (block.content) {
-        const priceContent = block.content.find((content: any) => content._type === 'price2Col');
-        if (priceContent?.items && Array.isArray(priceContent.items) && priceContent.items.length > 0) {
-          // Validate items structure
-          const validItems = priceContent.items.filter((item: any) => 
-            item && typeof item === 'object' && 'label' in item && 'price' in item
-          );
-          if (validItems.length > 0) {
-            pricingItems = validItems;
-            break;
-          }
-        }
-      }
-    }
-  }
-  
-  const calculatorPricing = pricingForCalculator(pricingItems);
 
   const homeGridTestimonials: HomeTestimonialItem[] = rawTestimonials.map(
     (testimonial: any) => {
@@ -389,12 +297,7 @@ export default async function Home() {
       />
 
       <div className="w-full px-[2.5%] sm:px-6 flex flex-col gap-16 lg:gap-20 pb-12 lg:pb-16">
-        <HomePricingCalculator
-          headlineMonthlyValue={calculatorPricing.headlineMonthlyValue}
-          baseMonthly={calculatorPricing.baseMonthly}
-          perAdditionalDesigner={calculatorPricing.perAdditionalDesigner}
-          savingPerAdditional={calculatorPricing.savingPerAdditional}
-        />
+        <HomePricingCalculator />
         <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
       </div>
 

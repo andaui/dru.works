@@ -3,19 +3,28 @@
 import NextLink from "next/link";
 import { useMemo, useState } from "react";
 
-const accent = "#de2475";
+const accent = "#DE2475";
+
+/** Core monthly (you / partner capacity only) */
+const BASE_MONTHLY = 20_000;
+/** Baseline per additional designer — tier discounts are measured against this */
+const BASELINE_ADDITIONAL = 13_500;
 
 function formatGbp(n: number): string {
   return `GBP ${n.toLocaleString("en-GB")}`;
 }
 
+/**
+ * Tiered rate per *additional* designer (count = team size minus one).
+ * 1 additional → £13,500 · 2 → £13,000 each · 3+ → £12,500 each.
+ */
+function tieredRatePerAdditionalDesigner(additionalCount: number): number {
+  if (additionalCount === 1) return 13_500;
+  if (additionalCount === 2) return 13_000;
+  return 12_500;
+}
+
 type HomePricingCalculatorProps = {
-  /** Shown in the first block (e.g. from CMS) */
-  headlineMonthlyLabel?: string;
-  headlineMonthlyValue?: string;
-  baseMonthly: number;
-  perAdditionalDesigner: number;
-  savingPerAdditional: number;
   minDesigners?: number;
   maxDesigners?: number;
 };
@@ -24,7 +33,6 @@ function Rule() {
   return <div className="h-px w-full bg-border shrink-0" aria-hidden />;
 }
 
-/** Inline SVGs (same paths as /public/*.svg) so icons always render; no extra HTTP + no middleware issues. */
 function IconArrowRight({ className }: { className?: string }) {
   return (
     <svg
@@ -83,33 +91,30 @@ function IconPlus({ className }: { className?: string }) {
 }
 
 export default function HomePricingCalculator({
-  headlineMonthlyLabel = "Monthly rate",
-  headlineMonthlyValue,
-  baseMonthly,
-  perAdditionalDesigner,
-  savingPerAdditional,
   minDesigners = 1,
   maxDesigners = 8,
 }: HomePricingCalculatorProps) {
-  const [n, setN] = useState(2);
+  const [teamSize, setTeamSize] = useState(1);
 
-  const headlineValue =
-    headlineMonthlyValue ?? formatGbp(baseMonthly);
-
-  const { listTotal, saving, finalTotal, additional } = useMemo(() => {
-    const add = Math.max(0, n - 1);
-    const list = baseMonthly + add * perAdditionalDesigner;
-    const sav = add * savingPerAdditional;
+  const { additionalCount, rateEach, totalMonthly } = useMemo(() => {
+    const add = Math.max(0, teamSize - 1);
+    const tierRate =
+      add === 0 ? BASELINE_ADDITIONAL : tieredRatePerAdditionalDesigner(add);
+    const additionalCost =
+      add === 0 ? 0 : add * tieredRatePerAdditionalDesigner(add);
+    const totalMonthly = BASE_MONTHLY + additionalCost;
     return {
-      additional: add,
-      listTotal: list,
-      saving: sav,
-      finalTotal: list - sav,
+      additionalCount: add,
+      rateEach: tierRate,
+      totalMonthly,
     };
-  }, [n, baseMonthly, perAdditionalDesigner, savingPerAdditional]);
+  }, [teamSize]);
 
-  const dec = () => setN((c) => Math.max(minDesigners, c - 1));
-  const inc = () => setN((c) => Math.min(maxDesigners, c + 1));
+  const additionalRowLabel =
+    additionalCount >= 2 ? "Additional designers" : "Additional designer";
+
+  const dec = () => setTeamSize((c) => Math.max(minDesigners, c - 1));
+  const inc = () => setTeamSize((c) => Math.min(maxDesigners, c + 1));
 
   return (
     <section
@@ -117,7 +122,6 @@ export default function HomePricingCalculator({
       className="w-full max-w-[1900px] mx-auto flex flex-col gap-10 lg:gap-[62px] scroll-mt-4"
       aria-labelledby="home-pricing-heading"
     >
-      {/* Block 1 — monthly rate + how I work */}
       <div className="flex flex-col gap-1 w-full">
         <Rule />
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 px-0 sm:px-0 w-full">
@@ -133,7 +137,7 @@ export default function HomePricingCalculator({
                 id="home-pricing-heading"
                 className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0"
               >
-                {headlineMonthlyLabel}
+                Monthly rate
               </h2>
               <Rule />
             </div>
@@ -141,8 +145,9 @@ export default function HomePricingCalculator({
               <p
                 className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] m-0 whitespace-pre-wrap"
                 style={{ color: accent }}
+                aria-live="polite"
               >
-                {headlineValue}
+                {formatGbp(totalMonthly)}
               </p>
               <Rule />
             </div>
@@ -162,7 +167,6 @@ export default function HomePricingCalculator({
         </div>
       </div>
 
-      {/* Block 2 — team + calculator */}
       <div className="flex flex-col gap-1 w-full">
         <Rule />
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 w-full">
@@ -178,8 +182,7 @@ export default function HomePricingCalculator({
             <div>
               <div className="pt-1">
                 <p className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
-                  When a project requires a broader team, I can bring in trusted
-                  designers
+                  When a broader team is needed, I can bring in trusted designers
                 </p>
                 <Rule />
               </div>
@@ -203,24 +206,24 @@ export default function HomePricingCalculator({
                 style={{ fontSize: "clamp(3rem, 15vw, 7.8125rem)" }}
                 aria-live="polite"
               >
-                {n}
+                {teamSize}
               </p>
               <div className="flex items-center gap-8 sm:gap-10 shrink-0">
                 <button
                   type="button"
                   onClick={dec}
-                  disabled={n <= minDesigners}
+                  disabled={teamSize <= minDesigners}
                   className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
-                  aria-label="Decrease number of designers"
+                  aria-label="Decrease team size"
                 >
                   <IconMinus className="w-6 h-6" />
                 </button>
                 <button
                   type="button"
                   onClick={inc}
-                  disabled={n >= maxDesigners}
+                  disabled={teamSize >= maxDesigners}
                   className="p-0 border-0 bg-transparent cursor-pointer text-foreground disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity flex items-center justify-center"
-                  aria-label="Increase number of designers"
+                  aria-label="Increase team size"
                 >
                   <IconPlus className="w-6 h-6" />
                 </button>
@@ -230,56 +233,50 @@ export default function HomePricingCalculator({
             <div className="flex flex-col w-full max-w-[815px]">
               <div className="pt-1">
                 <div className="flex items-center justify-between gap-4 text-[18px] sm:text-[24px] tracking-[-0.25px] w-full">
-                  <p className="font-soehne font-normal m-0 leading-[37px]">
-                    <span className="text-foreground">Designers </span>
-                    <span className="text-[#808080] dark:text-muted">
-                      (Including Dru)
-                    </span>
+                  <p className="font-soehne font-normal m-0 leading-[37px] text-foreground">
+                    Team size
                   </p>
                   <p className="font-soehne font-normal text-foreground/50 m-0 leading-[37px] tabular-nums">
-                    {n}
+                    {teamSize}
                   </p>
                 </div>
                 <Rule />
               </div>
               <div className="pt-1">
                 <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
-                  <span className="text-foreground">Per additional designer</span>
+                  <span className="text-foreground">Lead Designer (Dru)</span>
                   <span className="text-foreground/50 tabular-nums">
-                    {formatGbp(perAdditionalDesigner)}
+                    {formatGbp(BASE_MONTHLY)}
                   </span>
                 </div>
                 <Rule />
               </div>
-              {additional > 0 && (
-                <div className="pt-1">
-                  <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
-                    <span className="text-foreground">Discount</span>
-                    <div className="flex items-center justify-end gap-4 sm:gap-6 shrink-0">
-                      <span className="line-through opacity-50 text-foreground tabular-nums">
-                        {formatGbp(listTotal)}
-                      </span>
-                      <span className="tabular-nums" style={{ color: accent }}>
-                        {formatGbp(finalTotal)}
-                      </span>
-                    </div>
-                  </div>
-                  <Rule />
+              <div className="pt-1">
+                <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
+                  <span className="text-foreground">{additionalRowLabel}</span>
+                  <span className="text-foreground/50 tabular-nums">
+                    {teamSize > 1 ? formatGbp(rateEach) : "—"}
+                  </span>
                 </div>
-              )}
-              {additional > 0 && (
-                <div className="pt-1">
-                  <div className="flex items-center justify-between gap-4 w-full">
-                    <span className="font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground whitespace-nowrap">
-                      Saving per month
-                    </span>
-                    <span className="font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 tabular-nums whitespace-nowrap">
-                      -{formatGbp(saving)}
+                <Rule />
+              </div>
+              <div className="pt-1">
+                <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
+                  <div className="flex flex-col gap-[12px] min-w-0 pr-2">
+                    <span className="text-foreground">Monthly total</span>
+                    <span className="text-foreground/50">
+                      Volume pricing applied automatically
                     </span>
                   </div>
-                  <Rule />
+                  <span
+                    className="shrink-0 tabular-nums whitespace-nowrap leading-[37px]"
+                    style={{ color: accent }}
+                  >
+                    {formatGbp(totalMonthly)}
+                  </span>
                 </div>
-              )}
+                <Rule />
+              </div>
             </div>
           </div>
         </div>
