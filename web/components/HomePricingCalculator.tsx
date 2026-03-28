@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import NextLink from "next/link";
 import { useMemo, useState } from "react";
 
 export type HomePricingSideImage = {
@@ -52,6 +51,9 @@ type HomePricingCalculatorProps = {
   /** From Sanity “More info” fields; row hidden if both empty. */
   moreInfoTitle?: string | null;
   moreInfoDescription?: string | null;
+  /** Expandable row under monthly amount; title defaults to “How I work”. */
+  howIWorkTitle?: string | null;
+  howIWorkDescription?: string | null;
 };
 
 function SideStripeThumb({ image }: { image?: HomePricingSideImage }) {
@@ -79,6 +81,9 @@ function SideStripeThumb({ image }: { image?: HomePricingSideImage }) {
 function Rule() {
   return <div className="h-px w-full bg-border shrink-0" aria-hidden />;
 }
+
+/** Space between row text and the rule below (matches design token --spacing) */
+const pricingRowTextPb = "pb-[calc(var(--spacing)*1)]";
 
 function IconArrowRight({ className }: { className?: string }) {
   return (
@@ -145,9 +150,12 @@ export default function HomePricingCalculator({
   teamPricingSideImages,
   moreInfoTitle,
   moreInfoDescription,
+  howIWorkTitle,
+  howIWorkDescription,
 }: HomePricingCalculatorProps) {
   const [teamSize, setTeamSize] = useState(1);
   const [teamPricingOpen, setTeamPricingOpen] = useState(false);
+  const [howIWorkOpen, setHowIWorkOpen] = useState(false);
 
   const rates = useMemo(
     () => ({ ...DEFAULT_HOME_PRICING_RATES, ...pricingRatesProp }),
@@ -184,29 +192,33 @@ export default function HomePricingCalculator({
   const showMoreInfoRow =
     moreInfoTitleTrim.length > 0 || moreInfoDescriptionTrim.length > 0;
 
+  const howIWorkTitleDisplay = (howIWorkTitle?.trim() || "How I work").trim();
+  const howIWorkDescriptionTrim = howIWorkDescription?.trim() ?? "";
+  const howIWorkExpandable = howIWorkDescriptionTrim.length > 0;
+
   const dec = () => setTeamSize((c) => Math.max(minDesigners, c - 1));
   const inc = () => setTeamSize((c) => Math.min(maxDesigners, c + 1));
 
   return (
     <section
       id="pricing"
-      className="w-full max-w-[1900px] mx-auto flex flex-col gap-10 lg:gap-[62px] scroll-mt-4"
+      className="w-full flex flex-col gap-10 lg:gap-[62px] scroll-mt-4"
       aria-labelledby="home-pricing-heading"
     >
       <div className="flex flex-col gap-1 w-full">
         <Rule />
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 px-0 sm:px-0 w-full">
+        <div className="grid grid-cols-12 gap-x-1 gap-y-6 lg:gap-y-4 w-full items-start px-0 sm:px-0">
           <div
-            className="flex items-center pt-[8px] shrink-0 gap-[11px]"
+            className="col-span-12 lg:col-span-6 flex items-center pt-[8px] shrink-0 gap-[11px]"
             {...(!monthlyRateSideImage?.src ? { "aria-hidden": true } : {})}
           >
             <SideStripeThumb image={monthlyRateSideImage} />
           </div>
-          <div className="flex flex-col w-full sm:max-w-[815px] sm:ml-auto gap-0">
+          <div className="col-span-12 lg:col-span-6 min-w-0 flex flex-col w-full gap-0">
             <div className="pt-1 pb-0">
               <h2
                 id="home-pricing-heading"
-                className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0"
+                className={`font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 ${pricingRowTextPb}`}
               >
                 Monthly rate
               </h2>
@@ -214,7 +226,7 @@ export default function HomePricingCalculator({
             </div>
             <div className="pt-1">
               <p
-                className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] m-0 whitespace-pre-wrap"
+                className={`font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] m-0 whitespace-pre-wrap ${pricingRowTextPb}`}
                 style={{ color: "var(--accent)" }}
                 aria-live="polite"
               >
@@ -223,26 +235,65 @@ export default function HomePricingCalculator({
               <Rule />
             </div>
             <div className="pt-1">
-              <NextLink
-                href="/about#section-pricing"
-                className="flex items-center justify-between gap-4 w-full text-left group"
-              >
-                <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
-                  How I work
-                </span>
-                <IconArrowRight className="shrink-0 w-6 h-6 text-muted opacity-60 group-hover:opacity-100 group-hover:text-foreground transition-all" />
-              </NextLink>
+              {howIWorkExpandable ? (
+                <button
+                  type="button"
+                  id="pricing-how-i-work-toggle"
+                  aria-expanded={howIWorkOpen}
+                  aria-controls="pricing-how-i-work-details"
+                  aria-label={howIWorkOpen ? "Show less" : `Show details: ${howIWorkTitleDisplay}`}
+                  onClick={() => setHowIWorkOpen((o) => !o)}
+                  className={`flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer ${pricingRowTextPb}`}
+                >
+                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
+                    {howIWorkOpen ? "Show less" : howIWorkTitleDisplay}
+                  </span>
+                  <IconArrowRight
+                    className={`shrink-0 w-6 h-6 text-muted opacity-60 group-hover:opacity-100 group-hover:text-foreground transition-transform duration-200 ${
+                      howIWorkOpen ? "-rotate-90" : ""
+                    }`}
+                  />
+                </button>
+              ) : (
+                <div className={`flex items-center justify-between gap-4 w-full ${pricingRowTextPb}`}>
+                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50">
+                    {howIWorkTitleDisplay}
+                  </span>
+                </div>
+              )}
               <Rule />
             </div>
+            {howIWorkExpandable && (
+              <div
+                className={`grid w-full transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:transition-none ${
+                  howIWorkOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                }`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div
+                    id="pricing-how-i-work-details"
+                    className="w-full pt-[42px] pb-[42px]"
+                    role="region"
+                    aria-labelledby="pricing-how-i-work-toggle"
+                    aria-hidden={!howIWorkOpen}
+                    {...(!howIWorkOpen ? { inert: true } : {})}
+                  >
+                    <p className="font-soehne font-normal text-foreground/50 m-0 whitespace-pre-line text-[20px] leading-[29px]">
+                      {howIWorkDescriptionTrim}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-1 w-full">
         <Rule />
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 w-full">
+        <div className="grid grid-cols-12 gap-x-1 gap-y-6 lg:gap-y-4 w-full items-start">
           <div
-            className="flex items-center pt-[8px] gap-[11px] shrink-0"
+            className="col-span-12 lg:col-span-6 flex items-center pt-[8px] gap-[11px] shrink-0"
             {...(!teamPricingSideImages?.some((img) => img?.src)
               ? { "aria-hidden": true }
               : {})}
@@ -254,10 +305,12 @@ export default function HomePricingCalculator({
               />
             ))}
           </div>
-          <div className="flex flex-col w-full sm:max-w-[815px] sm:ml-auto gap-[52px]">
+          <div className="col-span-12 lg:col-span-6 min-w-0 flex flex-col w-full gap-[42px]">
             <div>
               <div className="pt-1">
-                <p className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                <p
+                  className={`font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 ${pricingRowTextPb}`}
+                >
                   When a broader team is needed, I can bring in trusted designers
                 </p>
                 <Rule />
@@ -269,7 +322,7 @@ export default function HomePricingCalculator({
                   aria-expanded={teamPricingOpen}
                   aria-controls="pricing-team-details"
                   onClick={() => setTeamPricingOpen((o) => !o)}
-                  className="flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer"
+                  className={`flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer ${pricingRowTextPb}`}
                 >
                   <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
                     {teamPricingOpen ? "Show less" : "Learn more"}
@@ -328,9 +381,11 @@ export default function HomePricingCalculator({
                     </div>
                   </div>
 
-                  <div className="flex flex-col w-full max-w-[815px]">
+                  <div className="flex flex-col w-full min-w-0">
                     <div className="pt-1">
-                      <div className="flex items-center justify-between gap-4 text-[18px] sm:text-[24px] tracking-[-0.25px] w-full">
+                      <div
+                        className={`flex items-center justify-between gap-4 text-[18px] sm:text-[24px] tracking-[-0.25px] w-full ${pricingRowTextPb}`}
+                      >
                         <p className="font-soehne font-normal m-0 leading-[37px] text-foreground">
                           Team size
                         </p>
@@ -341,7 +396,9 @@ export default function HomePricingCalculator({
                       <Rule />
                     </div>
                     <div className="pt-1">
-                      <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
+                      <div
+                        className={`flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap ${pricingRowTextPb}`}
+                      >
                         <span className="text-foreground">Lead Designer (Dru)</span>
                         <span className="text-foreground/50 tabular-nums">
                           {formatGbp(rates.baseMonthly)}
@@ -350,7 +407,9 @@ export default function HomePricingCalculator({
                       <Rule />
                     </div>
                     <div className="pt-1">
-                      <div className="flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap">
+                      <div
+                        className={`flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap ${pricingRowTextPb}`}
+                      >
                         <span className="text-foreground">{additionalRowLabel}</span>
                         <span className="text-foreground/50 tabular-nums">
                           {teamSize > 1 ? formatGbp(rateEach) : "—"}
@@ -359,7 +418,9 @@ export default function HomePricingCalculator({
                       <Rule />
                     </div>
                     <div className="pt-1">
-                      <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
+                      <div
+                        className={`flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full ${pricingRowTextPb}`}
+                      >
                         <div className="flex flex-col gap-[12px] min-w-0 pr-2">
                           <span className="text-foreground">Monthly total</span>
                           <span className="text-foreground/50">
@@ -377,7 +438,9 @@ export default function HomePricingCalculator({
                     </div>
                     {showMoreInfoRow && (
                       <div className="mt-[52px]">
-                        <div className="flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full">
+                        <div
+                          className={`flex items-end justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full ${pricingRowTextPb}`}
+                        >
                           <div className="flex flex-col gap-[12px] min-w-0 pr-2 flex-1">
                             {moreInfoTitleTrim ? (
                               <span className="text-foreground">{moreInfoTitleTrim}</span>

@@ -375,7 +375,7 @@ export default async function Home() {
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
   return (
-    <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <HomeLandingHero
         heroTitle={heroTitle}
         heroDescription={homepageData?.heroDescription}
@@ -391,6 +391,8 @@ export default async function Home() {
           teamPricingSideImages={teamPricingSideImages}
           moreInfoTitle={pricingDoc?.moreInfoTitle ?? null}
           moreInfoDescription={pricingDoc?.moreInfoDescription ?? null}
+          howIWorkTitle={pricingDoc?.howIWorkTitle ?? null}
+          howIWorkDescription={pricingDoc?.howIWorkDescription ?? null}
         />
       </div>
 

@@ -93,6 +93,21 @@ export default defineType({
       rows: 4,
       description: 'Secondary line under the more info title (muted). Supports line breaks.',
     }),
+    defineField({
+      name: 'howIWorkTitle',
+      title: 'How I work title',
+      type: 'string',
+      description:
+        'Label on the expandable row under the monthly amount (e.g. “How I work”). Shown collapsed; click expands the description below.',
+      initialValue: 'How I work',
+    }),
+    defineField({
+      name: 'howIWorkDescription',
+      title: 'How I work description',
+      type: 'text',
+      rows: 6,
+      description: 'Revealed when the title row is expanded. Line breaks preserved.',
+    }),
   ],
   preview: {
     prepare() {

@@ -74,8 +74,8 @@ export default function HomeLandingHero({
       className="w-full px-[2.5%] sm:px-6 pt-[22px] pb-[64px] lg:pb-[104px]"
       aria-label="Introduction"
     >
-      <div className="flex flex-col gap-10 lg:gap-8 w-full max-w-[1900px] mx-auto">
-        <div className="flex w-full items-center justify-between gap-4 pl-2">
+      <div className="grid grid-cols-12 gap-x-1 gap-y-10 lg:gap-y-8 w-full">
+        <div className="col-span-12 flex w-full items-center justify-between gap-4 pl-2">
           <nav
             className="flex items-center gap-[15px] font-inter font-normal text-[13px] leading-[19px]"
             aria-label="Page"
@@ -99,8 +99,8 @@ export default function HomeLandingHero({
           <ThemeLabelToggle />
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 lg:gap-8 w-full">
-          <div className="flex flex-col gap-8 w-full max-w-[441px] shrink-0">
+        <div className="col-span-12 lg:col-span-6 min-w-0">
+          <div className="flex flex-col gap-8 w-full">
             <div className="flex flex-col gap-[34px] w-full pl-1">
               <h1 className="font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
                 {displayTitle}
@@ -138,8 +138,10 @@ export default function HomeLandingHero({
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-8 lg:gap-[31px] w-full lg:max-w-[812px] shrink-0">
+        <div className="col-span-12 lg:col-span-6 min-w-0">
+          <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
             <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
               {description}
             </p>

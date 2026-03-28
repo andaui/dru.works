@@ -20,7 +20,7 @@ export default function HomeTestimonialsGrid({
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="w-full max-w-[1900px] mx-auto" aria-label="Testimonials">
+    <section className="w-full" aria-label="Testimonials">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 w-full">
         {testimonials.map((t) => (
           <TestimonialCard key={t._id} t={t} />
