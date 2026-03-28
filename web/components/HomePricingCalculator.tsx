@@ -187,9 +187,9 @@ export default function HomePricingCalculator({
     >
       <div className="flex flex-col gap-1 w-full">
         <Rule />
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 px-0 sm:px-0 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 px-0 sm:px-0 w-full">
           <div
-            className="flex items-center pt-2 shrink-0 gap-[11px]"
+            className="flex items-center pt-[8px] shrink-0 gap-[11px]"
             {...(!monthlyRateSideImage?.src ? { "aria-hidden": true } : {})}
           >
             <SideStripeThumb image={monthlyRateSideImage} />
@@ -232,9 +232,9 @@ export default function HomePricingCalculator({
 
       <div className="flex flex-col gap-1 w-full">
         <Rule />
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 pt-2 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 w-full">
           <div
-            className="flex items-center pt-2 gap-[11px] shrink-0"
+            className="flex items-center pt-[8px] gap-[11px] shrink-0"
             {...(!teamPricingSideImages?.some((img) => img?.src)
               ? { "aria-hidden": true }
               : {})}

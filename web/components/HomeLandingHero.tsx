@@ -49,7 +49,7 @@ const SERVICES_COLS: [string[], string[]] = [
 ];
 
 const listClass =
-  "flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px] text-[#5d5d5d] dark:text-muted";
+  "flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px] text-[rgba(0,0,0,0.7)]";
 
 type HomeLandingHeroProps = {
   heroTitle: string;

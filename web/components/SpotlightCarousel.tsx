@@ -62,7 +62,10 @@ function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
       ref={itemRef}
       className="relative shrink-0 flex flex-col items-start gap-[12px]"
     >
-      <div className="relative flex items-center" style={{ height: 'clamp(300px, 40vw, 582px)', backgroundColor: 'transparent' }}>
+      <div
+        className="relative flex items-center overflow-hidden rounded-[16px]"
+        style={{ height: 'clamp(300px, 40vw, 582px)', backgroundColor: 'transparent' }}
+      >
         {item.type === 'video' ? (
           <video
             ref={imageRef as React.RefObject<HTMLVideoElement>}
@@ -221,20 +224,12 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
 
   return (
     <div className="w-[calc(100%+5%)] sm:w-full -ml-[2.5%] -mr-[2.5%] sm:mx-0">
-      <div className="flex items-center justify-between pr-[2.5%] sm:pr-[24px]">
-        <div
-          className="text-left pl-[2.5%] sm:pl-[24px]"
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '13px',
-            lineHeight: '20px',
-            marginBottom: '28px',
-          }}
-        >
+      <div className="flex items-center justify-between pr-[2.5%] sm:pr-[24px] mb-7">
+        <div className="text-left pl-[2.5%] sm:pl-[24px] font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground">
           Spotlight
         </div>
         {itemCount > 1 && (
-          <div className="flex items-center gap-2 -mt-5 mb-5">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={goPrev}

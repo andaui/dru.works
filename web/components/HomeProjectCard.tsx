@@ -98,7 +98,7 @@ function CardContent({
   if (variant === "hero-main") {
     return (
       <>
-        <div className="w-full overflow-hidden">
+        <div className="w-full overflow-hidden rounded-[20px]">
           {isVideo ? (
             <video
               src={cover.url}
@@ -127,7 +127,7 @@ function CardContent({
 
   return (
     <>
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-hidden rounded-[20px]">
         {isVideo ? (
           <video
             src={cover.url}

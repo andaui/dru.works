@@ -9,7 +9,7 @@ export default function TestimonialCard({ t }: { t: HomeTestimonialItem }) {
 
   return (
     <article
-      className="flex flex-col gap-[21px] items-start p-6 sm:p-7"
+      className="flex flex-col gap-[21px] items-start p-5 sm:p-6"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import AboutPageLayout from "@/components/AboutPageLayout";
+import HeroDescriptionWithCompanyAccent from "@/components/HeroDescriptionWithCompanyAccent";
 import { client, pageDataQuery, navigationPagesQuery } from "@/lib/sanity";
 
 async function getPageData() {
@@ -59,9 +60,10 @@ export default async function About() {
             {/* Content Text */}
             {pageData?.heroDescription && (
               <div className="font-normal text-[16px] leading-[23px] not-italic text-foreground w-[788px] max-w-[calc(100%-48px)]">
-                <p className="whitespace-pre-line mb-0">
-                  {pageData.heroDescription}
-                </p>
+                <HeroDescriptionWithCompanyAccent
+                  text={pageData.heroDescription}
+                  className="whitespace-pre-line mb-0"
+                />
               </div>
             )}
           </>

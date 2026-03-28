@@ -10,6 +10,7 @@ import HomeTestimonialsGrid, {
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import Link from "@/components/Link";
 import Clients from "@/components/Clients";
+import HeroDescriptionWithCompanyAccent from "@/components/HeroDescriptionWithCompanyAccent";
 import {
   client,
   featuredWorkQuery,
@@ -382,20 +383,17 @@ export default async function Home() {
         servicesLabel={navServicesTitle}
       />
 
-      <div className="w-full px-[2.5%] sm:px-6 flex flex-col gap-16 lg:gap-20 pb-12 lg:pb-16">
+      <div className="w-full px-[2.5%] sm:px-6 pb-12 lg:pb-16">
         <HomePricingCalculator
           maxDesigners={pricingMaxTeamSize}
           pricingRates={pricingRates}
           monthlyRateSideImage={monthlyRateSideImage}
           teamPricingSideImages={teamPricingSideImages}
         />
-        <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
       </div>
 
       {/* Content Section - Normal Flow */}
       <div className="w-full relative z-0">
-        <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" />
-
         {/* Featured projects: desktop only (2-col row + main 70%). On mobile these appear in the grid below. */}
         {featuredThree.length >= 3 && (
           <section className="hidden md:block w-full pt-8 lg:pt-12 px-6">
@@ -415,24 +413,30 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Spotlight Carousel - below featured projects (desktop only) */}
+        {/* Testimonials — after featured work, before Spotlight (mobile: below pricing with section spacing) */}
+        <div className="w-full px-[2.5%] sm:px-6 mt-16 lg:mt-0 lg:pt-20">
+          <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
+        </div>
+
+        {/* Spotlight Carousel — below testimonials (desktop only) */}
         {processedSpotlightItems.length > 0 && (
-          <section className="hidden md:block w-full pt-[130px]">
+          <section className="hidden md:block w-full pt-16 lg:pt-[100px]">
             <SpotlightCarouselWrapper items={processedSpotlightItems} />
           </section>
         )}
 
-        {/* About Page Hero Description - 138px below carousel, aligned with carousel (24px left on sm+ screens) */}
+        {/* About Page Hero Description - same type + right column width as hero intro; 138px below carousel */}
         {aboutPageData?.heroDescription && (
-          <div className="px-[2.5%] sm:pl-[24px] sm:pr-0 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
-            <div className="font-normal text-[16px] leading-[23px] not-italic text-foreground w-[788px] max-w-[calc(100%-48px)]">
-              <p className="whitespace-pre-line mb-0">
-                {aboutPageData.heroDescription}
-              </p>
-            </div>
-            {/* About Link - 28px gap from description */}
-            <div style={{ marginTop: '28px' }}>
-              <Link text="About" url="/about" />
+          <div className="w-full px-[2.5%] sm:px-6 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px] flex justify-end">
+            <div className="w-full lg:max-w-[812px]">
+              <HeroDescriptionWithCompanyAccent
+                text={aboutPageData.heroDescription}
+                className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 whitespace-pre-line"
+              />
+              {/* About Link - 28px gap from description */}
+              <div style={{ marginTop: '28px' }}>
+                <Link text="About" url="/about" />
+              </div>
             </div>
           </div>
         )}
