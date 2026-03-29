@@ -8,8 +8,6 @@ import HomeTestimonialsGrid, {
   type HomeTestimonialItem,
 } from "@/components/HomeTestimonialsGrid";
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
-import Link from "@/components/Link";
-import Clients from "@/components/Clients";
 import HeroDescriptionWithCompanyAccent from "@/components/HeroDescriptionWithCompanyAccent";
 import {
   client,
@@ -18,7 +16,6 @@ import {
   heroTestimonialsQuery,
   spotlightQuery,
   pageDataQuery,
-  clientsSectionQuery,
   navigationPagesQuery,
   pricingAndDesignersQuery,
   urlFor,
@@ -116,31 +113,6 @@ async function getAboutPageData() {
   return getPageData('about');
 }
 
-async function getClientsSection() {
-  try {
-    const clientsSection = await client.fetch(clientsSectionQuery);
-    if (!clientsSection) return [];
-    
-    // Extract logos from all blocks and content items
-    const allLogos: any[] = [];
-    if (clientsSection.blocks) {
-      clientsSection.blocks.forEach((block: any) => {
-        if (block.content) {
-          block.content.forEach((content: any) => {
-            if (content._type === 'clients' && content.logos) {
-              allLogos.push(...content.logos);
-            }
-          });
-        }
-      });
-    }
-    return allLogos;
-  } catch (error) {
-    console.error('Error fetching clients section:', error);
-    return [];
-  }
-}
-
 async function getNavigationPages() {
   try {
     const pages = await client.fetch(navigationPagesQuery);
@@ -228,7 +200,7 @@ function toWorkWithMedia(item: any): WorkWithMedia {
 }
 
 export default async function Home() {
-  // Fetch navigation pages, homepage/work page data, spotlight, testimonials, about page data, and clients section from Sanity
+  // Fetch navigation pages, homepage/work page data, spotlight, testimonials, about page data from Sanity
   const navigationPages = await getNavigationPages();
   const homepageData = await getPageData('work');
   
@@ -236,7 +208,6 @@ export default async function Home() {
   const rawSpotlightItems = await getSpotlightItems();
   const rawTestimonials = await getHomeTestimonials();
   const aboutPageData = await getAboutPageData();
-  const clientLogos = await getClientsSection();
   const pricingDoc = await getPricingAndDesigners();
 
   let monthlyRateSideImage: HomePricingSideImage | undefined;
@@ -468,24 +439,21 @@ export default async function Home() {
           </section>
         )}
 
-        {/* About Page Hero Description - same type + right column width as hero intro; 138px below carousel */}
+        {/* About Page Hero Description — same grid + right column as HomeLandingHero intro (col 7–12, typography match) */}
         {aboutPageData?.heroDescription && (
-          <div className="w-full px-[2.5%] sm:px-6 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px] flex justify-end">
-            <div className="w-full lg:max-w-[812px]">
-              <HeroDescriptionWithCompanyAccent
-                text={aboutPageData.heroDescription}
-                className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 whitespace-pre-line"
-              />
-              {/* About Link - 28px gap from description */}
-              <div style={{ marginTop: '28px' }}>
-                <Link text="About" url="/about" />
+          <div className="w-full px-[2.5%] sm:px-6 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
+            <div className="grid grid-cols-12 gap-x-1 gap-y-10 lg:gap-y-8 w-full">
+              <div className="col-span-12 lg:col-span-6 lg:col-start-7 min-w-0">
+                <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
+                  <HeroDescriptionWithCompanyAccent
+                    text={aboutPageData.heroDescription}
+                    className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 whitespace-pre-line"
+                  />
+                </div>
               </div>
             </div>
           </div>
         )}
-
-        {/* Second Separator Line - 170px below about section (or 98px below carousel if no about section) */}
-        <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2" style={{ marginTop: aboutPageData?.heroDescription ? '0' : '98px' }} />
 
       </div>
 
@@ -525,36 +493,6 @@ export default async function Home() {
           <div className="text-muted text-sm">No featured work items found. Please add items in Sanity Studio.</div>
         )}
       </div>
-
-      {/* Clients Section */}
-      {clientLogos.length > 0 && (
-        <>
-          {/* Horizontal line with 200px gap from featured work */}
-          <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[80px] lg:mt-[200px]" />
-          <div className="w-full" style={{ marginTop: '32px' }}>
-            {/* Clients Title - matching Spotlight styling */}
-            <div
-              className="text-left pl-[2.5%] lg:pl-[24px] mb-4 md:mb-0"
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '13px',
-                lineHeight: '20px',
-                marginTop: '12px',
-              }}
-            >
-              Clients
-            </div>
-            {/* Clients Logos - Right Side, aligned to top and far right */}
-            <div className="w-full flex flex-col md:flex-row items-start gap-0 px-0">
-              <div className="flex-1 w-full md:w-auto pt-0 flex justify-start md:justify-start lg:justify-end">
-                <div className="w-full md:w-auto">
-                  <Clients logos={clientLogos} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Project below logos: desktop only, 40% width (hero-main) */}
       {belowLogosProject && (
