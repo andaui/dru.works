@@ -23,7 +23,7 @@ export default defineType({
       title: 'Coming soon',
       type: 'boolean',
       initialValue: false,
-      description: 'When enabled, "Coming soon" is shown on the project cover next to the project title.',
+      description: 'When enabled, "soon" is shown on the project cover next to the project title.',
     }),
     defineField({
       name: 'projectDescriptionShort',
@@ -81,7 +81,30 @@ export default defineType({
         },
       ],
       validation: (Rule) => Rule.max(1),
-      description: 'Optional image or video used on the homepage. If empty, the first item from Images/Videos is used.',
+      description:
+        'Used for the Featured 2-column row and Featured main (70% width) on the homepage. If empty, the first item from Images/Videos is used.',
+    }),
+    defineField({
+      name: 'gridCover',
+      title: 'Grid cover (7:8)',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            {
+              name: 'alt',
+              type: 'string',
+              title: 'Alternative Text',
+              description: 'Important for accessibility and SEO',
+            },
+          ],
+        },
+      ],
+      validation: (Rule) => Rule.max(1),
+      description:
+        'Optional. Crop for 7:8 portrait — used on the homepage 3-column grid only. If empty, Homepage cover is used there.',
     }),
     defineField({
       name: 'images',

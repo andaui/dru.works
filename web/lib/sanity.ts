@@ -52,6 +52,23 @@ const featuredWorkFields = `_id,
     },
     alt
   },
+  gridCover[] {
+    _type,
+    _key,
+    asset-> {
+      _id,
+      _type,
+      url,
+      mimeType,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt
+  },
   images[] {
     _type,
     _key,
@@ -372,6 +389,18 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
     creative,
     order,
     cover[] {
+      _type,
+      _key,
+      asset-> {
+        _id,
+        _type,
+        url,
+        mimeType,
+        metadata { dimensions { width, height } }
+      },
+      alt
+    },
+    gridCover[] {
       _type,
       _key,
       asset-> {

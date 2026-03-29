@@ -57,6 +57,20 @@ function processOneMedia(media: any, fallbackTitle: string): { url: string; alt:
   return null;
 }
 
+/** Homepage 7:8 grid — no Sanity crop; scale down only so the full frame is visible. */
+function processGridCoverImage(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" } | null {
+  if (!media || media._type !== "image" || !media.asset) return null;
+  try {
+    const imageUrl = urlFor(media).width(1600).fit("max").quality(90).format("jpg").url();
+    return { url: imageUrl, alt: media.alt || fallbackTitle || "Project image", type: "image" };
+  } catch {
+    if (media.asset?.url) {
+      return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project image", type: "image" };
+    }
+  }
+  return null;
+}
+
 function processWorkItemImages(item: any) {
   const processed: Array<{ url: string; alt: string; type: "image" | "video" }> = [];
   if (!item.images || !Array.isArray(item.images)) return processed;
@@ -181,13 +195,36 @@ function sanityImageToSideImage(
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
-type WorkWithMedia = { item: any; processed: any[]; cover: { url: string; alt: string; type: "image" | "video" } | null };
+type WorkWithMedia = {
+  item: any;
+  processed: any[];
+  /** Featured 2-col / main hero / below-logos */
+  cover: { url: string; alt: string; type: "image" | "video" } | null;
+  /** Homepage 3-col grid (7:8); falls back to cover when unset */
+  gridCover: { url: string; alt: string; type: "image" | "video" } | null;
+};
 
 function toWorkWithMedia(item: any): WorkWithMedia {
   const processed = processWorkItemImages(item);
   const title = item.projectTitle || "Project";
   const coverFromSchema = item.cover?.[0] ? processOneMedia(item.cover[0], title) : null;
-  return { item, processed, cover: coverFromSchema ?? processed[0] ?? null };
+  const cover = coverFromSchema ?? processed[0] ?? null;
+
+  const gridFromField = item.gridCover?.[0] ? processGridCoverImage(item.gridCover[0], title) : null;
+  const gridFromHeroCover =
+    !gridFromField && item.cover?.[0]?._type === "image"
+      ? processGridCoverImage(item.cover[0], title)
+      : null;
+  const firstGalleryImage = Array.isArray(item.images)
+    ? item.images.find((m: any) => m?._type === "image" && m?.asset)
+    : null;
+  const gridFromGallery =
+    !gridFromField && !gridFromHeroCover && firstGalleryImage
+      ? processGridCoverImage(firstGalleryImage, title)
+      : null;
+
+  const gridCover = gridFromField ?? gridFromHeroCover ?? gridFromGallery ?? cover;
+  return { item, processed, cover, gridCover };
 }
 
 export default async function Home() {
@@ -274,6 +311,7 @@ export default async function Home() {
         creative: item.creative ?? null,
         order: item.order,
         cover: item.cover || [],
+        gridCover: item.gridCover || [],
         images: item.images || [],
       })) || await getFeaturedWork();
     const allWithMedia = (workItems || []).map((item: any) => toWorkWithMedia(item));
@@ -451,36 +489,37 @@ export default async function Home() {
 
       </div>
 
-      {/* Work grid: on mobile = 1 col (featured 3 + grid items); on desktop = 2 cols then 3 cols (grid items only). Extra bottom padding on mobile when no clients section, for gap above footer. */}
-      <div className="w-full px-[2.5%] lg:px-[24px] mt-[40px] lg:mt-[80px]">
+      {/* Work grid: 3 cols (md+), 16px column gap, 152px row gap, 58px horizontal padding; 7:8 tiles with 20px radius. Mobile: 1 col, featured three then remaining grid items (hidden md+ in hero strip). */}
+      <div className="w-full mt-[40px] lg:mt-[80px] px-[58px]">
         {(featuredThree.length >= 3 || gridItems.length > 0) ? (
-          <div className="flex flex-col">
-            {/* Mobile: single column, featured 3 on top then all grid items (same as grid style) */}
-            <div className="grid grid-cols-1 gap-4 md:hidden">
-              {featuredThree.length >= 3 && featuredThree.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
-                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
-              ))}
-              {gridItems.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
-              ))}
-            </div>
-            {/* Desktop: first row 2 projects; then rows of 3 cols (grid items only) */}
-            {gridItems.length > 0 && (
-              <div className="hidden md:flex flex-col">
-                <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
-                  {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
-                  ))}
+          <div className="grid grid-cols-1 gap-x-4 gap-y-[152px] md:grid-cols-3">
+            {featuredThree.length >= 3 &&
+              featuredThree.map(({ item, gridCover }: WorkWithMedia) => (
+                <div key={item._id} className="md:hidden min-w-0">
+                  <HomeProjectCard
+                    cover={gridCover}
+                    variant="grid"
+                    gridPortrait
+                    title={item.projectTitle}
+                    creative={item.creative ?? null}
+                    href={item.slug ? `/work/${item.slug}` : null}
+                    comingSoon={item.comingSoon}
+                  />
                 </div>
-                {gridItems.slice(2).length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
-                    {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
-                    ))}
-                  </div>
-                )}
+              ))}
+            {gridItems.map(({ item, gridCover }: WorkWithMedia, i: number) => (
+              <div key={item._id || i} className="min-w-0">
+                <HomeProjectCard
+                  cover={gridCover}
+                  variant="grid"
+                  gridPortrait
+                  title={item.projectTitle}
+                  creative={item.creative ?? null}
+                  href={item.slug ? `/work/${item.slug}` : null}
+                  comingSoon={item.comingSoon}
+                />
               </div>
-            )}
+            ))}
           </div>
         ) : (
           <div className="text-muted text-sm">No featured work items found. Please add items in Sanity Studio.</div>

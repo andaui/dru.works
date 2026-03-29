@@ -35,43 +35,43 @@ interface HomeProjectCardProps {
   creative?: CreativeInput;
   /** When set, the card links to this href (e.g. project detail page) */
   href?: string | null;
-  /** When true, show "Coming soon" on the right aligned with the project title */
+  /** When true, show "soon" in a second column (intrinsic width), 24px from title/creative */
   comingSoon?: boolean | null;
+  /** When variant is `grid`, use 7:8 aspect and 20px rounded media (homepage); default keeps legacy tile proportions. */
+  gridPortrait?: boolean;
 }
 
 const titleRowClass =
   "font-soehne font-normal text-[17px] leading-[37px] tracking-[-0.25px]";
 
 const creativeTypeClass =
-  "font-soehne font-normal text-[13px] leading-[19px] text-black/50 dark:text-white/50";
+  "font-soehne font-normal text-[13px] leading-[19px] text-black/40 dark:text-white/50";
 
-const creativeRowClass = `flex flex-wrap items-baseline gap-2 ${creativeTypeClass}`;
+const creativeTagsClass = `flex flex-wrap items-baseline gap-x-3 gap-y-1 w-full ${creativeTypeClass}`;
 
 const captionBlock = (title?: string | null, creative?: CreativeInput, comingSoon?: boolean | null) => {
   const creativeParts = parseCreativeParts(creative);
   const hasCreative = creativeParts.length > 0;
   if (!title && !comingSoon && !hasCreative) return null;
   return (
-    <div className="mt-3 flex flex-col gap-0">
-      {(title || comingSoon) && (
-        <div className={`flex justify-between items-baseline gap-2 w-full ${titleRowClass}`}>
+    <div className="mt-3 w-full pl-1 pr-4">
+      <div className="flex items-start gap-6 w-full">
+        <div className="min-w-0 flex-1 flex flex-col gap-0">
           {title ? (
-            <span className="text-black dark:text-white">{title}</span>
-          ) : (
-            <span />
-          )}
-          {comingSoon && (
-            <span className={`shrink-0 ${creativeTypeClass}`}>Coming soon</span>
-          )}
+            <div className={`text-black dark:text-white ${titleRowClass}`}>{title}</div>
+          ) : null}
+          {hasCreative ? (
+            <div className={creativeTagsClass}>
+              {creativeParts.map((part, i) => (
+                <span key={`${part}-${i}`}>{part}</span>
+              ))}
+            </div>
+          ) : null}
         </div>
-      )}
-      {hasCreative && (
-        <div className={creativeRowClass}>
-          {creativeParts.map((part, i) => (
-            <span key={`${part}-${i}`}>{part}</span>
-          ))}
-        </div>
-      )}
+        {comingSoon ? (
+          <span className={`shrink-0 w-fit whitespace-nowrap pt-1 ${creativeTypeClass}`}>soon</span>
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -82,23 +82,29 @@ function CardContent({
   title,
   creative,
   comingSoon,
+  gridPortrait,
 }: {
   cover: CoverMedia;
   variant: HomeProjectCardProps["variant"];
   title?: string | null;
   creative?: CreativeInput;
   comingSoon?: boolean | null;
+  gridPortrait?: boolean;
 }) {
   const isVideo = cover.type === "video";
 
   if (variant === "grid") {
+    const gridMediaClass = gridPortrait
+      ? "relative w-full aspect-[7/8] overflow-hidden rounded-[20px] bg-zinc-100 dark:bg-white/[0.06]"
+      : "relative w-full aspect-[846/623] overflow-hidden";
+    const gridImgObject = gridPortrait ? "object-contain object-center" : "object-cover object-center";
     return (
       <>
-        <div className="relative w-full aspect-[846/623] overflow-hidden">
+        <div className={gridMediaClass}>
           {isVideo ? (
             <video
               src={cover.url}
-              className="object-cover object-center w-full h-full"
+              className={`${gridPortrait ? "object-contain object-center" : "object-cover object-center"} w-full h-full`}
               autoPlay
               muted
               loop
@@ -110,7 +116,7 @@ function CardContent({
               src={cover.url}
               alt={cover.alt}
               fill
-              className="object-cover object-center"
+              className={gridImgObject}
               sizes="(max-width: 768px) 100vw, 33vw"
             />
           )}
@@ -179,14 +185,22 @@ function CardContent({
   );
 }
 
-export default function HomeProjectCard({ cover, variant, title, creative, href, comingSoon }: HomeProjectCardProps) {
+export default function HomeProjectCard({
+  cover,
+  variant,
+  title,
+  creative,
+  href,
+  comingSoon,
+  gridPortrait,
+}: HomeProjectCardProps) {
   if (!cover) {
     return (
       <div
-        className="bg-border flex items-center justify-center text-muted text-sm"
+        className={`bg-border flex items-center justify-center text-muted text-sm${variant === "grid" && gridPortrait ? " rounded-[20px]" : ""}`}
         style={
           variant === "grid"
-            ? { aspectRatio: "846/623" }
+            ? { aspectRatio: gridPortrait ? "7/8" : "846/623" }
             : undefined
         }
       >
@@ -196,7 +210,14 @@ export default function HomeProjectCard({ cover, variant, title, creative, href,
   }
 
   const content = (
-    <CardContent cover={cover} variant={variant} title={title} creative={creative} comingSoon={comingSoon} />
+    <CardContent
+      cover={cover}
+      variant={variant}
+      title={title}
+      creative={creative}
+      comingSoon={comingSoon}
+      gridPortrait={gridPortrait}
+    />
   );
 
   const wrapperClass = "w-full block";
