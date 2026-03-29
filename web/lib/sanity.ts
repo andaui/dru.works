@@ -167,6 +167,12 @@ export const projectBySlugQuery = `*[_type == "featuredWork" && slug.current == 
 // Homepage Work singleton: 2-col row, main 70%, grid, below-logos project. Order = array order.
 export const homepageWorkQuery = `*[_type == "homepageWork"][0] {
   _id,
+  heroReelVideo {
+    asset-> {
+      url,
+      mimeType
+    }
+  },
   "featuredTwoCol": featuredTwoCol[]-> { ${featuredWorkFields} },
   "featuredMain": featuredMain-> { ${featuredWorkFields} },
   "gridItems": gridItems[]-> { ${featuredWorkFields} },

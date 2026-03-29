@@ -7,6 +7,14 @@ export default defineType({
   description: 'Choose and order projects for the homepage: 2-col row, main 70% slot, and grid below. Reorder by dragging.',
   fields: [
     defineField({
+      name: 'heroReelVideo',
+      title: 'Hero reel video',
+      type: 'file',
+      options: { accept: 'video/*' },
+      description:
+        'Optional. Plays below the homepage intro paragraph (right column). Same width as the text; height follows the video aspect ratio.',
+    }),
+    defineField({
       name: 'featuredTwoCol',
       title: 'Featured 2-column row',
       type: 'array',
@@ -38,7 +46,7 @@ export default defineType({
   ],
   preview: {
     prepare() {
-      return { title: 'Homepage Work', subtitle: '2-col · Main · Grid' }
+      return { title: 'Homepage Work', subtitle: 'Reel · 2-col · Main · Grid' }
     },
   },
 })

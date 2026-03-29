@@ -69,6 +69,8 @@ function normalizeHomeHeroTitleLines(lines: string[]): string[] {
 type HomeLandingHeroProps = {
   heroTitle: string;
   heroDescription?: string | null;
+  /** From Homepage Work → Hero reel video; same column width as intro text, height auto. */
+  heroReelVideoUrl?: string | null;
   aboutLabel?: string;
   servicesLabel?: string;
 };
@@ -76,6 +78,7 @@ type HomeLandingHeroProps = {
 export default function HomeLandingHero({
   heroTitle,
   heroDescription,
+  heroReelVideoUrl,
   aboutLabel = "About",
   servicesLabel = "Services",
 }: HomeLandingHeroProps) {
@@ -170,13 +173,27 @@ export default function HomeLandingHero({
               {description}
             </p>
 
-            {/* Swap this container for a &lt;video&gt; (or poster + controls) when the asset is ready */}
-            <div
-              className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
-              aria-label="Video placeholder"
-            >
-              <span className="sr-only">Video placeholder</span>
-            </div>
+            {heroReelVideoUrl ? (
+              <div className="relative w-full rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06]">
+                <video
+                  src={heroReelVideoUrl}
+                  className="w-full h-auto block object-contain object-center"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Reel"
+                />
+              </div>
+            ) : (
+              <div
+                className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
+                aria-label="Video placeholder"
+              >
+                <span className="sr-only">Video placeholder</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

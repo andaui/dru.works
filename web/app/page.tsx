@@ -389,6 +389,7 @@ export default async function Home() {
       <HomeLandingHero
         heroTitle={heroTitle}
         heroDescription={homepageData?.heroDescription}
+        heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
       />
