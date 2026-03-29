@@ -89,6 +89,7 @@ export default async function WorkPage() {
                 cover={cover}
                 variant="grid"
                 title={item.projectTitle}
+                creative={item.creative ?? null}
                 href={item.slug ? `/work/${item.slug}` : null}
                 comingSoon={item.comingSoon}
               />

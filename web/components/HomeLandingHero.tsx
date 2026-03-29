@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import NextLink from "next/link";
 import ThemeLabelToggle from "@/components/ThemeLabelToggle";
 
@@ -52,6 +53,19 @@ const SERVICES_COLS: [string[], string[]] = [
 const listClass =
   "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px]";
 
+/** Legacy CMS / old default broke after "with"; prefer break before "fluency". */
+function normalizeHomeHeroTitleLines(lines: string[]): string[] {
+  if (lines.length !== 2) return lines;
+  const [first, second] = lines;
+  if (first === "Design partner with" && second === "engineering fluency") {
+    return ["Design partner with\u00A0engineering", "fluency"];
+  }
+  if (second === "fluency") {
+    return [first.replace(/\bwith engineering\b/, "with\u00A0engineering"), second];
+  }
+  return lines;
+}
+
 type HomeLandingHeroProps = {
   heroTitle: string;
   heroDescription?: string | null;
@@ -66,8 +80,13 @@ export default function HomeLandingHero({
   servicesLabel = "Services",
 }: HomeLandingHeroProps) {
   const description = (heroDescription && heroDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
-  const titleLines = heroTitle.split("\n").map((l) => l.trim()).filter(Boolean);
-  const displayTitle = titleLines.length ? titleLines.join(" ") : "Design partner with engineering fluency";
+  const titleLines = normalizeHomeHeroTitleLines(
+    heroTitle.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
+  );
+  const heroTitleLines =
+    titleLines.length > 0
+      ? titleLines
+      : (["Design partner with\u00A0engineering", "fluency"] as const);
 
   return (
     <section
@@ -101,12 +120,17 @@ export default function HomeLandingHero({
 
         <div className="col-span-12 lg:col-span-6 min-w-0">
           <div className="flex flex-col gap-8 w-full">
-            <div className="flex flex-col gap-[34px] w-full pl-1">
-              <h1 className="font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
-                {displayTitle}
+            <div className="flex flex-col gap-[34px] w-full">
+              <h1 className="pl-1 font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                {heroTitleLines.map((line, i) => (
+                  <Fragment key={i}>
+                    {i > 0 ? <br /> : null}
+                    {line}
+                  </Fragment>
+                ))}
               </h1>
 
-              <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start">
+              <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start pl-1">
                 {CLIENT_COLS.map((col, i) => (
                   <div key={i} className={listClass}>
                     {col.map((name) => (

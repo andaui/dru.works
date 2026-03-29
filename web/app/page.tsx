@@ -286,7 +286,8 @@ export default async function Home() {
     : null;
 
   // Get hero title from homepage data, with fallback
-  const heroTitle = homepageData?.heroTitle || "Design partner with\nengineering fluency";
+  const heroTitle =
+    homepageData?.heroTitle || "Design partner with engineering\nfluency";
 
   const pageTitles = (navigationPages as { slug: string; title: string }[]).reduce(
     (acc, page) => {
@@ -457,10 +458,10 @@ export default async function Home() {
             {/* Mobile: single column, featured 3 on top then all grid items (same as grid style) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {featuredThree.length >= 3 && featuredThree.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
-                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
+                <HomeProjectCard key={item._id} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
               ))}
               {gridItems.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
+                <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
               ))}
             </div>
             {/* Desktop: first row 2 projects; then rows of 3 cols (grid items only) */}
@@ -468,13 +469,13 @@ export default async function Home() {
               <div className="hidden md:flex flex-col">
                 <div className="grid grid-cols-2 gap-x-4 mb-[78px]">
                   {gridItems.slice(0, 2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
+                    <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
                   ))}
                 </div>
                 {gridItems.slice(2).length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-[52px]">
                     {gridItems.slice(2).map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }, i: number) => (
-                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
+                      <HomeProjectCard key={item._id || i} cover={cover} variant="grid" title={item.projectTitle} creative={item.creative ?? null} href={item.slug ? `/work/${item.slug}` : null} comingSoon={item.comingSoon} />
                     ))}
                   </div>
                 )}

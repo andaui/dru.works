@@ -9,6 +9,22 @@ interface CoverMedia {
   type: "image" | "video";
 }
 
+/** Comma-separated string from CMS, or separate entries if the schema uses an array. */
+type CreativeInput = string | string[] | null | undefined;
+
+function parseCreativeParts(creative: CreativeInput): string[] {
+  if (creative == null) return [];
+  if (Array.isArray(creative)) {
+    return creative.map((s) => String(s).trim()).filter(Boolean);
+  }
+  const t = creative.trim();
+  if (!t) return [];
+  return t
+    .split(/,\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 interface HomeProjectCardProps {
   cover: CoverMedia | null;
   /** 'hero-half' | 'hero-center' | 'hero-main' (70% width, height auto) | 'grid' */
@@ -16,35 +32,49 @@ interface HomeProjectCardProps {
   /** Shown below image for hero variants (project title) */
   title?: string | null;
   /** Shown below title for hero variants (creative credit) */
-  creative?: string | null;
+  creative?: CreativeInput;
   /** When set, the card links to this href (e.g. project detail page) */
   href?: string | null;
   /** When true, show "Coming soon" on the right aligned with the project title */
   comingSoon?: boolean | null;
 }
 
-const captionBlock = (title?: string | null, creative?: string | null, comingSoon?: boolean | null) =>
-  (title || creative || comingSoon) ? (
-    <div className="mt-4 flex flex-col gap-1.5">
+const titleRowClass =
+  "font-soehne font-normal text-[17px] leading-[37px] tracking-[-0.25px]";
+
+const creativeTypeClass =
+  "font-soehne font-normal text-[13px] leading-[19px] text-black/50 dark:text-white/50";
+
+const creativeRowClass = `flex flex-wrap items-baseline gap-2 ${creativeTypeClass}`;
+
+const captionBlock = (title?: string | null, creative?: CreativeInput, comingSoon?: boolean | null) => {
+  const creativeParts = parseCreativeParts(creative);
+  const hasCreative = creativeParts.length > 0;
+  if (!title && !comingSoon && !hasCreative) return null;
+  return (
+    <div className="mt-3 flex flex-col gap-0">
       {(title || comingSoon) && (
-        <div className="flex justify-between items-baseline gap-2 w-full" style={{ fontSize: 16, lineHeight: "19px" }}>
+        <div className={`flex justify-between items-baseline gap-2 w-full ${titleRowClass}`}>
           {title ? (
-            <span className="text-foreground">{title}</span>
+            <span className="text-black dark:text-white">{title}</span>
           ) : (
             <span />
           )}
           {comingSoon && (
-            <span className="text-muted-foreground shrink-0 pr-3 opacity-80">Coming soon</span>
+            <span className={`shrink-0 ${creativeTypeClass}`}>Coming soon</span>
           )}
         </div>
       )}
-      {creative && (
-        <div className="text-muted" style={{ fontSize: 13, lineHeight: "19px" }}>
-          {creative}
+      {hasCreative && (
+        <div className={creativeRowClass}>
+          {creativeParts.map((part, i) => (
+            <span key={`${part}-${i}`}>{part}</span>
+          ))}
         </div>
       )}
     </div>
-  ) : null;
+  );
+};
 
 function CardContent({
   cover,
@@ -56,7 +86,7 @@ function CardContent({
   cover: CoverMedia;
   variant: HomeProjectCardProps["variant"];
   title?: string | null;
-  creative?: string | null;
+  creative?: CreativeInput;
   comingSoon?: boolean | null;
 }) {
   const isVideo = cover.type === "video";
@@ -85,12 +115,7 @@ function CardContent({
             />
           )}
         </div>
-        {(title || comingSoon) && (
-          <div className="mt-3 flex justify-between items-baseline gap-2 w-full font-inter font-normal text-muted" style={{ fontSize: 13, lineHeight: "19px" }}>
-            {title ? <span>{title}</span> : <span />}
-            {comingSoon && <span className="text-muted-foreground shrink-0 pr-3 opacity-80">Coming soon</span>}
-          </div>
-        )}
+        {captionBlock(title, creative, comingSoon)}
       </>
     );
   }
