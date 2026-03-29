@@ -199,6 +199,10 @@ function toWorkWithMedia(item: any): WorkWithMedia {
   return { item, processed, cover, gridCover };
 }
 
+function isNotMotionStudies(item: { projectTitle?: string | null }): boolean {
+  return (item?.projectTitle || "").trim().toLowerCase() !== "motion studies";
+}
+
 export default async function Home() {
   // Fetch navigation pages, homepage/work page data, spotlight, testimonials, about page data from Sanity
   const navigationPages = await getNavigationPages();
@@ -264,13 +268,22 @@ export default async function Home() {
 
   if (homepageWork?.featuredTwoCol?.length || homepageWork?.featuredMain || homepageWork?.gridItems?.length) {
     // Use Homepage Work schema: ordered 2-col, main, grid
-    const twoCol = (homepageWork.featuredTwoCol || []).filter(Boolean).map(toWorkWithMedia);
-    const main = homepageWork.featuredMain ? [toWorkWithMedia(homepageWork.featuredMain)] : [];
+    const twoCol = (homepageWork.featuredTwoCol || [])
+      .filter(Boolean)
+      .filter(isNotMotionStudies)
+      .map(toWorkWithMedia);
+    const main =
+      homepageWork.featuredMain && isNotMotionStudies(homepageWork.featuredMain)
+        ? [toWorkWithMedia(homepageWork.featuredMain)]
+        : [];
     featuredThree = [...twoCol.slice(0, 2), ...main].slice(0, 3);
-    gridItems = (homepageWork.gridItems || []).filter(Boolean).map(toWorkWithMedia);
+    gridItems = (homepageWork.gridItems || [])
+      .filter(Boolean)
+      .filter(isNotMotionStudies)
+      .map(toWorkWithMedia);
   } else {
     // Fallback: work from page sections or all featured work, grid by order only
-    const workItems = homepageData?.sections
+    const workItemsRaw = homepageData?.sections
       ?.filter((item: any) => item?._type === 'featuredWork')
         .map((item: any) => ({
         _id: item._id,
@@ -285,14 +298,16 @@ export default async function Home() {
         gridCover: item.gridCover || [],
         images: item.images || [],
       })) || await getFeaturedWork();
-    const allWithMedia = (workItems || []).map((item: any) => toWorkWithMedia(item));
+    const workItems = (workItemsRaw || []).filter(isNotMotionStudies);
+    const allWithMedia = workItems.map((item: any) => toWorkWithMedia(item));
     featuredThree = allWithMedia.slice(0, 3);
     gridItems = allWithMedia.slice(3).sort((a: WorkWithMedia, b: WorkWithMedia) => (a.item.order ?? 0) - (b.item.order ?? 0));
   }
 
-  const belowLogosProject = homepageWork?.belowLogosProject
-    ? toWorkWithMedia(homepageWork.belowLogosProject)
-    : null;
+  const belowLogosProject =
+    homepageWork?.belowLogosProject && isNotMotionStudies(homepageWork.belowLogosProject)
+      ? toWorkWithMedia(homepageWork.belowLogosProject)
+      : null;
 
   // Get hero title from homepage data, with fallback
   const heroTitle =

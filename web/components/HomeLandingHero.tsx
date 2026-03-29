@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import NextLink from "next/link";
 import ThemeLabelToggle from "@/components/ThemeLabelToggle";
+import HeroReelVideo from "@/components/HeroReelVideo";
 
 const DEFAULT_HERO_DESCRIPTION =
   "I bridge the gap between complex product requirements and world-class visual execution. I bring the precision and craft of a top-tier studio to every engagement. I care deeply about the 'invisible' details—the clarity, consistency, and refinement that transform a functional interface into a trusted brand experience.";
@@ -174,18 +175,7 @@ export default function HomeLandingHero({
             </p>
 
             {heroReelVideoUrl ? (
-              <div className="relative w-full rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06]">
-                <video
-                  src={heroReelVideoUrl}
-                  className="w-full h-auto block object-contain object-center"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label="Reel"
-                />
-              </div>
+              <HeroReelVideo src={heroReelVideoUrl} />
             ) : (
               <div
                 className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
