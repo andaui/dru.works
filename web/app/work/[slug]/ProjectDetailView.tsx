@@ -1,59 +1,90 @@
-import HomeProjectCard from "@/components/HomeProjectCard";
 import ProjectSectionTwoCol50 from "@/components/project/ProjectSectionTwoCol50";
 import ProjectSectionTwoCol30 from "@/components/project/ProjectSectionTwoCol30";
 import ProjectSectionOneCol from "@/components/project/ProjectSectionOneCol";
 import ProjectSectionText from "@/components/project/ProjectSectionText";
 import ProjectSectionWhatIDidOutcomes from "@/components/project/ProjectSectionWhatIDidOutcomes";
 import ProjectSectionSpacer from "@/components/project/ProjectSectionSpacer";
-import PageTestimonial from "@/components/PageTestimonial";
+import TestimonialCard from "@/components/TestimonialCard";
+import type { HomeTestimonialItem } from "@/components/HomeTestimonialsGrid";
 import { client, projectBySlugQuery, featuredWorkQuery, urlFor } from "@/lib/sanity";
 import { resolveProjectMedia } from "@/lib/projectMedia";
+import ProjectDetailFooterActions from "@/components/project/ProjectDetailFooterActions";
 import { notFound } from "next/navigation";
-import { Fragment } from "react";
+import Link from "next/link";
 
-function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
-  if (!media) return null;
-  if (media._type === "image" && media.asset) {
+function toHomeTestimonialItem(testimonial: any): HomeTestimonialItem | null {
+  if (!testimonial?._id) return null;
+  let photoUrl: string | null = null;
+  const photoAlt =
+    testimonial?.personPhoto?.alt || testimonial?.person || "Person photo";
+  if (testimonial?.personPhoto?.asset) {
     try {
-      const imageUrl = urlFor(media)
-        .width(1692)
-        .height(1246)
+      photoUrl = urlFor(testimonial.personPhoto)
+        .width(114)
+        .height(114)
         .fit("crop")
         .quality(90)
         .format("jpg")
         .url();
-      return { url: imageUrl, alt: media.alt || fallbackTitle || "Project image", type: "image" };
     } catch {
-      if (media.asset?.url) {
-        return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project image", type: "image" };
+      if (testimonial.personPhoto.asset?.url) {
+        photoUrl = testimonial.personPhoto.asset.url;
       }
     }
   }
-  if (media._type === "file" && media.asset?.mimeType?.startsWith?.("video/") && media.asset?.url) {
-    return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project video", type: "video" };
-  }
-  return null;
+  const body =
+    (testimonial.testimonialLong && testimonial.testimonialLong.trim()) ||
+    testimonial.testimonialShort ||
+    "";
+  return {
+    _id: testimonial._id,
+    person: testimonial.person || "",
+    role: testimonial.role || "",
+    company: testimonial.company || "",
+    body,
+    photoUrl,
+    photoAlt,
+  };
 }
 
-function toWorkWithMedia(item: any): { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null } {
-  const processed: Array<{ url: string; alt: string; type: "image" | "video" }> = [];
-  if (item.images?.length) {
-    const title = item.projectTitle || "Project";
-    item.images.forEach((media: any) => {
-      const one = processOneMedia(media, title);
-      if (one) processed.push(one);
-    });
-  }
-  const title = item.projectTitle || "Project";
-  const coverFromSchema = item.cover?.[0] ? processOneMedia(item.cover[0], title) : null;
-  return { item, cover: coverFromSchema ?? processed[0] ?? null };
+function NavArrow({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      width={44}
+      height={44}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={direction === "left" ? "shrink-0 rotate-180" : "shrink-0"}
+      aria-hidden
+    >
+      <path
+        d="M13.4173 21.5455L11.7767 19.9262L18.531 13.1719H1.03809V10.8282H18.531L11.7767 4.09521L13.4173 2.45459L22.9628 12L13.4173 21.5455Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
+
+const navLabelClass =
+  "font-soehne font-normal text-[70px] leading-[65px] tracking-[-0.25px]";
+
+/** Monthly pricing expandable description (HomePricingCalculator) — 30% opacity; full accent on link hover. */
+const navProjectTitleClass =
+  "font-soehne font-normal text-[20px] leading-[29px] text-foreground/30 group-hover:text-accent transition-colors shrink min-w-0";
 
 async function getProject(slug: string) {
   return client.fetch(projectBySlugQuery, { slug });
 }
 
-export default async function ProjectDetailView({ slug }: { slug: string }) {
+export default async function ProjectDetailView({
+  slug,
+  /** In the intercepted modal, replace history so Close (router.back) exits the overlay instead of stepping through each project. */
+  replaceProjectNav = false,
+}: {
+  slug: string;
+  replaceProjectNav?: boolean;
+}) {
   const [project, allWork] = await Promise.all([
     getProject(slug),
     client.fetch(featuredWorkQuery).then((r: any[]) => r || []),
@@ -70,10 +101,15 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
       }
     | undefined;
 
-  const remainingProjects = allWork
-    .filter((w: any) => w._id !== project._id && w.slug !== slug)
-    .filter((w: any) => (w.projectTitle || "").trim().toLowerCase() !== "motion studies")
-    .map(toWorkWithMedia);
+  const navWork = allWork.filter((w: any) => w.slug);
+  let navIndex = navWork.findIndex((w: any) => w.slug === slug);
+  if (navIndex < 0) {
+    navIndex = navWork.findIndex((w: any) => w._id === project._id);
+  }
+  const n = navWork.length;
+  const i = navIndex >= 0 ? navIndex : 0;
+  const prevProject = n > 0 ? navWork[(i - 1 + n) % n] : null;
+  const nextProject = n > 0 ? navWork[(i + 1) % n] : null;
 
   const description =
     (project.projectDescriptionShort && String(project.projectDescriptionShort).trim()) || "";
@@ -97,6 +133,7 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
 
   return (
     <>
+      <div id="project-detail-top" className="h-0 w-full shrink-0 scroll-mt-0" aria-hidden />
       {/* Project intro (Figma frame): description first, full width; no title in modal/page shell. */}
       {description ? (
         <div className="w-full pt-[50px]">
@@ -106,7 +143,7 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
         </div>
       ) : null}
 
-      {(listLines.length > 0 || clientName) ? (
+      {listLines.length > 0 || clientName ? (
         <div className="w-full mt-[80px]">
           <div className="grid grid-cols-12 gap-x-[34px] gap-y-10 w-full items-start">
             <div className="col-span-12 lg:col-span-9 min-w-0">
@@ -196,39 +233,65 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
                 );
               case "projectSectionSpacer":
                 return <ProjectSectionSpacer key={section._key} height={section.height || "24"} />;
-              case "projectSectionTestimonial":
-                return section.testimonial ? (
-                  <Fragment key={section._key}>
-                    <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[128px]" />
-                    <div className="w-full min-w-0 mt-[75px] flex flex-col gap-0">
-                      <PageTestimonial testimonial={section.testimonial} contained hideTopLine />
+              case "projectSectionTestimonial": {
+                const t = section.testimonial ? toHomeTestimonialItem(section.testimonial) : null;
+                if (!t) return null;
+                return (
+                  <div key={section._key} className="w-full min-w-0 mt-[80px] mb-[80px] lg:mt-[128px] lg:mb-[128px]">
+                    <div className="w-full max-w-[780px] mx-auto">
+                      <TestimonialCard t={t} />
                     </div>
-                    <div className="w-screen h-px bg-border relative left-1/2 -translate-x-1/2 mt-[75px] mb-[128px]" />
-                  </Fragment>
-                ) : null;
+                  </div>
+                );
+              }
               default:
                 return null;
             }
           })}
         </div>
 
-        {remainingProjects.length > 0 && (
-          <div className="w-full min-w-0 mt-[40px] lg:mt-[80px]">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-[52px]">
-              {remainingProjects.map(({ item, cover }: { item: any; cover: { url: string; alt: string; type: "image" | "video" } | null }) => (
-                <HomeProjectCard
-                  key={item._id}
-                  cover={cover}
-                  variant="grid"
-                  title={item.projectTitle}
-                  creative={item.creative ?? null}
-                  href={item.slug ? `/work/${item.slug}` : null}
-                  comingSoon={item.comingSoon}
-                />
-              ))}
+        {n > 0 ? (
+          <div className="w-full min-w-0 mt-[260px] flex flex-row items-center gap-4">
+            <div className="flex-1 flex justify-start min-w-0">
+              <Link
+                href={`/work/${prevProject.slug}`}
+                replace={replaceProjectNav}
+                className="group inline-flex flex-row items-center gap-2 min-w-0 max-w-full text-black dark:text-white hover:text-accent transition-colors"
+              >
+                <span className="inline-flex flex-row items-center shrink-0">
+                  <NavArrow direction="left" />
+                </span>
+                <span className="inline-flex flex-row items-center gap-6 min-w-0">
+                  <span className={`${navLabelClass} shrink-0`}>Previous</span>
+                  <span className={`${navProjectTitleClass} truncate`}>
+                    {(prevProject.projectTitle || "").trim() || "Project"}
+                  </span>
+                </span>
+              </Link>
+            </div>
+            <div className="flex-1 flex justify-end min-w-0">
+              <Link
+                href={`/work/${nextProject.slug}`}
+                replace={replaceProjectNav}
+                className="group inline-flex flex-row items-center gap-2 min-w-0 max-w-full text-black dark:text-white hover:text-accent transition-colors"
+              >
+                <span className="inline-flex flex-row items-center justify-end gap-6 min-w-0">
+                  <span className={`${navProjectTitleClass} truncate text-right`}>
+                    {(nextProject.projectTitle || "").trim() || "Project"}
+                  </span>
+                  <span className={`${navLabelClass} shrink-0`}>Next</span>
+                </span>
+                <span className="inline-flex flex-row items-center shrink-0">
+                  <NavArrow direction="right" />
+                </span>
+              </Link>
             </div>
           </div>
-        )}
+        ) : null}
+
+        <div className="w-full min-w-0 mt-[200px]">
+          <ProjectDetailFooterActions />
+        </div>
       </div>
     </>
   );

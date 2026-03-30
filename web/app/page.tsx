@@ -467,7 +467,7 @@ export default async function Home() {
       </div>
 
       {/* Work grid: 3 cols (md+), 16px column gap, 152px row gap, 58px horizontal padding; 7:8 tiles with 20px radius. Mobile: 1 col, featured three then remaining grid items (hidden md+ in hero strip). */}
-      <div className="w-full mt-[40px] lg:mt-[260px] px-[58px]">
+      <div className="w-full mt-[40px] lg:mt-[220px] px-[58px]">
         {(featuredThree.length >= 3 || gridItems.length > 0) ? (
           <div className="grid grid-cols-1 gap-x-4 gap-y-[152px] md:grid-cols-3">
             {featuredThree.length >= 3 &&

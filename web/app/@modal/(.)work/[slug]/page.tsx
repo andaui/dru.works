@@ -9,7 +9,7 @@ export default async function InterceptedProjectPage({
   const { slug } = await params;
   return (
     <ProjectWorkShell mode="overlay">
-      <ProjectDetailView slug={slug} />
+      <ProjectDetailView slug={slug} replaceProjectNav />
     </ProjectWorkShell>
   );
 }

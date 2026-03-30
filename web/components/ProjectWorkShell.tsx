@@ -84,7 +84,7 @@ export default function ProjectWorkShell({ mode, children }: ProjectWorkShellPro
     // Overlay: nav scrolls with content (not sticky/pinned).
     <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-auto">
       {nav}
-      <div className="relative w-full min-h-full pb-[40px] lg:pb-[200px] px-6">
+      <div className="relative w-full min-h-full pb-[50px] px-6">
         {children}
       </div>
     </div>
@@ -93,7 +93,7 @@ export default function ProjectWorkShell({ mode, children }: ProjectWorkShellPro
     <>
       {nav}
       <div className="flex-1 w-full min-h-0">
-        <div className="relative w-full min-h-full pb-[40px] lg:pb-[200px] px-6">
+        <div className="relative w-full min-h-full pb-[50px] px-6">
           {children}
         </div>
       </div>
