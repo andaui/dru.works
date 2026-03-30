@@ -55,10 +55,9 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Home hero client / services lists — html.dark matches ThemeProvider */
+/* Home hero client / services lists — html.dark matches ThemeProvider; opacity via Tailwind opacity-60 on listClass */
 .home-hero-list-col {
   color: #000000;
-  opacity: 0.6;
 }
 
 html.dark .home-hero-list-col {

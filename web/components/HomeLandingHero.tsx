@@ -55,7 +55,7 @@ const SERVICES_COLS: [string[], string[]] = [
 ];
 
 const listClass =
-  "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[14px] leading-[19px]";
+  "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[14px] leading-[19px] opacity-60";
 
 /** About / Services hero body (left column). Exact 21px line height. */
 const aboutServicesBodyClass =
@@ -123,6 +123,12 @@ export default function HomeLandingHero({
     indexServicesColumns?.length && indexServicesColumns.some((c) => c.length > 0)
       ? indexServicesColumns
       : SERVICES_COLS;
+
+  /** Same column count + grid for client + services rows so columns line up vertically. */
+  const maxIndexCols = Math.max(clientCols.length, servicesCols.length, 1);
+  const indexListsGridStyle = {
+    gridTemplateColumns: `repeat(${maxIndexCols}, minmax(0, 1fr))`,
+  } as const;
 
   const description =
     (homepageDescription && homepageDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
@@ -203,11 +209,14 @@ export default function HomeLandingHero({
               </h1>
 
               {section === "index" ? (
-                <>
-                  <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start pl-1">
-                    {clientCols.map((col, i) => (
-                      <div key={i} className={listClass}>
-                        {col.map((name, j) => (
+                <div className="w-full max-w-[min(100%,480px)] flex flex-col gap-[34px]">
+                  <div
+                    className="grid w-full gap-x-[48px] sm:gap-x-[79px] gap-y-1 items-start pl-1"
+                    style={indexListsGridStyle}
+                  >
+                    {Array.from({ length: maxIndexCols }).map((_, i) => (
+                      <div key={`client-col-${i}`} className={`${listClass} min-w-0`}>
+                        {(clientCols[i] || []).map((name, j) => (
                           <p key={`${i}-${j}-${name}`} className="m-0 whitespace-nowrap">
                             {name}
                           </p>
@@ -223,10 +232,13 @@ export default function HomeLandingHero({
                     {indexContactButtonText}
                   </a>
 
-                  <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
-                    {servicesCols.map((col, i) => (
-                      <div key={i} className={listClass}>
-                        {col.map((name, j) => (
+                  <div
+                    className="grid w-full gap-x-[48px] sm:gap-x-[79px] gap-y-1 items-start pl-1"
+                    style={indexListsGridStyle}
+                  >
+                    {Array.from({ length: maxIndexCols }).map((_, i) => (
+                      <div key={`services-col-${i}`} className={`${listClass} min-w-0`}>
+                        {(servicesCols[i] || []).map((name, j) => (
                           <p key={`${i}-${j}-${name}`} className="m-0 whitespace-nowrap">
                             {name}
                           </p>
@@ -234,7 +246,7 @@ export default function HomeLandingHero({
                       </div>
                     ))}
                   </div>
-                </>
+                </div>
               ) : section === "about" ? (
                 <div className="pl-1 w-full min-w-0 max-w-[445px]">
                   {aboutBody ? (
