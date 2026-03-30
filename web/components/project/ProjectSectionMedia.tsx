@@ -14,7 +14,7 @@ export default function ProjectSectionMedia({ media, className = "" }: ProjectSe
 
   if (media.type === "video") {
     return (
-      <div className={`w-full overflow-hidden bg-transparent ${className}`}>
+      <div className={`w-full overflow-hidden rounded-[24px] bg-transparent ${className}`}>
         <video
           src={media.url}
           className="w-full h-auto block object-cover object-center origin-center scale-[1.01]"
@@ -30,7 +30,7 @@ export default function ProjectSectionMedia({ media, className = "" }: ProjectSe
   }
 
   return (
-    <div className={`relative w-full overflow-hidden bg-transparent ${className}`}>
+    <div className={`relative w-full overflow-hidden rounded-[24px] bg-transparent ${className}`}>
       <Image
         src={media.url}
         alt={media.alt}

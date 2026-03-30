@@ -100,7 +100,7 @@ export default function HomeLandingHero({
       <div className="grid grid-cols-12 gap-x-1 gap-y-10 lg:gap-y-8 w-full">
         <div className="col-span-12 flex w-full items-center justify-between gap-4 pl-2">
           <nav
-            className="flex items-center gap-[15px] font-inter font-normal text-[13px] leading-[19px]"
+            className="flex items-center gap-[15px] font-inter font-normal text-[14px] leading-[19px]"
             aria-label="Page"
           >
             <NextLink href="/" className="text-foreground">
