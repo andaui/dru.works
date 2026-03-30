@@ -19,6 +19,7 @@ import {
   pricingAndDesignersQuery,
   urlFor,
 } from "@/lib/sanity";
+import { parseServicesPageSectionsForHome } from "@/lib/servicesHomeSections";
 
 async function getHomeTestimonials() {
   try {
@@ -323,6 +324,10 @@ export default async function Home() {
   const navAboutTitle = pageTitles.about || "About";
   const navServicesTitle = pageTitles.services || "Services";
 
+  const servicesSectionsForHome = parseServicesPageSectionsForHome(
+    servicesPageData?.sections,
+  );
+
   const homeGridTestimonials: HomeTestimonialItem[] = rawTestimonials.map(
     (testimonial: any) => {
       let photoUrl: string | null = null;
@@ -406,6 +411,8 @@ export default async function Home() {
         homepageDescription={homepageData?.homepageDescription}
         aboutPageDescription={aboutPageData?.homepageDescription}
         servicesPageDescription={servicesPageData?.homepageDescription}
+        servicesHeroTitle={servicesPageData?.heroTitle ?? null}
+        servicesSectionsForHome={servicesSectionsForHome}
         heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
@@ -460,7 +467,7 @@ export default async function Home() {
       </div>
 
       {/* Work grid: 3 cols (md+), 16px column gap, 152px row gap, 58px horizontal padding; 7:8 tiles with 20px radius. Mobile: 1 col, featured three then remaining grid items (hidden md+ in hero strip). */}
-      <div className="w-full mt-[40px] lg:mt-[80px] px-[58px]">
+      <div className="w-full mt-[40px] lg:mt-[260px] px-[58px]">
         {(featuredThree.length >= 3 || gridItems.length > 0) ? (
           <div className="grid grid-cols-1 gap-x-4 gap-y-[152px] md:grid-cols-3">
             {featuredThree.length >= 3 &&

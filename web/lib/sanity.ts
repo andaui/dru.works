@@ -437,6 +437,7 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
     },
     // Section fields
     sectionTitle,
+    order,
     blocks[] {
       _key,
       backgroundColor,

@@ -3,6 +3,8 @@
 import { Fragment, useState } from "react";
 import ThemeLabelToggle from "@/components/ThemeLabelToggle";
 import HeroReelVideo from "@/components/HeroReelVideo";
+import ServicesHomePricingBlock from "@/components/ServicesHomePricingBlock";
+import type { ServicesHomeSectionParsed } from "@/lib/servicesHomeSections";
 
 const DEFAULT_HERO_DESCRIPTION =
   "I bridge the gap between complex product requirements and world-class visual execution. I bring the precision and craft of a top-tier studio to every engagement. I care deeply about the 'invisible' details—the clarity, consistency, and refinement that transform a functional interface into a trusted brand experience.";
@@ -82,6 +84,10 @@ type HomeLandingHeroProps = {
   aboutPageDescription?: string | null;
   /** Services page — left column when Services is selected. */
   servicesPageDescription?: string | null;
+  /** Services page hero title (replaces work title when Services is selected). */
+  servicesHeroTitle?: string | null;
+  /** Services page sections — pricing-style blocks on the home hero. */
+  servicesSectionsForHome?: ServicesHomeSectionParsed[];
   heroReelVideoUrl?: string | null;
   aboutLabel?: string;
   servicesLabel?: string;
@@ -92,6 +98,8 @@ export default function HomeLandingHero({
   homepageDescription,
   aboutPageDescription,
   servicesPageDescription,
+  servicesHeroTitle,
+  servicesSectionsForHome = [],
   heroReelVideoUrl,
   aboutLabel = "About",
   servicesLabel = "Services",
@@ -100,13 +108,20 @@ export default function HomeLandingHero({
 
   const description =
     (homepageDescription && homepageDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
+
+  const activeTitleSource =
+    section === "services" && servicesHeroTitle?.trim()
+      ? servicesHeroTitle
+      : heroTitle;
   const titleLines = normalizeHomeHeroTitleLines(
-    heroTitle.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
+    activeTitleSource.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
   );
   const heroTitleLines =
     titleLines.length > 0
       ? titleLines
       : (["Design partner with\u00A0engineering", "fluency"] as const);
+
+  const [firstServiceSection, ...restServiceSections] = servicesSectionsForHome;
 
   const navMuted = "text-[#989898] dark:text-muted hover:text-foreground transition-colors";
   const navActive = "text-foreground";
@@ -153,7 +168,11 @@ export default function HomeLandingHero({
           <ThemeLabelToggle />
         </div>
 
-        <div className="col-span-12 lg:col-span-6 min-w-0">
+        <div
+          className={`col-span-12 min-w-0 ${
+            section === "services" ? "lg:col-span-4" : "lg:col-span-6"
+          }`}
+        >
           <div className="flex flex-col gap-8 w-full">
             <div className="flex flex-col gap-[34px] w-full">
               <h1 className="pl-1 font-soehne font-normal text-[30px] leading-[37px] tracking-[-0.25px] text-foreground m-0">
@@ -211,40 +230,92 @@ export default function HomeLandingHero({
                   )}
                 </div>
               ) : (
-                <div className="pl-1 w-full min-w-0 max-w-[440px]">
+                <div className="pl-1 w-full min-w-0 max-w-[440px] flex flex-col gap-[34px]">
                   {servicesBody ? (
                     <p className={aboutServicesBodyClass}>{servicesBody}</p>
-                  ) : (
-                    <p
-                      className={`${aboutServicesBodyClass} text-black/45 dark:text-white/45`}
-                    >
-                      Add copy in Sanity: Pages → Services → Homepage description.
-                    </p>
-                  )}
+                  ) : null}
+                  <a
+                    href="mailto:carterandrew93@gmail.com"
+                    className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
+                  >
+                    Contact
+                  </a>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-6 min-w-0">
-          <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
-            <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
-              {description}
-            </p>
+        <div
+          className={`col-span-12 min-w-0 ${
+            section === "services" ? "lg:col-span-6 lg:col-start-7" : "lg:col-span-6"
+          }`}
+        >
+          {section === "services" ? (
+            <div className="flex flex-col w-full">
+              {firstServiceSection ? (
+                <ServicesHomePricingBlock
+                  data={firstServiceSection}
+                  variant="heroRight"
+                />
+              ) : null}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
+              <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                {description}
+              </p>
 
-            {heroReelVideoUrl ? (
-              <HeroReelVideo src={heroReelVideoUrl} />
-            ) : (
-              <div
-                className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
-                aria-label="Video placeholder"
-              >
-                <span className="sr-only">Video placeholder</span>
-              </div>
-            )}
-          </div>
+              {heroReelVideoUrl ? (
+                <HeroReelVideo src={heroReelVideoUrl} />
+              ) : (
+                <div
+                  className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
+                  aria-label="Video placeholder"
+                >
+                  <span className="sr-only">Video placeholder</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {section === "services" &&
+          restServiceSections.map((s) => (
+            <div
+              key={s._id}
+              className="col-span-12 w-full mt-10 lg:mt-[62px] min-w-0"
+            >
+              <ServicesHomePricingBlock data={s} variant="fullWidth" />
+            </div>
+          ))}
+
+        {section === "services" ? (
+          <div
+            className={`col-span-12 min-w-0 lg:col-span-6 lg:col-start-7 ${
+              firstServiceSection || restServiceSections.length > 0
+                ? "mt-10 lg:mt-[62px]"
+                : ""
+            }`}
+          >
+            <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
+              <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                {description}
+              </p>
+
+              {heroReelVideoUrl ? (
+                <HeroReelVideo src={heroReelVideoUrl} />
+              ) : (
+                <div
+                  className="relative w-full h-[min(70vw,420px)] sm:h-[440px] lg:h-[495px] rounded-[25px] overflow-hidden bg-[#e5e5e5] dark:bg-white/[0.06] border border-dashed border-border"
+                  aria-label="Video placeholder"
+                >
+                  <span className="sr-only">Video placeholder</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );
