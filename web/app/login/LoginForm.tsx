@@ -1,31 +1,69 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import ThemeLabelToggle from "@/components/ThemeLabelToggle";
+
+const DEFAULT_HERO_DESCRIPTION =
+  "I bridge the gap between complex product requirements and world-class visual execution. I bring the precision and craft of a top-tier studio to every engagement. I care deeply about the 'invisible' details—the clarity, consistency, and refinement that transform a functional interface into a trusted brand experience.";
 
 interface LoginFormProps {
   heroTitle?: string;
-  heroDescription?: string;
+  homepageDescription?: string;
 }
 
-export default function LoginForm({ heroTitle, heroDescription }: LoginFormProps) {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+function Rule() {
+  return <div className="h-px w-full bg-border shrink-0" aria-hidden />;
+}
+
+/** Space between row text and the rule below (matches HomePricingCalculator) */
+const pricingRowTextPb = "pb-[calc(var(--spacing)*1)]";
+
+/** Matches homepage hero client/services lists (`HomeLandingHero` listClass). */
+const heroListTextClass =
+  "font-inter font-normal text-[14px] leading-[19px]";
+
+function IconArrowRight({ className }: { className?: string }) {
+  return (
+    <svg
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden
+    >
+      <path
+        d="M13.4173 21.5455L11.7767 19.9262L18.531 13.1719H1.03809V10.8282H18.531L11.7767 4.09521L13.4173 2.45459L22.9628 12L13.4173 21.5455Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export default function LoginForm({ homepageDescription }: LoginFormProps) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
+  const redirect = searchParams.get("redirect") || "/";
+
+  const description =
+    (homepageDescription && homepageDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    if (!password.trim()) return;
+    setError("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
+      const response = await fetch("/api/auth", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ password }),
       });
@@ -33,73 +71,106 @@ export default function LoginForm({ heroTitle, heroDescription }: LoginFormProps
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Redirect to the original page or home
         router.push(redirect);
         router.refresh();
       } else {
-        setError(data.error || 'Invalid password');
+        setError(data.error || "Invalid password");
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch {
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const displayTitle = heroTitle || "Design partner\nwith technical skills";
-  const displayDescription = heroDescription || "I take on a limited number of projects and share details directly.";
+  const canSubmit = password.trim().length > 0 && !isLoading;
 
   return (
-    <div className="fixed inset-0 w-full bg-white overflow-x-hidden overflow-y-auto flex items-center justify-center px-[24px] min-h-[100dvh] min-h-screen">
-      <div className="w-full flex flex-col gap-[59px] items-center text-center">
-        {/* Title Section */}
-        <div className="flex flex-col gap-[19px] items-center w-full">
-          {/* Title - split into multiple lines */}
-          <h1 className="font-medium text-[32px] leading-[38px] sm:text-[40px] sm:leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
-            {displayTitle.split('\n').map((line: string, index: number) => (
-              <p key={index} className="mb-0">{line}</p>
-            ))}
-          </h1>
-          
-          {/* Subtitle */}
-          <p className="font-normal text-[12px] leading-[19px] not-italic text-[#989898] w-full">
-            {displayDescription}
-          </p>
-        </div>
+    <>
+      <section
+        className="relative w-full min-h-[100dvh] min-h-screen px-[2.5%] sm:px-6 pt-[22px] pb-[140px] lg:pb-[160px] bg-background"
+        aria-label="Sign in"
+      >
+        <div className="grid grid-cols-12 gap-x-1 gap-y-10 lg:gap-y-8 w-full">
+          <div className="col-span-12 flex w-full items-center justify-end gap-4 pl-2">
+            <ThemeLabelToggle />
+          </div>
 
-        {/* Form Section */}
-        <form onSubmit={handleSubmit} className="w-full flex flex-col items-center">
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="bg-[#eaeaea] px-[12px] py-[6px] w-[275px] text-[16px] sm:text-[13px] leading-[20px] text-black font-normal font-inter placeholder:text-black placeholder:opacity-40 placeholder:text-[13px] placeholder:font-inter focus:outline-none disabled:opacity-50 mb-[12px]"
-            required
-            autoFocus
-            disabled={isLoading}
-          />
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-black px-[12px] py-[6px] w-[275px] text-[13px] leading-[20px] font-normal text-[#fcfcfc] transition-opacity hover:opacity-70 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? 'Verifying...' : 'Submit'}
-          </button>
-          <p className="font-normal text-[12px] leading-[19px] not-italic text-[#989898] w-full block sm:hidden mt-[28px]">
-            Use desktop for better experience
-          </p>
-          
-          {error && (
-            <div className="font-normal text-[13px] leading-[19px] not-italic text-[#D30505] mt-[38px]">
-              {error}
+          <div className="col-span-12 lg:col-span-6 lg:col-start-7 min-w-0">
+            <div className="flex flex-col w-full">
+              <p className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0">
+                {description}
+              </p>
+
+              <form
+                onSubmit={handleSubmit}
+                className="mt-[144px] flex flex-col gap-1 w-full"
+              >
+                <Rule />
+                <div className="pt-1 pb-0">
+                  <h2
+                    className={`font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] m-0 ${pricingRowTextPb}`}
+                    style={{ color: "var(--accent)" }}
+                  >
+                    Password
+                  </h2>
+                  <Rule />
+                </div>
+                <div className="pt-1">
+                  <div className="flex items-center justify-between gap-4 w-full min-w-0">
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error) setError("");
+                      }}
+                      placeholder="Enter password"
+                      disabled={isLoading}
+                      autoComplete="current-password"
+                      autoFocus
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={error ? "password-error" : undefined}
+                      className="min-w-0 flex-1 bg-transparent border-0 p-0 font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-0 disabled:opacity-20 disabled:cursor-not-allowed"
+                    />
+                    {error ? (
+                      <p
+                        id="password-error"
+                        className={`${heroListTextClass} shrink-0 max-w-[min(50%,280px)] text-right text-foreground m-0 pb-1 opacity-50`}
+                        role="alert"
+                      >
+                        {error}
+                      </p>
+                    ) : null}
+                  </div>
+                  <Rule />
+                </div>
+                <div className="pt-1">
+                  <button
+                    type="submit"
+                    disabled={!canSubmit}
+                    className={`group flex items-center justify-between gap-4 w-full text-left p-0 border-0 bg-transparent ${pricingRowTextPb} disabled:opacity-20 disabled:cursor-not-allowed`}
+                  >
+                    <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 transition-colors group-hover:text-foreground/70">
+                      {isLoading ? "Verifying..." : "Submit"}
+                    </span>
+                    <IconArrowRight className="shrink-0 w-6 h-6 text-muted opacity-60 transition-opacity group-hover:opacity-100 group-hover:text-foreground" />
+                  </button>
+                  <Rule />
+                </div>
+              </form>
             </div>
-          )}
-        </form>
+          </div>
+        </div>
+      </section>
+
+      <div
+        className="pointer-events-none fixed bottom-[18px] left-6 z-10 font-soehne font-normal text-[70px] leading-[65px] tracking-[-0.25px] text-black dark:text-white select-none"
+        aria-hidden
+      >
+        dru.works
       </div>
-    </div>
+    </>
   );
 }
-

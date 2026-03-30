@@ -382,7 +382,7 @@ export const pageDataQuery = (slug: string) => `*[_type == "page" && slug.curren
   _type,
   title,
   heroTitle,
-  heroDescription,
+  "homepageDescription": coalesce(homepageDescription, heroDescription),
   sections[]-> {
     _id,
     _type,

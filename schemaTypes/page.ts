@@ -28,9 +28,17 @@ export default defineType({
     }),
     defineField({
       name: 'heroDescription',
-      title: 'Hero Description',
+      title: 'Hero description (legacy)',
       type: 'text',
-      description: 'Description text displayed in the hero section of the page',
+      hidden: true,
+      description: 'Migrated to Homepage description. Data is still read until you copy it over.',
+    }),
+    defineField({
+      name: 'homepageDescription',
+      title: 'Homepage description',
+      type: 'text',
+      description:
+        'Work page: intro in the home hero right column. About / Services pages: paragraphs shown in the home hero left column when that nav item is selected (also used on standalone page routes where applicable).',
     }),
     defineField({
       name: 'sections',

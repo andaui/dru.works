@@ -58,10 +58,10 @@ export default async function About() {
             )}
 
             {/* Content Text */}
-            {pageData?.heroDescription && (
+            {pageData?.homepageDescription && (
               <div className="font-normal text-[16px] leading-[23px] not-italic text-foreground w-[788px] max-w-[calc(100%-48px)]">
                 <HeroDescriptionWithCompanyAccent
-                  text={pageData.heroDescription}
+                  text={pageData.homepageDescription}
                   className="whitespace-pre-line mb-0"
                 />
               </div>

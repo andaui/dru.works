@@ -15,28 +15,22 @@ async function getLoginPageData() {
 async function LoginPageContent() {
   const loginPageData = await getLoginPageData();
   const heroTitle = loginPageData?.heroTitle || "Design partner\nwith technical skills";
-  const heroDescription = loginPageData?.heroDescription || "I take on a limited number of projects and share details directly.";
+  const homepageDescription =
+    loginPageData?.homepageDescription ||
+    "I take on a limited number of projects and share details directly.";
 
-  return <LoginForm heroTitle={heroTitle} heroDescription={heroDescription} />;
+  return <LoginForm heroTitle={heroTitle} homepageDescription={homepageDescription} />;
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="fixed inset-0 w-full bg-white overflow-x-hidden overflow-y-auto flex items-center justify-center px-[24px] min-h-[100dvh] min-h-screen">
-        <div className="w-full flex flex-col gap-[59px] items-center text-center">
-          <div className="flex flex-col gap-[19px] items-center w-full">
-            <h1 className="font-medium text-[32px] leading-[38px] sm:text-[40px] sm:leading-[47px] not-italic text-black tracking-[-0.25px] w-full">
-              <p className="mb-0">Design partner</p>
-              <p className="mb-0">with technical skills</p>
-            </h1>
-            <p className="font-normal text-[12px] leading-[19px] not-italic text-[#989898] w-full">
-              Loading...
-            </p>
-          </div>
+    <Suspense
+      fallback={
+        <div className="min-h-[100dvh] min-h-screen w-full bg-background px-[2.5%] sm:px-6 pt-[22px]">
+          <div className="font-soehne text-[26px] text-foreground/50">Loading…</div>
         </div>
-      </div>
-    }>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   );

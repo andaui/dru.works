@@ -1,23 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-
+/** Login route uses the same theme-aware background as the rest of the app. */
 export default function LoginPageBackground({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtmlBg = html.style.background;
-    const prevBodyBg = body.style.background;
-    const prevBodyColor = body.style.color;
-    html.style.background = '#ffffff';
-    body.style.background = '#ffffff';
-    body.style.color = '#000000';
-    return () => {
-      html.style.background = prevHtmlBg;
-      body.style.background = prevBodyBg;
-      body.style.color = prevBodyColor;
-    };
-  }, []);
-
   return <>{children}</>;
 }

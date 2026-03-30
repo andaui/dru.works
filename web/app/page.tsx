@@ -8,7 +8,6 @@ import HomeTestimonialsGrid, {
   type HomeTestimonialItem,
 } from "@/components/HomeTestimonialsGrid";
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
-import HeroDescriptionWithCompanyAccent from "@/components/HeroDescriptionWithCompanyAccent";
 import {
   client,
   featuredWorkQuery,
@@ -212,6 +211,7 @@ export default async function Home() {
   const rawSpotlightItems = await getSpotlightItems();
   const rawTestimonials = await getHomeTestimonials();
   const aboutPageData = await getAboutPageData();
+  const servicesPageData = await getPageData("services");
   const pricingDoc = await getPricingAndDesigners();
 
   let monthlyRateSideImage: HomePricingSideImage | undefined;
@@ -403,7 +403,9 @@ export default async function Home() {
     <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
       <HomeLandingHero
         heroTitle={heroTitle}
-        heroDescription={homepageData?.heroDescription}
+        homepageDescription={homepageData?.homepageDescription}
+        aboutPageDescription={aboutPageData?.homepageDescription}
+        servicesPageDescription={servicesPageData?.homepageDescription}
         heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
@@ -453,22 +455,6 @@ export default async function Home() {
           <section className="hidden md:block w-full pt-16 lg:pt-[100px]">
             <SpotlightCarouselWrapper items={processedSpotlightItems} />
           </section>
-        )}
-
-        {/* About Page Hero Description — same grid + right column as HomeLandingHero intro (col 7–12, typography match) */}
-        {aboutPageData?.heroDescription && (
-          <div className="w-full px-[2.5%] sm:px-6 mt-[48px] mb-[90px] lg:mt-[138px] lg:mb-[170px]">
-            <div className="grid grid-cols-12 gap-x-1 gap-y-10 lg:gap-y-8 w-full">
-              <div className="col-span-12 lg:col-span-6 lg:col-start-7 min-w-0">
-                <div className="flex flex-col gap-8 lg:gap-[31px] w-full">
-                  <HeroDescriptionWithCompanyAccent
-                    text={aboutPageData.heroDescription}
-                    className="font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground m-0 whitespace-pre-line"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
         )}
 
       </div>

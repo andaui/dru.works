@@ -1,5 +1,6 @@
-import { Fragment } from "react";
-import NextLink from "next/link";
+"use client";
+
+import { Fragment, useState } from "react";
 import ThemeLabelToggle from "@/components/ThemeLabelToggle";
 import HeroReelVideo from "@/components/HeroReelVideo";
 
@@ -54,6 +55,10 @@ const SERVICES_COLS: [string[], string[]] = [
 const listClass =
   "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[14px] leading-[19px]";
 
+/** About / Services hero body (left column). Exact 21px line height. */
+const aboutServicesBodyClass =
+  "font-inter font-normal text-[14px] [line-height:21px] text-black/70 dark:text-white/60 m-0 whitespace-pre-line";
+
 /** Legacy CMS / old default broke after "with"; prefer break before "fluency". */
 function normalizeHomeHeroTitleLines(lines: string[]): string[] {
   if (lines.length !== 2) return lines;
@@ -67,10 +72,16 @@ function normalizeHomeHeroTitleLines(lines: string[]): string[] {
   return lines;
 }
 
+type HomeHeroSection = "index" | "about" | "services";
+
 type HomeLandingHeroProps = {
   heroTitle: string;
-  heroDescription?: string | null;
-  /** From Homepage Work → Hero reel video; same column width as intro text, height auto. */
+  /** Work page — right column intro (Homepage description in Sanity). */
+  homepageDescription?: string | null;
+  /** About page — left column when About is selected. */
+  aboutPageDescription?: string | null;
+  /** Services page — left column when Services is selected. */
+  servicesPageDescription?: string | null;
   heroReelVideoUrl?: string | null;
   aboutLabel?: string;
   servicesLabel?: string;
@@ -78,12 +89,17 @@ type HomeLandingHeroProps = {
 
 export default function HomeLandingHero({
   heroTitle,
-  heroDescription,
+  homepageDescription,
+  aboutPageDescription,
+  servicesPageDescription,
   heroReelVideoUrl,
   aboutLabel = "About",
   servicesLabel = "Services",
 }: HomeLandingHeroProps) {
-  const description = (heroDescription && heroDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
+  const [section, setSection] = useState<HomeHeroSection>("index");
+
+  const description =
+    (homepageDescription && homepageDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
   const titleLines = normalizeHomeHeroTitleLines(
     heroTitle.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
   );
@@ -91,6 +107,12 @@ export default function HomeLandingHero({
     titleLines.length > 0
       ? titleLines
       : (["Design partner with\u00A0engineering", "fluency"] as const);
+
+  const navMuted = "text-[#989898] dark:text-muted hover:text-foreground transition-colors";
+  const navActive = "text-foreground";
+
+  const aboutBody = (aboutPageDescription && aboutPageDescription.trim()) || "";
+  const servicesBody = (servicesPageDescription && servicesPageDescription.trim()) || "";
 
   return (
     <section
@@ -103,21 +125,30 @@ export default function HomeLandingHero({
             className="flex items-center gap-[15px] font-inter font-normal text-[14px] leading-[19px]"
             aria-label="Page"
           >
-            <NextLink href="/" className="text-foreground">
+            <button
+              type="button"
+              onClick={() => setSection("index")}
+              className={section === "index" ? navActive : navMuted}
+              aria-current={section === "index" ? "page" : undefined}
+            >
               Index
-            </NextLink>
-            <NextLink
-              href="/about"
-              className="text-[#989898] dark:text-muted hover:text-foreground transition-colors"
+            </button>
+            <button
+              type="button"
+              onClick={() => setSection("about")}
+              className={section === "about" ? navActive : navMuted}
+              aria-current={section === "about" ? "page" : undefined}
             >
               {aboutLabel}
-            </NextLink>
-            <NextLink
-              href="/services"
-              className="text-[#989898] dark:text-muted hover:text-foreground transition-colors"
+            </button>
+            <button
+              type="button"
+              onClick={() => setSection("services")}
+              className={section === "services" ? navActive : navMuted}
+              aria-current={section === "services" ? "page" : undefined}
             >
               {servicesLabel}
-            </NextLink>
+            </button>
           </nav>
           <ThemeLabelToggle />
         </div>
@@ -134,36 +165,64 @@ export default function HomeLandingHero({
                 ))}
               </h1>
 
-              <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start pl-1">
-                {CLIENT_COLS.map((col, i) => (
-                  <div key={i} className={listClass}>
-                    {col.map((name) => (
-                      <p key={name} className="m-0 whitespace-nowrap">
-                        {name}
-                      </p>
+              {section === "index" ? (
+                <>
+                  <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start pl-1">
+                    {CLIENT_COLS.map((col, i) => (
+                      <div key={i} className={listClass}>
+                        {col.map((name) => (
+                          <p key={name} className="m-0 whitespace-nowrap">
+                            {name}
+                          </p>
+                        ))}
+                      </div>
                     ))}
                   </div>
-                ))}
-              </div>
 
-              <a
-                href="mailto:carterandrew93@gmail.com"
-                className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
-              >
-                Contact
-              </a>
+                  <a
+                    href="mailto:carterandrew93@gmail.com"
+                    className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
+                  >
+                    Contact
+                  </a>
 
-              <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
-                {SERVICES_COLS.map((col, i) => (
-                  <div key={i} className={listClass}>
-                    {col.map((name) => (
-                      <p key={name} className="m-0 whitespace-nowrap">
-                        {name}
-                      </p>
+                  <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
+                    {SERVICES_COLS.map((col, i) => (
+                      <div key={i} className={listClass}>
+                        {col.map((name) => (
+                          <p key={name} className="m-0 whitespace-nowrap">
+                            {name}
+                          </p>
+                        ))}
+                      </div>
                     ))}
                   </div>
-                ))}
-              </div>
+                </>
+              ) : section === "about" ? (
+                <div className="pl-1 w-full min-w-0 max-w-[445px]">
+                  {aboutBody ? (
+                    <p className={aboutServicesBodyClass}>{aboutBody}</p>
+                  ) : (
+                    <p
+                      className={`${aboutServicesBodyClass} text-black/45 dark:text-white/45`}
+                    >
+                      Add copy in Sanity: Pages → About → Homepage description.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="pl-1 w-full min-w-0 max-w-[440px]">
+                  {servicesBody ? (
+                    <p className={aboutServicesBodyClass}>{servicesBody}</p>
+                  ) : (
+                    <p
+                      className={`${aboutServicesBodyClass} text-black/45 dark:text-white/45`}
+                    >
+                      Add copy in Sanity: Pages → Services → Homepage description.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
