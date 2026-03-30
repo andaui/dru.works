@@ -12,7 +12,6 @@ interface MediaData {
 interface WorkFeatureCardProps {
   projectTitle: string;
   projectDescriptionShort: string;
-  projectDescriptionLong?: string | null;
   teamContribution?: string | null;
   images?: MediaData[];
   readMoreText?: string;
@@ -21,19 +20,15 @@ interface WorkFeatureCardProps {
 export default function WorkFeatureCard({
   projectTitle,
   projectDescriptionShort,
-  projectDescriptionLong,
   teamContribution,
   images = [],
   readMoreText = "Read more",
 }: WorkFeatureCardProps) {
-  // Show "Read description" button if there's a long description OR if there's only a short description (for mobile)
-  const hasLongDescription = projectDescriptionLong && projectDescriptionLong.trim().length > 0;
   const hasShortDescription = projectDescriptionShort && projectDescriptionShort.trim().length > 0;
-  // On mobile, show button if there's any description. On desktop, only show if there's a long description.
-  const showReadMore = hasLongDescription || hasShortDescription;
+  // With a single description field, we always show it (no expand/collapse).
+  const showReadMore = false;
   
-  // Expand/collapse state for description
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Expand/collapse state removed (single description field)
   
   // Carousel state - only track media index, not work item index
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -198,34 +193,22 @@ export default function WorkFeatureCard({
           <p className="relative shrink-0 w-full max-w-[452px] text-[16px] leading-[normal] text-black">
             {projectTitle}
           </p>
-          {/* Short description - hidden on mobile, visible on desktop. On mobile, only show if expanded and no long description */}
-          <p className={`relative shrink-0 min-w-full w-[min-content] text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] whitespace-pre-line ${isExpanded && !hasLongDescription ? 'block md:hidden' : 'hidden md:block'}`}>
+          <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] whitespace-pre-line">
             {projectDescriptionShort}
           </p>
-          {/* Long description - only show when expanded. If both exist, show long. If only short exists, it's shown above */}
-          {isExpanded && hasLongDescription && (
-            <p className="relative shrink-0 min-w-full w-[min-content] text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] whitespace-pre-line">
-              {projectDescriptionLong}
-            </p>
-          )}
           {/* Team contribution - hidden on mobile, visible on desktop */}
           {teamContribution && (
             <p className="hidden md:block relative shrink-0 w-full max-w-[354.667px] text-[14px] leading-[20px] text-[#5d5d5d]">
               {teamContribution}
             </p>
           )}
-          {showReadMore && (
+          {showReadMore ? (
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
               className="relative shrink-0 w-full max-w-[354.667px] text-left text-[13px] md:text-[14px] leading-[19px] md:leading-[20px] text-[#5d5d5d] opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
-            >
-              <span className="md:hidden">{isExpanded ? 'Read less' : 'Read description'}</span>
-              {/* Desktop: only show if there's a long description */}
-              {hasLongDescription && (
-                <span className="hidden md:inline">{isExpanded ? 'Read less' : readMoreText}</span>
-              )}
-            </button>
-          )}
+              type="button"
+              aria-hidden
+            />
+          ) : null}
         </div>
         {/* Navigation Controls - Desktop only (in left column) */}
         {showNavigation && (

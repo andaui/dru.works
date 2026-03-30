@@ -76,15 +76,21 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
     .map(toWorkWithMedia);
 
   const description =
-    (project.projectDescriptionLong && String(project.projectDescriptionLong).trim()) ||
-    (project.projectDescriptionShort && String(project.projectDescriptionShort).trim()) ||
-    "";
+    (project.projectDescriptionShort && String(project.projectDescriptionShort).trim()) || "";
+
+  const roleImpactLines = String(project.roleImpact || "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   const whatIDidTitle = (firstWhatIDid?.whatIDidTitle || "What I did").trim();
   const whatIDidLines = String(firstWhatIDid?.whatIDidText || "")
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
+
+  const listTitle = roleImpactLines.length > 0 ? "Role & Impact" : whatIDidTitle;
+  const listLines = roleImpactLines.length > 0 ? roleImpactLines : whatIDidLines;
 
   const fallbackAlt = (project.projectTitle || "").trim() || "Project";
   const clientName = (project.client || "").trim();
@@ -100,15 +106,15 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
         </div>
       ) : null}
 
-      {(whatIDidLines.length > 0 || clientName) ? (
+      {(listLines.length > 0 || clientName) ? (
         <div className="w-full mt-[80px]">
           <div className="grid grid-cols-12 gap-x-[34px] gap-y-10 w-full items-start">
-            <div className="col-span-12 lg:col-span-10 min-w-0">
+            <div className="col-span-12 lg:col-span-9 min-w-0">
               <div className="font-soehne font-normal text-[18px] sm:text-[20px] leading-[26px] sm:leading-[29px] tracking-[-0.25px]">
-                <p className="m-0 text-black/50 dark:text-white/50">{whatIDidTitle}</p>
-                {whatIDidLines.length > 0 ? (
+                <p className="m-0 text-black/50 dark:text-white/50">{listTitle}</p>
+                {listLines.length > 0 ? (
                   <div className="mt-[10px] flex flex-col gap-1 text-black dark:text-white">
-                    {whatIDidLines.map((line, i) => (
+                    {listLines.map((line, i) => (
                       <p key={i} className="m-0">
                         {line}
                       </p>
@@ -119,7 +125,7 @@ export default async function ProjectDetailView({ slug }: { slug: string }) {
             </div>
 
             {clientName ? (
-              <div className="col-span-12 lg:col-span-2 min-w-0">
+              <div className="col-span-12 lg:col-span-2 lg:col-start-11 min-w-0">
                 <div className="pt-1">
                   <p className="m-0 font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-black dark:text-white">
                     Client

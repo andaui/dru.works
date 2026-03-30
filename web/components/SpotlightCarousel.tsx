@@ -15,60 +15,36 @@ interface SpotlightCarouselProps {
 
 interface CarouselItemProps {
   item: MediaData;
-  index: number;
-  isFirst?: boolean;
 }
 
-function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
-  const itemRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const updateTextWidth = () => {
-      if (imageRef.current && itemRef.current) {
-        const imageWidth = imageRef.current.offsetWidth;
-        const textElement = itemRef.current.querySelector('p');
-        if (textElement) {
-          textElement.style.maxWidth = `${imageWidth}px`;
-        }
-      }
-    };
-
-    updateTextWidth();
-    window.addEventListener('resize', updateTextWidth);
-
-    if (imageRef.current) {
-      if (item.type === 'image' && imageRef.current instanceof HTMLImageElement) {
-        imageRef.current.addEventListener('load', updateTextWidth);
-      } else if (item.type === 'video' && imageRef.current instanceof HTMLVideoElement) {
-        imageRef.current.addEventListener('loadedmetadata', updateTextWidth);
-      }
-    }
-
-    return () => {
-      window.removeEventListener('resize', updateTextWidth);
-      if (imageRef.current) {
-        if (item.type === 'image' && imageRef.current instanceof HTMLImageElement) {
-          imageRef.current.removeEventListener('load', updateTextWidth);
-        } else if (item.type === 'video' && imageRef.current instanceof HTMLVideoElement) {
-          imageRef.current.removeEventListener('loadedmetadata', updateTextWidth);
-        }
-      }
-    };
-  }, [item.type]);
-
+function IconArrowRight({ className }: { className?: string }) {
   return (
-    <div
-      ref={itemRef}
-      className="relative shrink-0 flex flex-col items-start gap-[12px]"
+    <svg
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden
     >
+      <path
+        d="M13.4173 21.5455L11.7767 19.9262L18.531 13.1719H1.03809V10.8282H18.531L11.7767 4.09521L13.4173 2.45459L22.9628 12L13.4173 21.5455Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function CarouselItem({ item }: CarouselItemProps) {
+  return (
+    <div className="relative shrink-0">
       <div
         className="relative flex items-center overflow-hidden rounded-[16px]"
         style={{ height: 'clamp(300px, 40vw, 582px)', backgroundColor: 'transparent' }}
       >
         {item.type === 'video' ? (
           <video
-            ref={imageRef as React.RefObject<HTMLVideoElement>}
             src={item.url}
             className="object-contain w-auto"
             autoPlay
@@ -83,7 +59,6 @@ function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
           />
         ) : (
           <img
-            ref={imageRef as React.RefObject<HTMLImageElement>}
             src={item.url}
             alt={item.alt}
             className="object-contain w-auto"
@@ -95,9 +70,6 @@ function CarouselItem({ item, index, isFirst = false }: CarouselItemProps) {
           />
         )}
       </div>
-      <p className="font-normal leading-[19px] not-italic text-[#5d5d5d] text-[13px] text-left break-words" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-        {item.text || 'Text'}
-      </p>
     </div>
   );
 }
@@ -106,7 +78,6 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
   const itemCount = items.length;
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isScrollingRef = useRef(false);
 
@@ -176,13 +147,6 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     goToItem(targetIndex);
   };
 
-  const updateSpacerWidth = () => {
-    if (spacerRef.current && containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth;
-      spacerRef.current.style.width = `${Math.max(0, containerWidth * 0.1 - 30)}px`;
-    }
-  };
-
   // Sync currentIndex from scroll position
   useEffect(() => {
     const el = containerRef.current;
@@ -207,50 +171,35 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
     return () => el.removeEventListener('scroll', updateIndex);
   }, [itemCount]);
 
-  useEffect(() => {
-    updateSpacerWidth();
-    window.addEventListener('resize', updateSpacerWidth);
-    return () => window.removeEventListener('resize', updateSpacerWidth);
-  }, [itemCount]);
-
-  useEffect(() => {
-    const t = setTimeout(updateSpacerWidth, 150);
-    return () => clearTimeout(t);
-  }, [itemCount]);
-
   if (itemCount === 0) {
     return null;
   }
 
   return (
     <div className="w-[calc(100%+5%)] sm:w-full -ml-[2.5%] -mr-[2.5%] sm:mx-0">
-      <div className="flex items-center justify-between pr-[2.5%] sm:pr-[24px] mb-7">
+      <div className="flex items-center justify-between pr-[calc(2.5%+12px)] sm:pr-[36px] mb-7">
         <div className="text-left pl-[2.5%] sm:pl-[24px] font-soehne font-normal text-[26px] sm:text-[29px] leading-[34px] sm:leading-[37px] tracking-[-0.25px] text-foreground">
           Spotlight
         </div>
         {itemCount > 1 && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-[42px] shrink-0">
             <button
               type="button"
               onClick={goPrev}
               disabled={currentIndex === 0}
-              className="p-2 rounded-full text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+              className="p-0 text-black dark:text-white hover:opacity-70 disabled:opacity-20 disabled:pointer-events-none transition-opacity"
               aria-label="Previous item"
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <IconArrowRight className="rotate-180" />
             </button>
             <button
               type="button"
               onClick={goNext}
               disabled={currentIndex >= itemCount - 1}
-              className="p-2 rounded-full text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+              className="p-0 text-black dark:text-white hover:opacity-70 disabled:opacity-20 disabled:pointer-events-none transition-opacity"
               aria-label="Next item"
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <IconArrowRight />
             </button>
           </div>
         )}
@@ -269,10 +218,11 @@ export default function SpotlightCarousel({ items }: SpotlightCarouselProps) {
               ref={(el) => { itemRefs.current[index] = el; }}
               className="shrink-0"
             >
-              <CarouselItem item={item} index={index} isFirst={index === 0} />
+              <CarouselItem item={item} />
             </div>
           ))}
-          <div ref={spacerRef} style={{ flexShrink: 0 }} />
+          {/* Right-side breathing room so next item never touches viewport edge */}
+          <div className="shrink-0 w-[calc(2.5%+12px)] sm:w-[36px]" aria-hidden />
         </div>
       </div>
     </div>

@@ -27,22 +27,23 @@ export default defineType({
     }),
     defineField({
       name: 'projectDescriptionShort',
-      title: 'Project Description Short',
+      title: 'Project Description',
       type: 'text',
-      description: 'Short description that will always be displayed',
+      description: 'Project description shown at the top of the project.',
       validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'projectDescriptionLong',
-      title: 'Project Description Long',
-      type: 'text',
-      description: 'Long description - if populated, "Read more" link will appear',
     }),
     defineField({
       name: 'teamContribution',
       title: 'Team Contribution',
       type: 'string',
       description: 'Optional text to show team contribution (e.g., "Team contribution")',
+    }),
+    defineField({
+      name: 'roleImpact',
+      title: 'Role & Impact',
+      type: 'text',
+      description:
+        'Shown below the description as a list. Use new lines for each item (this will replace the current "What I did" list once fully migrated).',
     }),
     defineField({
       name: 'creative',

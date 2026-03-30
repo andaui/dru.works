@@ -154,7 +154,7 @@ export default function HomePricingCalculator({
   howIWorkDescription,
 }: HomePricingCalculatorProps) {
   const [teamSize, setTeamSize] = useState(1);
-  const [teamPricingOpen, setTeamPricingOpen] = useState(true);
+  const [teamPricingOpen, setTeamPricingOpen] = useState(false);
   const [howIWorkOpen, setHowIWorkOpen] = useState(true);
 
   const rates = useMemo(

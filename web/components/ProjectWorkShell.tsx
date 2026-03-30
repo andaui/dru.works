@@ -80,14 +80,19 @@ export default function ProjectWorkShell({ mode, children }: ProjectWorkShellPro
     </nav>
   );
 
-  const scrollAreaClass = isOverlay
-    ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain"
-    : "flex-1 w-full min-h-0";
-
-  const inner = (
+  const inner = isOverlay ? (
+    // Overlay: nav scrolls with content (not sticky/pinned).
+    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-auto">
+      {nav}
+      <div className="relative w-full min-h-full pb-[40px] lg:pb-[200px] px-6">
+        {children}
+      </div>
+    </div>
+  ) : (
+    // Page: nav stays at top of the document flow.
     <>
       {nav}
-      <div className={scrollAreaClass}>
+      <div className="flex-1 w-full min-h-0">
         <div className="relative w-full min-h-full pb-[40px] lg:pb-[200px] px-6">
           {children}
         </div>

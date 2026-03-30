@@ -7,7 +7,7 @@ export interface FeaturedWork {
   _type: 'featuredWork';
   projectTitle: string;
   projectDescriptionShort: string;
-  projectDescriptionLong?: string | null;
+  roleImpact?: string | null;
   teamContribution?: string | null;
   images?: Array<{
     _type: 'image' | 'file';

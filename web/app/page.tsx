@@ -290,9 +290,9 @@ export default async function Home() {
         _type: item._type,
         projectTitle: item.projectTitle,
         projectDescriptionShort: item.projectDescriptionShort,
-        projectDescriptionLong: item.projectDescriptionLong,
         teamContribution: item.teamContribution,
         creative: item.creative ?? null,
+        roleImpact: item.roleImpact ?? null,
         order: item.order,
         cover: item.cover || [],
         gridCover: item.gridCover || [],
@@ -443,8 +443,8 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Testimonials — after featured work, before Spotlight (mobile: below pricing with section spacing) */}
-        <div className="w-full px-[2.5%] sm:px-6 mt-16 lg:mt-0 lg:pt-20">
+        {/* Testimonials — after featured work, before Spotlight */}
+        <div className="w-full px-[2.5%] sm:px-6 pt-[calc(var(--spacing)*30)]">
           <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
         </div>
 

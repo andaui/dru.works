@@ -52,7 +52,7 @@ const SERVICES_COLS: [string[], string[]] = [
 ];
 
 const listClass =
-  "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[13px] leading-[19px]";
+  "home-hero-list-col flex flex-col gap-1 font-inter font-normal text-[14px] leading-[19px]";
 
 /** Legacy CMS / old default broke after "with"; prefer break before "fluency". */
 function normalizeHomeHeroTitleLines(lines: string[]): string[] {
