@@ -179,6 +179,19 @@ export const homepageWorkQuery = `*[_type == "homepageWork"][0] {
   "belowLogosProject": belowLogosProject-> { ${featuredWorkFields} }
 }`
 
+// Home hero Index tab: singleton (document id homeIndex)
+export const homeIndexQuery = `*[_type == "homeIndex"][0] {
+  _id,
+  title,
+  clientColumns[] {
+    items
+  },
+  servicesColumns[] {
+    items
+  },
+  contactButtonText
+}`
+
 // Works Page Projects: same shape as Homepage Work (2-col, main, grid) for /work page.
 export const worksPageProjectsQuery = `*[_type == "worksPageProjects"][0] {
   _id,

@@ -20,6 +20,9 @@ export default defineConfig({
               .title('Homepage Work')
               .child(S.document().schemaType('homepageWork').documentId('homepageWork')),
             S.listItem()
+              .title('Index')
+              .child(S.document().schemaType('homeIndex').documentId('homeIndex')),
+            S.listItem()
               .title('Pricing & designers')
               .child(
                 S.document()
@@ -30,6 +33,7 @@ export default defineConfig({
             ...S.documentTypeListItems().filter(
               (item) =>
                 item.getId() !== 'homepageWork' &&
+                item.getId() !== 'homeIndex' &&
                 item.getId() !== 'pricingAndDesigners',
             ),
           ]),

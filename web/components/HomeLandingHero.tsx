@@ -91,6 +91,12 @@ type HomeLandingHeroProps = {
   heroReelVideoUrl?: string | null;
   aboutLabel?: string;
   servicesLabel?: string;
+  /** Sanity Index singleton — client columns; falls back to built-in list when unset. */
+  indexClientColumns?: string[][];
+  /** Sanity Index singleton — services columns. */
+  indexServicesColumns?: string[][];
+  /** Contact button between client and services lists (Index tab). */
+  indexContactButtonText?: string;
 };
 
 export default function HomeLandingHero({
@@ -103,8 +109,20 @@ export default function HomeLandingHero({
   heroReelVideoUrl,
   aboutLabel = "About",
   servicesLabel = "Services",
+  indexClientColumns,
+  indexServicesColumns,
+  indexContactButtonText = "Contact",
 }: HomeLandingHeroProps) {
   const [section, setSection] = useState<HomeHeroSection>("index");
+
+  const clientCols =
+    indexClientColumns?.length && indexClientColumns.some((c) => c.length > 0)
+      ? indexClientColumns
+      : CLIENT_COLS;
+  const servicesCols =
+    indexServicesColumns?.length && indexServicesColumns.some((c) => c.length > 0)
+      ? indexServicesColumns
+      : SERVICES_COLS;
 
   const description =
     (homepageDescription && homepageDescription.trim()) || DEFAULT_HERO_DESCRIPTION;
@@ -187,10 +205,10 @@ export default function HomeLandingHero({
               {section === "index" ? (
                 <>
                   <div className="flex flex-wrap gap-x-[48px] gap-y-6 sm:gap-x-[79px] items-start pl-1">
-                    {CLIENT_COLS.map((col, i) => (
+                    {clientCols.map((col, i) => (
                       <div key={i} className={listClass}>
-                        {col.map((name) => (
-                          <p key={name} className="m-0 whitespace-nowrap">
+                        {col.map((name, j) => (
+                          <p key={`${i}-${j}-${name}`} className="m-0 whitespace-nowrap">
                             {name}
                           </p>
                         ))}
@@ -202,14 +220,14 @@ export default function HomeLandingHero({
                     href="mailto:carterandrew93@gmail.com"
                     className="inline-flex items-center justify-center rounded-[36px] bg-[#070707] dark:bg-foreground px-[22px] py-3 w-fit font-inter font-normal text-[13px] leading-[19px] text-[#f7f7f7] dark:text-background no-underline hover:opacity-90 transition-opacity"
                   >
-                    Contact
+                    {indexContactButtonText}
                   </a>
 
                   <div className="flex flex-wrap gap-6 sm:gap-6 items-start pl-1">
-                    {SERVICES_COLS.map((col, i) => (
+                    {servicesCols.map((col, i) => (
                       <div key={i} className={listClass}>
-                        {col.map((name) => (
-                          <p key={name} className="m-0 whitespace-nowrap">
+                        {col.map((name, j) => (
+                          <p key={`${i}-${j}-${name}`} className="m-0 whitespace-nowrap">
                             {name}
                           </p>
                         ))}

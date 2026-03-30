@@ -12,6 +12,7 @@ import {
   client,
   featuredWorkQuery,
   homepageWorkQuery,
+  homeIndexQuery,
   heroTestimonialsQuery,
   spotlightQuery,
   pageDataQuery,
@@ -203,11 +204,36 @@ function isNotMotionStudies(item: { projectTitle?: string | null }): boolean {
   return (item?.projectTitle || "").trim().toLowerCase() !== "motion studies";
 }
 
+function normalizeIndexColumns(
+  cols: { items?: string[] | null }[] | null | undefined,
+): string[][] {
+  if (!cols?.length) return [];
+  return cols.map((col) =>
+    (col.items || []).map((s) => String(s).trim()).filter(Boolean),
+  );
+}
+
+function columnsHaveItems(cols: string[][]): boolean {
+  return cols.some((c) => c.length > 0);
+}
+
+async function getHomeIndex() {
+  try {
+    return await client.fetch(homeIndexQuery);
+  } catch (e) {
+    console.error("Error fetching home index:", e);
+    return null;
+  }
+}
+
 export default async function Home() {
   // Fetch navigation pages, homepage/work page data, spotlight, testimonials, about page data from Sanity
   const navigationPages = await getNavigationPages();
-  const homepageData = await getPageData('work');
-  
+  const [homepageData, homeIndex] = await Promise.all([
+    getPageData("work"),
+    getHomeIndex(),
+  ]);
+
   const homepageWork = await getHomepageWork();
   const rawSpotlightItems = await getSpotlightItems();
   const rawTestimonials = await getHomeTestimonials();
@@ -310,9 +336,24 @@ export default async function Home() {
       ? toWorkWithMedia(homepageWork.belowLogosProject)
       : null;
 
-  // Get hero title from homepage data, with fallback
+  const indexClientColsRaw = normalizeIndexColumns(homeIndex?.clientColumns);
+  const indexServicesColsRaw = normalizeIndexColumns(homeIndex?.servicesColumns);
+
+  // Index singleton overrides Work title for the Index tab; else Work hero title
   const heroTitle =
-    homepageData?.heroTitle || "Design partner with engineering\nfluency";
+    (homeIndex?.title && String(homeIndex.title).trim()) ||
+    homepageData?.heroTitle ||
+    "Design partner with engineering\nfluency";
+
+  const indexClientColumns = columnsHaveItems(indexClientColsRaw)
+    ? indexClientColsRaw
+    : undefined;
+  const indexServicesColumns = columnsHaveItems(indexServicesColsRaw)
+    ? indexServicesColsRaw
+    : undefined;
+  const indexContactButtonText =
+    (homeIndex?.contactButtonText && String(homeIndex.contactButtonText).trim()) ||
+    "Contact";
 
   const pageTitles = (navigationPages as { slug: string; title: string }[]).reduce(
     (acc, page) => {
@@ -416,6 +457,9 @@ export default async function Home() {
         heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
+        indexClientColumns={indexClientColumns}
+        indexServicesColumns={indexServicesColumns}
+        indexContactButtonText={indexContactButtonText}
       />
 
       <div className="w-full px-[2.5%] sm:px-6 pb-12 lg:pb-16">
