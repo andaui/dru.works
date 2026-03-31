@@ -567,7 +567,7 @@ export default async function Home() {
       )}
 
       {/* UK clock: last on page, left 90px on desktop, center on mobile */}
-      <footer className="flex w-full justify-center md:justify-start px-6 md:px-0 md:pl-[48px] pb-[80px] md:pb-[60px] pt-[150px] md:pt-[500px]">
+      <footer className="flex w-full justify-center md:justify-start px-6 md:px-0 md:pl-[52px] pb-[80px] md:pb-[50px] pt-[150px] md:pt-[500px]">
         <HomeFooterClock />
       </footer>
 
