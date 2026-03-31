@@ -245,7 +245,7 @@ export default function HomePricingCalculator({
                   onClick={() => setHowIWorkOpen((o) => !o)}
                   className={`flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer ${pricingRowTextPb}`}
                 >
-                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
+                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-black/50 dark:text-white/50 group-hover:text-black/70 dark:group-hover:text-white/70 transition-colors">
                     {howIWorkOpen ? "Show less" : howIWorkTitleDisplay}
                   </span>
                   <IconArrowRight
@@ -256,7 +256,7 @@ export default function HomePricingCalculator({
                 </button>
               ) : (
                 <div className={`flex items-center justify-between gap-4 w-full ${pricingRowTextPb}`}>
-                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50">
+                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-black/50 dark:text-white/50">
                     {howIWorkTitleDisplay}
                   </span>
                 </div>
@@ -278,7 +278,7 @@ export default function HomePricingCalculator({
                     aria-hidden={!howIWorkOpen}
                     {...(!howIWorkOpen ? { inert: true } : {})}
                   >
-                    <p className="font-soehne font-normal text-foreground/50 m-0 whitespace-pre-line text-[20px] leading-[29px]">
+                    <p className="font-soehne font-normal text-black/50 dark:text-white/50 m-0 whitespace-pre-line text-[20px] leading-[29px]">
                       {howIWorkDescriptionTrim}
                     </p>
                   </div>
@@ -324,7 +324,7 @@ export default function HomePricingCalculator({
                   onClick={() => setTeamPricingOpen((o) => !o)}
                   className={`flex items-center justify-between gap-4 w-full text-left group p-0 border-0 bg-transparent cursor-pointer ${pricingRowTextPb}`}
                 >
-                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-foreground/50 group-hover:text-foreground/70 transition-colors">
+                  <span className="font-soehne font-normal text-[20px] sm:text-[24px] leading-[37px] tracking-[-0.25px] text-black/50 dark:text-white/50 group-hover:text-black/70 dark:group-hover:text-white/70 transition-colors">
                     {teamPricingOpen ? "Show less" : "Learn more"}
                   </span>
                   <IconArrowRight
@@ -389,7 +389,7 @@ export default function HomePricingCalculator({
                         <p className="font-soehne font-normal m-0 leading-[37px] text-foreground">
                           Team size
                         </p>
-                        <p className="font-soehne font-normal text-foreground/50 m-0 leading-[37px] tabular-nums">
+                        <p className="font-soehne font-normal text-black/50 dark:text-white/50 m-0 leading-[37px] tabular-nums">
                           {teamSize}
                         </p>
                       </div>
@@ -400,7 +400,7 @@ export default function HomePricingCalculator({
                         className={`flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap ${pricingRowTextPb}`}
                       >
                         <span className="text-foreground">Lead Designer (Dru)</span>
-                        <span className="text-foreground/50 tabular-nums">
+                        <span className="text-black/50 dark:text-white/50 tabular-nums">
                           {formatGbp(rates.baseMonthly)}
                         </span>
                       </div>
@@ -411,7 +411,7 @@ export default function HomePricingCalculator({
                         className={`flex items-center justify-between gap-4 font-soehne font-normal text-[18px] sm:text-[24px] leading-[37px] tracking-[-0.25px] w-full whitespace-nowrap ${pricingRowTextPb}`}
                       >
                         <span className="text-foreground">{additionalRowLabel}</span>
-                        <span className="text-foreground/50 tabular-nums">
+                        <span className="text-black/50 dark:text-white/50 tabular-nums">
                           {teamSize > 1 ? formatGbp(rateEach) : "—"}
                         </span>
                       </div>
@@ -423,7 +423,7 @@ export default function HomePricingCalculator({
                       >
                         <div className="flex flex-col gap-[12px] min-w-0 pr-2">
                           <span className="text-foreground">Monthly total</span>
-                          <span className="text-foreground/50">
+                          <span className="text-black/50 dark:text-white/50">
                             Volume pricing applied automatically
                           </span>
                         </div>
@@ -446,7 +446,7 @@ export default function HomePricingCalculator({
                               <span className="text-foreground">{moreInfoTitleTrim}</span>
                             ) : null}
                             {moreInfoDescriptionTrim ? (
-                              <span className="text-foreground/50 whitespace-pre-line text-[20px] leading-[29px]">
+                              <span className="text-black/50 dark:text-white/50 whitespace-pre-line text-[20px] leading-[29px]">
                                 {moreInfoDescriptionTrim}
                               </span>
                             ) : null}

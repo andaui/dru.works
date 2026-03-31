@@ -7,6 +7,7 @@ import HomePricingCalculator, {
 import HomeTestimonialsGrid, {
   type HomeTestimonialItem,
 } from "@/components/HomeTestimonialsGrid";
+import HomeFooterClock from "@/components/HomeFooterClock";
 import SpotlightCarouselWrapper from "@/components/SpotlightCarouselWrapper";
 import {
   client,
@@ -446,7 +447,7 @@ export default async function Home() {
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
   return (
-    <div className="relative w-full bg-background min-h-screen overflow-x-hidden pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
+    <div className="relative w-full bg-background min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
       <HomeLandingHero
         heroTitle={heroTitle}
         homepageDescription={homepageData?.homepageDescription}
@@ -549,7 +550,7 @@ export default async function Home() {
 
       {/* Project below logos: desktop only, 40% width (hero-main) */}
       {belowLogosProject && (
-        <section className="hidden md:block w-full pt-[240px] pb-[40px] lg:pb-[200px]">
+        <section className="hidden md:block w-full pt-[80px]">
           <div className="w-full flex justify-center px-6">
             <div className="w-full max-w-[40%]">
               <HomeProjectCard
@@ -564,6 +565,11 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* UK clock: last on page, left 90px on desktop, center on mobile */}
+      <footer className="flex w-full justify-center md:justify-start px-6 md:px-0 md:pl-[48px] pb-[80px] md:pb-[60px] pt-[150px] md:pt-[500px]">
+        <HomeFooterClock />
+      </footer>
 
     </div>
   );
