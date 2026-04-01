@@ -48,10 +48,12 @@ const digitalFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export default function HomeFooterClock() {
-  const [angles, setAngles] = useState<Angles>(() => londonAngles(new Date()));
+  const [mounted, setMounted] = useState(false);
+  const [angles, setAngles] = useState<Angles>({ h: 0, m: 0, s: 0 });
   const [digitalTime, setDigitalTime] = useState<string>("");
 
   useEffect(() => {
+    setMounted(true);
     let id = 0;
     const tick = () => {
       const now = new Date();
@@ -63,11 +65,48 @@ export default function HomeFooterClock() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const label = new Intl.DateTimeFormat("en-GB", {
+  const label = mounted ? new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/London",
     dateStyle: "medium",
     timeStyle: "medium",
-  }).format(new Date());
+  }).format(new Date()) : "UK time (London)";
+
+  if (!mounted) {
+    return (
+      <div className="flex flex-col w-full">
+        <svg
+          width={490}
+          height={490}
+          viewBox="0 0 490 490"
+          className="shrink-0 w-full max-w-[490px] h-auto text-black dark:text-white opacity-0"
+          role="img"
+          aria-hidden="true"
+        >
+          <circle cx={CX} cy={CY} r={FACE_R} fill="none" stroke="currentColor" strokeWidth={1} />
+        </svg>
+        <div className="mt-[66px] pl-[8px] flex flex-col md:flex-row items-start justify-between w-full font-soehne font-normal text-[18px] sm:text-[20px] leading-[26px] sm:leading-[27px] tracking-[-0.25px] text-foreground opacity-0">
+          <div className="flex flex-col md:flex-row items-start gap-[32px] md:gap-[150px]">
+            <div className="whitespace-nowrap w-[150px] shrink-0 flex gap-[8px]">
+              <span>LON</span>
+              <span className="tabular-nums">00:00:00</span>
+            </div>
+            <div>
+              5th Floor 167-169 Great Portland Street,<br />
+              England, W1W 5PF
+            </div>
+          </div>
+          <div className="mt-[66px] md:mt-0 flex flex-col items-end text-right md:absolute md:bottom-[50px] md:right-[78px]">
+            <div className="font-soehne font-normal text-[40px] sm:text-[70px] leading-[1] sm:leading-[65px] tracking-[-0.25px] text-black dark:text-white">
+              dru.works
+            </div>
+            <a href="mailto:contact@dru.works" className="mt-[14px] font-soehne font-normal text-[40px] sm:text-[70px] leading-[1] sm:leading-[65px] tracking-[-0.25px] text-black dark:text-white opacity-30">
+              contact
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full">
