@@ -1,19 +1,24 @@
 'use client'
 
-import type {ButtonHTMLAttributes, ReactNode} from 'react'
+import type {ReactNode} from 'react'
+import {useLayoutEffect, useRef} from 'react'
 import type {InvoiceCurrency} from '@/lib/invoiceFormat'
-import {formatDateSlashes, formatMoney} from '@/lib/invoiceFormat'
+import {
+  dueDatePlaceholderDisplay,
+  formatDateSlashes,
+  formatMoney,
+  formatMoneyCompact,
+} from '@/lib/invoiceFormat'
+import type {InvoiceBankDetails} from '@/lib/invoiceBankDetails'
+import {domesticBankInputForCurrency} from '@/lib/invoiceBankDetails'
+import {
+  type ContactForm,
+  CONTACT_PLACEHOLDERS,
+  contactHasAnyValue,
+  contactToPreviewLines,
+} from '@/lib/invoiceContact'
 
-export type ContactForm = {
-  name: string
-  email: string
-  address: string
-  phone: string
-  city: string
-  zip: string
-  state: string
-  country: string
-}
+export type {ContactForm} from '@/lib/invoiceContact'
 
 export type EditorLineItem = {
   id: string
@@ -25,12 +30,8 @@ export type EditorLineItem = {
 export type InvoiceEditorProps = {
   fromA: ContactForm
   setFromA: (p: Partial<ContactForm>) => void
-  fromB: ContactForm
-  setFromB: (p: Partial<ContactForm>) => void
   fromAExpanded: boolean
   setFromAExpanded: (v: boolean) => void
-  fromBExpanded: boolean
-  setFromBExpanded: (v: boolean) => void
   billed: ContactForm
   setBilled: (p: Partial<ContactForm>) => void
   billedExpanded: boolean
@@ -51,9 +52,14 @@ export type InvoiceEditorProps = {
   setDiscountPercent: (n: number) => void
   taxPercent: number
   setTaxPercent: (n: number) => void
-  goodsAndServices: number
-  setGoodsAndServices: (n: number) => void
-  compareTotal: number
+  /** Sum of line totals (before discount / tax). */
+  subtotal: number
+  /** Discount amount in currency (positive number; shown with a leading minus). */
+  discountAmount: number
+  vatId: string
+  setVatId: (v: string) => void
+  bankDetails: InvoiceBankDetails
+  setBankDetails: (p: Partial<InvoiceBankDetails>) => void
   note: string
   setNote: (v: string) => void
   computedFinal: number
@@ -62,71 +68,94 @@ export type InvoiceEditorProps = {
 }
 
 const SOEHNE = "font-[family-name:var(--font-soehne)] tracking-[-0.25px] text-black"
-const ROW = `flex items-center gap-[122px] text-[24px] leading-[37px] ${SOEHNE}`
-const LABEL_W = 'w-[186px] shrink-0'
+/** Panel grid: label | gutter | main — first column matches item description (283px). */
+const EDITOR_GRID =
+  'grid w-full grid-cols-[minmax(0,283px)_24px_minmax(0,1fr)] items-center gap-x-0'
+/** Item / price / qty / line total — lives in column 3; widths sum with gap-4 to match main column at max width. */
+const ITEMS_GRID =
+  'grid w-full grid-cols-[minmax(0,283px)_minmax(0,150px)_minmax(0,90px)_minmax(0,1fr)] gap-4'
+
+/** Item grid + summary lines — 37px line box matches Invoice no. / date rows. */
+const ITEM_LINE_TYPO =
+  'font-[family-name:var(--font-soehne)] text-[20px] leading-[37px] tracking-[-0.25px] not-italic'
+
+/** Column titles — explicit per cell so Item / Price / Quantity share one size. */
+const ITEM_COL_HEADER_TYPO =
+  'shrink-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] not-italic text-[rgba(0,0,0,0.2)]'
+
+const CURRENCY_PRIMARY: readonly InvoiceCurrency[] = ['GBP', 'USD', 'EUR']
+const CURRENCY_EXTRA: readonly InvoiceCurrency[] = ['CHF', 'KRW', 'RUB', 'AUD']
+
+function currencySymbol(code: InvoiceCurrency) {
+  switch (code) {
+    case 'GBP':
+      return '£'
+    case 'USD':
+      return '$'
+    case 'EUR':
+      return '€'
+    case 'CHF':
+      return '₣'
+    case 'KRW':
+      return '₩'
+    case 'RUB':
+      return '₽'
+    case 'JPY':
+    case 'CNY':
+      return '¥'
+    case 'INR':
+      return '₹'
+    case 'AUD':
+      return 'A$'
+  }
+}
+
+function cycleYenPair(current: InvoiceCurrency): InvoiceCurrency {
+  if (current === 'JPY') return 'CNY'
+  if (current === 'CNY') return 'JPY'
+  return 'JPY'
+}
 
 export function InvoiceEditor(p: InvoiceEditorProps) {
+  const totalBeforeDiscount = p.subtotal + p.subtotal * (p.taxPercent / 100)
+  const showPreDiscountTotal = p.discountAmount > 0
+  const hasPricedLine = p.lineItems.some((r) => r.price > 0)
+  const domesticBank = domesticBankInputForCurrency(p.currency, p.bankDetails, p.setBankDetails)
+
   return (
     <div className="flex w-full max-w-[781px] shrink-0 flex-col items-end gap-[61px]">
       <p className="font-inter whitespace-nowrap text-[13px] font-normal leading-[19px] text-[#989898]">
         Dark
       </p>
 
-      <div className="flex w-full flex-col items-start gap-[40px]">
+      <div className="flex w-full flex-col items-stretch gap-[40px]">
         <div className="flex w-full flex-col items-start gap-[52px]">
           <ContactStack
             title="From"
-            summary={p.fromA.name || 'None'}
-            expanded={p.fromAExpanded}
-            onToggle={() => p.setFromAExpanded(!p.fromAExpanded)}
-            collapseIcon="minus"
+            emptyHint="Add your details"
             contact={p.fromA}
             setContact={p.setFromA}
-            showFields={p.fromAExpanded}
-            mutedSecondaryFields
+            expanded={p.fromAExpanded}
+            onToggle={() => p.setFromAExpanded(!p.fromAExpanded)}
+            ariaLabelToggle="Toggle From details"
           />
           <ContactStack
-            title="From"
-            summary={p.fromB.name || 'None'}
-            expanded={p.fromBExpanded}
-            onToggle={() => p.setFromBExpanded(!p.fromBExpanded)}
-            collapseIcon="minus"
-            contact={p.fromB}
-            setContact={p.setFromB}
-            showFields={p.fromBExpanded}
-            mutedSecondaryFields
+            title="Billed to"
+            emptyHint="Add client details"
+            contact={p.billed}
+            setContact={p.setBilled}
+            expanded={p.billedExpanded}
+            onToggle={() => p.setBilledExpanded(!p.billedExpanded)}
+            ariaLabelToggle="Toggle Billed to details"
           />
-          <div className="flex w-full flex-col items-start">
-            <FormRow
-              trailing={
-                <button
-                  type="button"
-                  aria-label="Expand billed to"
-                  className="size-6 shrink-0 text-black"
-                  onClick={() => p.setBilledExpanded(!p.billedExpanded)}
-                >
-                  <PlusIcon />
-                </button>
-              }
-            >
-              <div className={`${ROW} w-[453.5px]`}>
-                <span className={LABEL_W}>Billed to</span>
-                <span className="whitespace-nowrap">{p.billed.name || 'Ontlea Ltd'}</span>
-              </div>
-            </FormRow>
-            {p.billedExpanded ? (
-              <div className="mt-0 w-full pl-0">
-                <ContactFields contact={p.billed} setContact={p.setBilled} muted={false} />
-              </div>
-            ) : null}
-          </div>
 
-          <div className="flex w-full flex-col items-start">
-            <LabeledInputRow label="Invoice no." widthClass="w-[453.5px]">
+          <div className="flex w-full flex-col items-stretch">
+            <LabeledInputRow label="Invoice no.">
               <input
-                className="min-w-0 flex-1 border-0 bg-transparent p-0 opacity-20 outline-none"
+                className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
                 value={p.invoiceNo}
                 onChange={(e) => p.setInvoiceNo(e.target.value)}
+                placeholder="e.g. 001"
                 aria-label="Invoice number"
               />
             </LabeledInputRow>
@@ -135,230 +164,361 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
               iso={p.issueDate}
               onChange={p.setIssueDate}
             />
-            <LabeledDateRow label="Due date" iso={p.dueDate} onChange={p.setDueDate} />
+            <LabeledDateRow
+              label="Due date"
+              iso={p.dueDate}
+              onChange={p.setDueDate}
+              emptyDisplay={dueDatePlaceholderDisplay()}
+            />
+            <LabeledInputRow label="VAT ID">
+              <input
+                className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+                value={p.vatId}
+                onChange={(e) => p.setVatId(e.target.value)}
+                placeholder="VAT ID"
+                aria-label="VAT ID"
+              />
+            </LabeledInputRow>
           </div>
         </div>
 
-        <div className="flex w-full flex-col items-start gap-[52px] py-[60px]">
-          <div className="flex w-full flex-col items-start">
-            <FormRow>
-              <div className="flex min-h-0 min-w-0 flex-1 items-center gap-[122px] text-[24px] leading-[37px] tracking-[-0.25px]">
-                <span className={`${SOEHNE} min-h-0 min-w-0 flex-1 not-italic`}>Items</span>
-                <div className="flex shrink-0 items-center gap-4 text-right">
-                  {(['GBP', 'USD', 'EUR'] as const).map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => p.setCurrency(code)}
-                      className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
-                        p.currency === code ? 'text-black' : 'text-black/20'
-                      }`}
-                      aria-pressed={p.currency === code}
-                    >
-                      {code === 'GBP' ? '£' : code === 'USD' ? '$' : '€'}
-                    </button>
-                  ))}
-                  <span className="font-[family-name:var(--font-soehne)] text-[24px] text-black/20">
-                    ¥
-                  </span>
-                  <span className="font-[family-name:var(--font-soehne)] text-[24px] text-black/20">
-                    ₹
-                  </span>
-                </div>
+        <div className="flex w-full flex-col items-stretch gap-[52px] py-[60px]">
+          <FormRow
+            primary={<span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>Items</span>}
+            secondary={
+              <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-right">
+                {CURRENCY_PRIMARY.map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => p.setCurrency(code)}
+                    className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
+                      p.currency === code ? 'text-black' : 'text-black/20'
+                    }`}
+                    aria-pressed={p.currency === code}
+                    aria-label={code}
+                  >
+                    {currencySymbol(code)}
+                  </button>
+                ))}
+                {CURRENCY_EXTRA.map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => p.setCurrency(code)}
+                    className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
+                      p.currency === code ? 'text-black' : 'text-black/20'
+                    }`}
+                    aria-pressed={p.currency === code}
+                    aria-label={code}
+                  >
+                    {currencySymbol(code)}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => p.setCurrency(cycleYenPair(p.currency))}
+                  className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
+                    p.currency === 'JPY' || p.currency === 'CNY' ? 'text-black' : 'text-black/20'
+                  }`}
+                  aria-pressed={p.currency === 'JPY' || p.currency === 'CNY'}
+                  title={
+                    p.currency === 'JPY'
+                      ? 'Japanese yen — click for Chinese yuan'
+                      : p.currency === 'CNY'
+                        ? 'Chinese yuan — click for Japanese yen'
+                        : 'Japanese yen — click again for Chinese yuan'
+                  }
+                  aria-label={
+                    p.currency === 'JPY'
+                      ? 'CNY (switch from JPY)'
+                      : p.currency === 'CNY'
+                        ? 'JPY (switch from CNY)'
+                        : 'JPY or CNY'
+                  }
+                >
+                  ¥
+                </button>
+                <button
+                  type="button"
+                  onClick={() => p.setCurrency('INR')}
+                  className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
+                    p.currency === 'INR' ? 'text-black' : 'text-black/20'
+                  }`}
+                  aria-pressed={p.currency === 'INR'}
+                  aria-label="INR"
+                >
+                  ₹
+                </button>
               </div>
-            </FormRow>
-          </div>
+            }
+          />
 
           <div className="flex w-full flex-col gap-[52px]">
-            <div className="flex w-full items-center gap-[164px]">
-              <span
-                className={`min-h-0 min-w-0 flex-1 font-[family-name:var(--font-soehne)] text-[125px] leading-[100px] tracking-[-0.25px] text-black not-italic`}
-              >
-                {p.lineItems.length}
-              </span>
-              <div className="flex w-[118.625px] shrink-0 items-center justify-between">
-                <button type="button" className="size-6 text-black" onClick={p.removeLastLine} aria-label="Remove line">
-                  <MinusIcon />
-                </button>
-                <button type="button" className="size-6 text-black" onClick={p.addLine} aria-label="Add line">
-                  <PlusSquareIcon />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex w-full flex-col items-start">
-              <FormRow>
-                <div className={`flex w-full gap-4 ${SOEHNE} not-italic`}>
-                  <span className="w-[283px] shrink-0 opacity-40">Item</span>
-                  <span className="w-[150px] shrink-0 opacity-40">Price</span>
-                  <span className="whitespace-nowrap opacity-40">Quantity</span>
+            <FormRowMainOnly divider={false}>
+              <div className="flex w-full items-center justify-between gap-4">
+                <span
+                  className={`min-h-0 min-w-0 font-[family-name:var(--font-soehne)] text-[125px] leading-[100px] tracking-[-0.25px] text-black not-italic`}
+                >
+                  {p.lineItems.length}
+                </span>
+                <div className="flex w-[118.625px] shrink-0 items-center justify-between">
+                  <button type="button" className="size-6 text-black" onClick={p.removeLastLine} aria-label="Remove line">
+                    <MinusIcon />
+                  </button>
+                  <button type="button" className="size-6 text-black" onClick={p.addLine} aria-label="Add line">
+                    <PlusSquareIcon />
+                  </button>
                 </div>
-              </FormRow>
+              </div>
+            </FormRowMainOnly>
+
+            <div className="flex w-full flex-col items-stretch">
+              <FormRowMainOnly>
+                <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
+                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO}`}>Item</span>
+                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO}`}>Price</span>
+                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO} whitespace-nowrap`}>Quantity</span>
+                  <span className="min-w-0" aria-hidden />
+                </div>
+              </FormRowMainOnly>
 
               {p.lineItems.map((row, idx) => {
-                const isPlaceholder = idx === p.lineItems.length - 1 && !row.description && row.price === 0
-                const op = isPlaceholder ? 'opacity-20' : ''
+                const isPlaceholder =
+                  idx === p.lineItems.length - 1 && !row.description && row.price === 0
+                const emptyTint = 'text-[rgba(0,0,0,0.2)] placeholder:text-[rgba(0,0,0,0.2)]'
+                const op = isPlaceholder ? emptyTint : ''
                 const rowTypography = isPlaceholder
                   ? `home-hero-list-col ${SOEHNE} not-italic`
                   : `${SOEHNE} not-italic`
+                const priceInputValue =
+                  isPlaceholder && row.price === 0 ? '0' : row.price === 0 ? '' : String(row.price)
                 return (
-                  <FormRow key={row.id}>
+                  <FormRowMainOnly key={row.id}>
                     <div
-                      className={`flex w-full items-start gap-4 py-[10px] text-[20px] leading-[29px] tracking-[-0.25px] text-black ${rowTypography}`}
+                      className={`${ITEMS_GRID} min-h-[37px] items-start text-black ${ITEM_LINE_TYPO} ${rowTypography}`}
                     >
-                      <input
-                        className={`w-[283px] shrink-0 border-0 bg-transparent p-0 outline-none ${op}`}
+                      <ItemDescriptionTextarea
                         value={row.description}
-                        onChange={(e) => p.updateLine(row.id, {description: e.target.value})}
+                        onChange={(v) => p.updateLine(row.id, {description: v})}
+                        className={`min-w-0 w-full resize-none border-0 bg-transparent p-0 align-top break-words text-[20px] leading-[37px] outline-none ${op}`}
                         placeholder="Item"
+                        aria-label="Item description"
                       />
                       <input
                         type="number"
-                        className={`w-[150px] shrink-0 border-0 bg-transparent p-0 tabular-nums outline-none ${op}`}
-                        value={row.price || ''}
+                        min={0}
+                        className={`min-w-0 w-full border-0 bg-transparent p-0 text-[20px] leading-[37px] tabular-nums outline-none ${op}`}
+                        value={priceInputValue}
                         onChange={(e) =>
                           p.updateLine(row.id, {price: Number.parseFloat(e.target.value) || 0})
                         }
+                        placeholder="0"
                       />
                       <input
                         type="number"
                         min={1}
-                        className={`w-[90px] shrink-0 border-0 bg-transparent p-0 tabular-nums outline-none ${op}`}
+                        className={`min-w-0 w-full border-0 bg-transparent p-0 text-[20px] leading-[37px] tabular-nums outline-none ${op}`}
                         value={row.quantity}
                         onChange={(e) =>
                           p.updateLine(row.id, {
-                            quantity: Math.max(0, Number.parseInt(e.target.value, 10) || 0),
+                            quantity: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
                           })
                         }
+                        placeholder="1"
                       />
-                      <span className={`min-w-0 flex-1 text-right tabular-nums ${op}`}>
-                        {formatMoney(row.price * row.quantity, p.currency)}
+                      <span className={`min-w-0 text-right text-[20px] leading-[37px] tabular-nums ${op}`}>
+                        {isPlaceholder
+                          ? formatMoneyCompact(0, p.currency)
+                          : formatMoney(row.price * row.quantity, p.currency)}
                       </span>
                     </div>
-                  </FormRow>
+                  </FormRowMainOnly>
                 )
               })}
 
-              <div className="flex w-full flex-col gap-[6px] pt-[44px]">
-                <FormRow>
-                  <div className="flex w-full items-center gap-4">
-                    <span className={`w-[283px] shrink-0 ${SOEHNE} text-[24px] leading-[37px] not-italic`}>
-                      Discount
-                    </span>
-                    <div className="flex min-w-0 flex-1 items-center gap-2 text-[20px] leading-[29px] tracking-[-0.25px]">
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        className="w-12 border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] outline-none"
-                        value={p.discountPercent}
-                        onChange={(e) => p.setDiscountPercent(Number(e.target.value) || 0)}
-                      />
-                      <span className="font-[family-name:var(--font-soehne)]">%</span>
-                    </div>
-                    <div className="flex w-[118.625px] shrink-0 items-center justify-end gap-6">
-                      <StepButton
-                        aria-label="Decrease discount"
-                        onClick={() => p.setDiscountPercent(Math.max(0, p.discountPercent - 1))}
-                      >
-                        <MinusSmIcon />
-                      </StepButton>
-                      <StepButton
-                        aria-label="Increase discount"
-                        onClick={() => p.setDiscountPercent(Math.min(100, p.discountPercent + 1))}
-                      >
-                        <PlusSmIcon />
-                      </StepButton>
-                    </div>
+              {hasPricedLine ? (
+                <div className="flex w-full flex-col">
+                  <div className="flex w-full flex-col gap-[6px] pt-[44px]">
+                    <FormRowMainOnly>
+                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
+                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Subtotal</span>
+                        <span className="min-w-0" aria-hidden />
+                        <span className="min-w-0" aria-hidden />
+                        <span className={`min-w-0 text-right ${ITEM_LINE_TYPO} text-black tabular-nums`}>
+                          {formatMoney(p.subtotal, p.currency)}
+                        </span>
+                      </div>
+                    </FormRowMainOnly>
+                    <FormRowMainOnly>
+                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
+                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Tax</span>
+                        <div className={`flex min-w-0 items-center gap-2 ${ITEM_LINE_TYPO}`}>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            className={`w-12 border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[20px] leading-[37px] outline-none ${
+                              p.taxPercent === 0 ? 'text-[rgba(0,0,0,0.1)]' : 'text-black'
+                            }`}
+                            value={p.taxPercent}
+                            onChange={(e) => p.setTaxPercent(Number(e.target.value) || 0)}
+                            aria-label="Tax percent"
+                          />
+                          <span
+                            className={`font-[family-name:var(--font-soehne)] ${
+                              p.taxPercent === 0 ? 'text-[rgba(0,0,0,0.1)]' : 'text-black'
+                            }`}
+                          >
+                            %
+                          </span>
+                        </div>
+                        <div className="min-w-0" aria-hidden />
+                        <div className="min-w-0" aria-hidden />
+                      </div>
+                    </FormRowMainOnly>
                   </div>
-                </FormRow>
+                  <div className="pt-[44px]">
+                    <FormRowMainOnly>
+                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
+                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Discount</span>
+                        <div className={`flex min-w-0 items-center gap-2 ${ITEM_LINE_TYPO} text-black`}>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            className="w-12 border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[20px] leading-[37px] outline-none"
+                            value={p.discountPercent}
+                            onChange={(e) => p.setDiscountPercent(Number(e.target.value) || 0)}
+                            aria-label="Discount percent"
+                          />
+                          <span className="font-[family-name:var(--font-soehne)]">%</span>
+                        </div>
+                        <div className="min-w-0" aria-hidden />
+                        <span
+                          className={`min-w-0 text-right text-[rgba(0,0,0,0.1)] tabular-nums ${ITEM_LINE_TYPO}`}
+                        >
+                          {p.discountPercent > 0 && p.discountAmount > 0
+                            ? `- ${formatMoneyCompact(p.discountAmount, p.currency)}`
+                            : null}
+                        </span>
+                      </div>
+                    </FormRowMainOnly>
+                  </div>
 
-                <div className="flex w-full flex-col gap-1 pt-[20px]">
-                  <div className="flex w-full items-end justify-between">
-                    <span className={`${SOEHNE} whitespace-nowrap text-[24px] leading-[37px] not-italic`}>
-                      Total
-                    </span>
-                    <div className="flex items-center gap-6 whitespace-nowrap text-[24px] leading-[37px] tracking-[-0.25px]">
-                      <span
-                        className="font-[family-name:var(--font-soehne)] line-through decoration-solid opacity-50 not-italic"
-                        style={{textDecorationSkipInk: 'none'}}
-                      >
-                        {formatMoney(p.compareTotal, p.currency)}
-                      </span>
-                      <span
-                        className="font-[family-name:var(--font-soehne)] not-italic"
-                        style={{color: '#de2475'}}
-                      >
-                        {formatMoney(p.computedFinal, p.currency)}
-                      </span>
+                  <FormRowMainOnly>
+                    <div className="flex w-full flex-col gap-1 pt-[20px]">
+                      <div className="flex w-full items-end justify-between gap-4">
+                        <span className={`${SOEHNE} whitespace-nowrap text-[24px] leading-[37px] not-italic`}>
+                          Total {p.currency}
+                        </span>
+                        <div className="flex items-center gap-6 whitespace-nowrap text-[24px] leading-[37px] tracking-[-0.25px]">
+                          {showPreDiscountTotal ? (
+                            <span
+                              className="font-[family-name:var(--font-soehne)] line-through decoration-solid text-[rgba(0,0,0,0.1)] not-italic"
+                              style={{textDecorationSkipInk: 'none'}}
+                            >
+                              {formatMoney(totalBeforeDiscount, p.currency)}
+                            </span>
+                          ) : null}
+                          <span
+                            className="font-[family-name:var(--font-soehne)] not-italic"
+                            style={{color: '#de2475'}}
+                          >
+                            {formatMoney(p.computedFinal, p.currency)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <RowDivider />
+                  </FormRowMainOnly>
                 </div>
-              </div>
+              ) : null}
             </div>
           </div>
         </div>
 
-        <div className="flex w-full flex-col items-start">
-          <FormRow>
-            <div className="flex w-full items-center gap-4">
-              <span className={`w-[291px] shrink-0 ${SOEHNE} text-[24px] leading-[37px] not-italic`}>Tax</span>
-              <div className="flex min-w-0 flex-1 items-center gap-2 text-[24px] leading-[37px] tracking-[-0.25px]">
-                <input
-                  type="number"
-                  min={0}
-                  className="w-12 border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] opacity-20 outline-none"
-                  value={p.taxPercent}
-                  onChange={(e) => p.setTaxPercent(Number(e.target.value) || 0)}
-                />
-                <span className="font-[family-name:var(--font-soehne)] opacity-20">%</span>
-              </div>
-              <div className="flex w-[118.625px] shrink-0 items-center justify-end gap-6">
-                <StepButton
-                  aria-label="Decrease tax"
-                  onClick={() => p.setTaxPercent(Math.max(0, p.taxPercent - 1))}
-                >
-                  <MinusSmIcon />
-                </StepButton>
-                <StepButton
-                  aria-label="Increase tax"
-                  onClick={() => p.setTaxPercent(Math.min(100, p.taxPercent + 1))}
-                >
-                  <PlusSmIcon />
-                </StepButton>
-              </div>
-            </div>
-          </FormRow>
-          <FormRow>
-            <div className="flex w-full items-center gap-4">
-              <span className={`w-[291px] shrink-0 ${SOEHNE} text-[24px] leading-[37px] not-italic`}>
-                Goods and Services
-              </span>
-              <div className="flex min-w-0 flex-1 justify-end">
-                <input
-                  type="number"
-                  className="w-full max-w-[200px] border-0 bg-transparent p-0 text-right font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] outline-none not-italic"
-                  value={p.goodsAndServices || ''}
-                  onChange={(e) => p.setGoodsAndServices(Number.parseFloat(e.target.value) || 0)}
-                />
-              </div>
-            </div>
-          </FormRow>
+        <div className="flex w-full flex-col items-stretch">
+          <LabeledInputRow label="Account holder name">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.accountHolderName}
+              onChange={(e) => p.setBankDetails({accountHolderName: e.target.value})}
+              placeholder="Legal name on the account"
+              aria-label="Account holder name"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Bank name">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.bankName}
+              onChange={(e) => p.setBankDetails({bankName: e.target.value})}
+              placeholder="e.g. Barclays, Chase, Monzo"
+              aria-label="Bank name"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Bank address">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.bankAddress}
+              onChange={(e) => p.setBankDetails({bankAddress: e.target.value})}
+              placeholder="City and country, or full address"
+              aria-label="Bank address"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Account number">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.accountNumber}
+              onChange={(e) => p.setBankDetails({accountNumber: e.target.value})}
+              placeholder="Account number"
+              aria-label="Account number"
+            />
+          </LabeledInputRow>
+          {domesticBank ? (
+            <LabeledInputRow label={domesticBank.label}>
+              <input
+                className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+                value={domesticBank.value}
+                onChange={(e) => domesticBank.onChange(e.target.value)}
+                placeholder={domesticBank.label}
+                aria-label={domesticBank.label}
+              />
+            </LabeledInputRow>
+          ) : null}
+          <LabeledInputRow label="IBAN">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.iban}
+              onChange={(e) => p.setBankDetails({iban: e.target.value})}
+              placeholder="IBAN (international)"
+              aria-label="IBAN"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="SWIFT / BIC">
+            <input
+              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
+              value={p.bankDetails.bic}
+              onChange={(e) => p.setBankDetails({bic: e.target.value})}
+              placeholder="SWIFT / BIC"
+              aria-label="SWIFT or BIC"
+            />
+          </LabeledInputRow>
         </div>
 
-        <div className="flex w-full flex-col items-start">
-          <FormRow>
-            <span className={`w-full ${SOEHNE} text-[24px] leading-[37px] not-italic`}>Note</span>
-          </FormRow>
-          <FormRow>
+        <div className="flex w-full flex-col items-stretch">
+          <FormRow
+            primary={<span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>Note</span>}
+            secondary={<span className="min-w-0" aria-hidden />}
+          />
+          <FormRowMainOnly>
             <div className="flex w-full items-center">
               <textarea
-                className="min-h-[37px] min-w-0 flex-1 resize-none border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] opacity-20 outline-none not-italic placeholder:text-black"
+                className="min-h-[37px] min-w-0 flex-1 resize-none border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none not-italic placeholder:text-[rgba(0,0,0,0.1)]"
                 placeholder="Add note"
                 value={p.note}
                 onChange={(e) => p.setNote(e.target.value)}
                 rows={2}
+                aria-label="Note"
               />
               <p className="shrink-0 whitespace-nowrap text-right opacity-20">
                 <span className="font-inter text-[16px] font-bold leading-[37px]">⇧</span>
@@ -368,11 +528,11 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 </span>
               </p>
             </div>
-          </FormRow>
+          </FormRowMainOnly>
         </div>
 
-        <div className="flex w-full flex-col items-start pt-[89px]">
-          <FormRow>
+        <div className="flex w-full flex-col items-stretch pt-[89px]">
+          <FormRowMainOnly>
             <button
               type="button"
               disabled={p.exporting}
@@ -387,7 +547,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
               </span>
               <ArrowRightIcon className="shrink-0" />
             </button>
-          </FormRow>
+          </FormRowMainOnly>
         </div>
       </div>
     </div>
@@ -396,42 +556,56 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
 
 function ContactStack({
   title,
-  summary,
-  expanded,
-  onToggle,
-  collapseIcon,
+  emptyHint,
   contact,
   setContact,
-  showFields,
-  mutedSecondaryFields,
+  expanded,
+  onToggle,
+  ariaLabelToggle,
 }: {
   title: string
-  summary: string
-  expanded: boolean
-  onToggle: () => void
-  collapseIcon: 'minus' | 'plus'
+  emptyHint: string
   contact: ContactForm
   setContact: (p: Partial<ContactForm>) => void
-  showFields: boolean
-  mutedSecondaryFields?: boolean
+  expanded: boolean
+  onToggle: () => void
+  ariaLabelToggle: string
 }) {
+  const filled = contactHasAnyValue(contact)
+  const summaryLine = contactToPreviewLines(contact)[0] ?? ''
+
   return (
-    <div className="flex w-full flex-col items-start">
+    <div className="flex w-full flex-col items-stretch">
       <FormRow
+        primary={<span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>{title}</span>}
+        secondary={
+          !expanded ? (
+            filled ? (
+              <span className="truncate whitespace-nowrap font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+                {summaryLine}
+              </span>
+            ) : (
+              <span className="whitespace-nowrap font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic text-[rgba(0,0,0,0.1)]">
+                {emptyHint}
+              </span>
+            )
+          ) : (
+            <span className="min-w-0" />
+          )
+        }
         trailing={
-          <button type="button" className="size-6 shrink-0 text-black" onClick={onToggle} aria-expanded={expanded}>
-            {collapseIcon === 'minus' ? <MinusCollapseIcon /> : <PlusIcon />}
+          <button
+            type="button"
+            className="size-6 shrink-0 text-black"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            aria-label={ariaLabelToggle}
+          >
+            {expanded ? <MinusIcon /> : <PlusIcon />}
           </button>
         }
-      >
-        <div className={`${ROW} w-[453.5px]`}>
-          <span className={LABEL_W}>{title}</span>
-          {!expanded ? <span className="whitespace-nowrap">{summary}</span> : <span className="min-w-0 flex-1" />}
-        </div>
-      </FormRow>
-      {showFields ? (
-        <ContactFields contact={contact} setContact={setContact} muted={!!mutedSecondaryFields} />
-      ) : null}
+      />
+      {expanded ? <ContactFields contact={contact} setContact={setContact} /> : null}
     </div>
   )
 }
@@ -439,11 +613,9 @@ function ContactStack({
 function ContactFields({
   contact,
   setContact,
-  muted,
 }: {
   contact: ContactForm
   setContact: (p: Partial<ContactForm>) => void
-  muted?: boolean
 }) {
   const fields: {key: keyof ContactForm; label: string}[] = [
     {key: 'name', label: 'Name'},
@@ -455,25 +627,28 @@ function ContactFields({
     {key: 'state', label: 'State'},
     {key: 'country', label: 'Country'},
   ]
+  const ph = 'placeholder:text-[rgba(0,0,0,0.1)]'
   return (
     <div className="w-full">
-      {fields.map(({key, label}, i) => {
-        const m = muted && i > 1 ? 'opacity-20' : ''
-        const v = muted && i > 1 ? 'opacity-10' : ''
-        return (
-          <FormRow key={key}>
-            <div className={`${ROW} w-[453.5px] ${m}`}>
-              <span className={LABEL_W}>{label}</span>
-              <input
-                className={`min-w-0 flex-1 border-0 bg-transparent p-0 outline-none ${v}`}
-                value={contact[key]}
-                onChange={(e) => setContact({[key]: e.target.value} as Partial<ContactForm>)}
-                aria-label={label}
-              />
-            </div>
-          </FormRow>
-        )
-      })}
+      {fields.map(({key, label}) => (
+        <FormRow
+          key={key}
+          primary={
+            <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+              {label}
+            </span>
+          }
+          secondary={
+            <input
+              className={`min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none ${ph}`}
+              value={contact[key]}
+              onChange={(e) => setContact({[key]: e.target.value} as Partial<ContactForm>)}
+              placeholder={CONTACT_PLACEHOLDERS[key]}
+              aria-label={label}
+            />
+          }
+        />
+      ))}
     </div>
   )
 }
@@ -482,18 +657,32 @@ function LabeledDateRow({
   label,
   iso,
   onChange,
+  emptyDisplay,
 }: {
   label: string
   iso: string
   onChange: (v: string) => void
+  /** When `iso` is empty, show this instead of an em dash (e.g. due date hint). */
+  emptyDisplay?: string
 }) {
+  const visible =
+    iso ? formatDateSlashes(iso) : (emptyDisplay ?? formatDateSlashes(iso))
+  const muted = !iso
   return (
-    <FormRow>
-      <div className="flex w-full max-w-[453.5px] items-center justify-between gap-[122px] text-[24px] leading-[37px] tracking-[-0.25px]">
-        <span className={`font-[family-name:var(--font-soehne)] not-italic ${LABEL_W}`}>{label}</span>
-        <div className="relative min-h-[37px] min-w-0 flex-1">
-          <span className="pointer-events-none absolute right-0 top-0 font-[family-name:var(--font-soehne)] whitespace-nowrap">
-            {formatDateSlashes(iso)}
+    <FormRow
+      primary={
+        <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+          {label}
+        </span>
+      }
+      secondary={
+        <div className="relative min-h-[37px] w-full min-w-0">
+          <span
+            className={`pointer-events-none absolute right-0 top-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] whitespace-nowrap tabular-nums ${
+              muted ? 'text-[rgba(0,0,0,0.1)]' : 'text-black'
+            }`}
+          >
+            {visible}
           </span>
           <input
             type="date"
@@ -503,45 +692,103 @@ function LabeledDateRow({
             aria-label={label}
           />
         </div>
-      </div>
-    </FormRow>
+      }
+    />
   )
 }
 
 function FormRow({
-  children,
+  primary,
+  secondary,
   trailing,
 }: {
-  children: ReactNode
+  primary: ReactNode
+  secondary: ReactNode
   trailing?: ReactNode
 }) {
   return (
     <div className="flex w-full flex-col gap-1 pt-1">
-      <div className="flex w-full items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">{children}</div>
-        {trailing}
+      <div className={EDITOR_GRID}>
+        <div className="min-w-0">{primary}</div>
+        <div className="min-w-[24px] max-w-[24px]" aria-hidden />
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">{secondary}</div>
+          {trailing ?? null}
+        </div>
       </div>
       <RowDivider />
     </div>
   )
 }
 
-function LabeledInputRow({
-  label,
+/** One row, content aligned to main column (col 3) — item grid, summaries, etc. */
+function FormRowMainOnly({
   children,
-  widthClass,
+  divider = true,
 }: {
-  label: string
-  children: React.ReactNode
-  widthClass?: string
+  children: ReactNode
+  /** When false, no rule under the row (e.g. line count). */
+  divider?: boolean
 }) {
   return (
-    <FormRow>
-      <div className={`flex items-center justify-between gap-[122px] text-[24px] leading-[37px] tracking-[-0.25px] ${widthClass ?? 'w-full'}`}>
-        <span className={`font-[family-name:var(--font-soehne)] not-italic ${LABEL_W}`}>{label}</span>
-        <div className="flex min-w-0 flex-1 items-center">{children}</div>
+    <div className="flex w-full flex-col gap-1 pt-1">
+      <div className={EDITOR_GRID}>
+        <div className="col-span-3 min-w-0">{children}</div>
       </div>
-    </FormRow>
+      {divider ? <RowDivider /> : null}
+    </div>
+  )
+}
+
+function LabeledInputRow({label, children}: {label: string; children: ReactNode}) {
+  return (
+    <FormRow
+      primary={
+        <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+          {label}
+        </span>
+      }
+      secondary={<div className="flex min-w-0 w-full items-center">{children}</div>}
+    />
+  )
+}
+
+/** One line of item description — matches invoice date row band (37px). */
+const ITEM_DESC_LINE_PX = 37
+
+function ItemDescriptionTextarea({
+  value,
+  onChange,
+  className,
+  placeholder,
+  'aria-label': ariaLabel,
+}: {
+  value: string
+  onChange: (next: string) => void
+  className?: string
+  placeholder?: string
+  'aria-label'?: string
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = '0px'
+    el.style.height = `${Math.max(ITEM_DESC_LINE_PX, el.scrollHeight)}px`
+  }, [value])
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={className}
+      style={{minHeight: ITEM_DESC_LINE_PX, overflow: 'hidden'}}
+      value={value}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+      onChange={(e) => onChange(e.target.value)}
+    />
   )
 }
 
@@ -573,26 +820,6 @@ function MinusIcon() {
   )
 }
 
-function MinusCollapseIcon() {
-  return <MinusIcon />
-}
-
-function MinusSmIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M6 12h12" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
-function PlusSmIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
 function ArrowRightIcon({className}: {className?: string}) {
   return (
     <svg
@@ -611,17 +838,5 @@ function ArrowRightIcon({className}: {className?: string}) {
         strokeLinejoin="round"
       />
     </svg>
-  )
-}
-
-function StepButton({children, ...props}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type="button"
-      className="flex size-[17px] items-center justify-center text-black"
-      {...props}
-    >
-      {children}
-    </button>
   )
 }

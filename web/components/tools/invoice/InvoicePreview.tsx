@@ -1,6 +1,8 @@
 'use client'
 
 import {forwardRef} from 'react'
+import type {InvoiceBankDetails} from '@/lib/invoiceBankDetails'
+import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import type {InvoiceCurrency} from '@/lib/invoiceFormat'
 import {formatDateDots, formatMoney, formatMoneyCompact} from '@/lib/invoiceFormat'
 
@@ -22,11 +24,10 @@ export type InvoicePreviewProps = {
   lineItems: PreviewLineItem[]
   currency: InvoiceCurrency
   discountPercent: number
-  compareTotal: number
-  /** Final total after discount (Figma shows explicit total) */
+  taxPercent: number
+  /** Final total after discount and tax */
   displayTotal: number
-  bankIban: string
-  bankBic: string
+  bankDetails: InvoiceBankDetails
   noteLines: string[]
 }
 
@@ -46,10 +47,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       lineItems,
       currency,
       discountPercent,
-      compareTotal,
+      taxPercent,
       displayTotal,
-      bankIban,
-      bankBic,
+      bankDetails,
       noteLines,
     },
     ref,
@@ -58,6 +58,38 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       ink: '#000000',
       bg: '#f8f8f8',
     }
+
+    const lineSubtotal = lineItems.reduce((s, r) => s + r.quantity * r.unitPrice, 0)
+    const discountAmt = lineSubtotal * (discountPercent / 100)
+    const afterDisc = lineSubtotal - discountAmt
+    const taxAmt = afterDisc * (taxPercent / 100)
+    const totalBeforeDiscount = lineSubtotal + lineSubtotal * (taxPercent / 100)
+    const showPreDiscountTotal = discountAmt > 0
+
+    const metaRows: {key: string; label: string; value: string}[] = []
+    if (invoiceDateIso?.trim()) {
+      metaRows.push({
+        key: 'date',
+        label: 'Invoice date',
+        value: formatDateDots(invoiceDateIso),
+      })
+    }
+    if (invoiceNo.trim()) {
+      metaRows.push({key: 'no', label: 'Invoice no.', value: invoiceNo.trim()})
+    }
+    if (dueDateIso.trim()) {
+      metaRows.push({
+        key: 'due',
+        label: 'Due date',
+        value: formatDateDots(dueDateIso),
+      })
+    }
+    if (vatId.trim()) {
+      metaRows.push({key: 'vat', label: 'Vat ID', value: vatId.trim()})
+    }
+
+    const bankRows = buildPreviewBankRows(currency, bankDetails)
+    const hasBankDetails = bankRows.length > 0
 
     return (
       <div
@@ -81,40 +113,25 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <div className="flex w-full flex-col items-start gap-[29px]">
             <PreviewRow label="From" lines={fromLines} />
             <PreviewRow label="Billed to" lines={billedLines} />
-            <div
-              className="flex w-full items-center justify-between pl-[12px] pr-[24px]"
-              style={{color: c.ink}}
-            >
-              <div className="flex items-center gap-[60px] text-[11px] leading-normal">
-                <div className="flex w-[100px] flex-col gap-[6px] font-normal">
-                  <span>Invoice date</span>
-                  <span>Invoice no.</span>
-                  <span>Due date</span>
-                  <span>Vat ID</span>
-                </div>
-                <div className="flex flex-col gap-[6px] whitespace-nowrap font-normal">
-                  <span>{formatDateDots(invoiceDateIso)}</span>
-                  <span>{invoiceNo}</span>
-                  <span>{formatDateDots(dueDateIso)}</span>
-                  <span>{vatId}</span>
+            {metaRows.length > 0 ? (
+              <div
+                className="flex w-full items-center justify-between pl-[12px] pr-[24px]"
+                style={{color: c.ink}}
+              >
+                <div className="flex items-center gap-[60px] text-[11px] leading-normal">
+                  <div className="flex w-[100px] flex-col gap-[6px] font-normal">
+                    {metaRows.map((r) => (
+                      <span key={r.key}>{r.label}</span>
+                    ))}
+                  </div>
+                  <div className="flex flex-col gap-[6px] whitespace-nowrap font-normal">
+                    {metaRows.map((r) => (
+                      <span key={r.key}>{r.value}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex w-full items-center justify-center px-[24px]">
-              <p
-                className="min-h-0 min-w-0 flex-1 text-right"
-                style={{
-                  fontFamily: 'var(--font-inter), sans-serif',
-                  fontSize: '88px',
-                  lineHeight: '100px',
-                  fontWeight: 400,
-                  letterSpacing: '-0.2235px',
-                  color: c.ink,
-                }}
-              >
-                Invoice
-              </p>
-            </div>
+            ) : null}
           </div>
 
           <div className="flex w-[641px] flex-col items-start px-[14px]">
@@ -169,9 +186,21 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   {lineItems.map((row, i) => {
                     const lineTotal = row.quantity * row.unitPrice
                     return (
-                      <div key={i} className="flex w-full items-center gap-[30px]">
-                        <p className="min-h-0 min-w-0 flex-1" style={{color: c.ink}}>
-                          {row.description || 'Item Name'}
+                      <div key={i} className="flex w-full items-start gap-[30px]">
+                        <p
+                          className="min-h-0 min-w-0 flex-1"
+                          style={{
+                            color: c.ink,
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: 2,
+                            overflow: 'hidden',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'pre-wrap',
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {row.description}
                         </p>
                         <p className="w-[60px] shrink-0 text-right tabular-nums" style={{color: c.ink}}>
                           {row.quantity}
@@ -189,23 +218,60 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               </div>
 
               <div
-                className="flex w-full flex-col gap-[16px] text-right text-[11.347px] font-semibold leading-[1.15] tracking-[-0.5674px]"
+                className="flex w-full flex-col gap-[3px] text-[11.347px] font-normal leading-[1.15] tracking-[-0.5674px]"
                 style={{color: c.ink, fontFamily: 'var(--font-inter), sans-serif'}}
               >
-                <div className="flex w-full items-center justify-end gap-[30px]">
-                  <span className="w-[120px]">Discount</span>
-                  <span className="w-[120px]">{discountPercent}%</span>
+                <div className="flex h-[18px] w-full shrink-0 items-center gap-[30px]">
+                  <span className="min-w-0 flex-1">Subtotal</span>
+                  <span className="w-[60px] shrink-0" aria-hidden />
+                  <span className="w-[120px] shrink-0" aria-hidden />
+                  <span className="w-[120px] shrink-0 text-right tabular-nums">
+                    {formatMoneyCompact(lineSubtotal, currency)}
+                  </span>
                 </div>
-                <div className="flex w-full items-end justify-end gap-[30px]">
-                  <span className="w-[120px]">Total</span>
-                  <div className="flex flex-col items-start justify-end gap-[10px]">
-                    <span
-                      className="w-[120px] line-through decoration-solid"
-                      style={{opacity: 0.4, color: c.ink, textDecorationSkipInk: 'none'}}
-                    >
-                      {formatMoneyCompact(compareTotal, currency)}
-                    </span>
-                    <span className="w-[120px]" style={{color: c.ink}}>
+                <div className="flex h-[18px] w-full shrink-0 items-center gap-[30px] font-semibold">
+                  <span className="min-w-0 flex-1">Tax</span>
+                  <span
+                    className="w-[60px] shrink-0 text-right tabular-nums"
+                    style={{color: taxPercent === 0 ? 'rgba(0,0,0,0.25)' : c.ink}}
+                  >
+                    {taxPercent}%
+                  </span>
+                  <span className="w-[120px] shrink-0" aria-hidden />
+                  <span className="w-[120px] shrink-0 text-right font-normal tabular-nums">
+                    {taxAmt > 0 ? formatMoneyCompact(taxAmt, currency) : null}
+                  </span>
+                </div>
+                <div className="flex h-[18px] w-full shrink-0 items-center gap-[30px]">
+                  <span className="min-w-0 flex-1">Discount</span>
+                  <span
+                    className="w-[60px] shrink-0 text-right tabular-nums"
+                    style={{color: discountPercent === 0 ? 'rgba(0,0,0,0.25)' : c.ink}}
+                  >
+                    {discountPercent}%
+                  </span>
+                  <span className="w-[120px] shrink-0" aria-hidden />
+                  <span
+                    className="w-[120px] shrink-0 text-right tabular-nums"
+                    style={{opacity: discountAmt > 0 ? 0.4 : undefined, color: c.ink}}
+                  >
+                    {discountAmt > 0 ? `-${formatMoneyCompact(discountAmt, currency)}` : null}
+                  </span>
+                </div>
+                <div className="flex h-[18px] w-full shrink-0 items-center gap-[30px] font-semibold">
+                  <span className="min-w-0 flex-1">Total {currency}</span>
+                  <span className="w-[60px] shrink-0" aria-hidden />
+                  <span className="w-[120px] shrink-0" aria-hidden />
+                  <div className="flex w-[120px] min-w-0 shrink-0 flex-row items-center justify-end gap-[6px] tabular-nums">
+                    {showPreDiscountTotal ? (
+                      <span
+                        className="line-through decoration-solid shrink-0"
+                        style={{opacity: 0.4, color: c.ink, textDecorationSkipInk: 'none'}}
+                      >
+                        {formatMoneyCompact(totalBeforeDiscount, currency)}
+                      </span>
+                    ) : null}
+                    <span className="shrink-0" style={{color: c.ink}}>
                       {formatMoneyCompact(displayTotal, currency)}
                     </span>
                   </div>
@@ -215,21 +281,24 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
 
           <div className="flex w-full flex-col gap-[24px] text-[11px]" style={{color: c.ink}}>
-            <div className="flex flex-col gap-[16px] whitespace-nowrap pl-[12px] pr-[24px] leading-normal">
-              <p className="font-semibold" style={{fontFamily: 'var(--font-inter), sans-serif'}}>
-                Bank account
-              </p>
-              <div className="flex items-center gap-[62px] font-normal">
-                <div className="flex w-[100px] flex-col gap-[6px]">
-                  <span>IBAN</span>
-                  <span>SWIFT / BIC</span>
-                </div>
-                <div className="flex flex-col gap-[6px]">
-                  <span>{bankIban}</span>
-                  <span>{bankBic}</span>
+            {hasBankDetails ? (
+              <div className="flex flex-col gap-[16px] pl-[12px] pr-[24px] leading-normal">
+                <div className="flex items-start gap-[40px] font-normal">
+                  <div className="flex w-[158px] shrink-0 flex-col gap-[6px]">
+                    {bankRows.map((r) => (
+                      <span key={r.key} className="break-words">
+                        {r.label}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-[6px] break-words">
+                    {bankRows.map((r) => (
+                      <span key={r.key}>{r.value}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
             <div className="flex w-full items-start gap-[60px] px-[12px]">
               <p
                 className="w-[100px] shrink-0 font-semibold leading-normal"
@@ -237,12 +306,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               >
                 Note
               </p>
-              <div className="font-normal leading-[0] whitespace-nowrap">
-                {noteLines.map((line, i) => (
-                  <p key={i} className="mb-0 leading-[16px] last:mb-0">
-                    {line}
-                  </p>
-                ))}
+              <div className="min-h-[16px] font-normal leading-[0] whitespace-nowrap">
+                {noteLines.length === 0 ? null : (
+                  noteLines.map((line, i) => (
+                    <p key={i} className="mb-0 leading-[16px] last:mb-0">
+                      {line}
+                    </p>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -264,12 +335,17 @@ function PreviewRow({label, lines}: {label: string; lines: string[]}) {
       >
         {label}
       </p>
-      <div className="font-normal leading-[0] whitespace-nowrap" style={{fontFamily: 'var(--font-inter), sans-serif'}}>
-        {lines.map((line, i) => (
-          <p key={i} className="mb-0 leading-[16px] last:mb-0">
-            {line}
-          </p>
-        ))}
+      <div
+        className="min-h-[16px] min-w-0 flex-1 font-normal leading-[0] whitespace-pre-wrap"
+        style={{fontFamily: 'var(--font-inter), sans-serif'}}
+      >
+        {lines.length === 0 ? null : (
+          lines.map((line, i) => (
+            <p key={i} className="mb-0 leading-[16px] last:mb-0">
+              {line}
+            </p>
+          ))
+        )}
       </div>
     </div>
   )

@@ -1,54 +1,36 @@
 'use client'
 
-import {useCallback, useMemo, useRef, useState} from 'react'
-import {
-  InvoiceEditor,
-  type ContactForm,
-  type EditorLineItem,
-} from '@/components/tools/invoice/InvoiceEditor'
+import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react'
+import {InvoiceEditor, type EditorLineItem} from '@/components/tools/invoice/InvoiceEditor'
 import {InvoicePreview, type PreviewLineItem} from '@/components/tools/invoice/InvoicePreview'
-import type {InvoiceCurrency} from '@/lib/invoiceFormat'
+import type {ContactForm} from '@/lib/invoiceContact'
+import {contactToPreviewLines} from '@/lib/invoiceContact'
+import {
+  emptyInvoiceBankDetails,
+  type InvoiceBankDetails,
+} from '@/lib/invoiceBankDetails'
+import {isoDateLocal, type InvoiceCurrency} from '@/lib/invoiceFormat'
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-const emptyContact = (): ContactForm => ({
-  name: '',
-  email: '',
-  address: '',
-  phone: '',
-  city: '',
-  zip: '',
-  state: '',
-  country: '',
-})
+/** Must match fixed height in `InvoicePreview` root. */
+const INVOICE_PREVIEW_HEIGHT_PX = 905
 
 export function InvoiceTool() {
   const previewRef = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
+  /** Only use a scroll container when the preview is taller than the viewport (avoids empty scrollbars). */
+  const [clipPreview, setClipPreview] = useState(false)
 
-  const [fromAExpanded, setFromAExpanded] = useState(true)
-  const [fromBExpanded, setFromBExpanded] = useState(false)
+  const [fromAExpanded, setFromAExpanded] = useState(false)
   const [billedExpanded, setBilledExpanded] = useState(false)
 
-  const [fromA, setFromAState] = useState<ContactForm>({
-    name: 'Dru',
-    email: 'dru@email.com',
-    address: '12 Aurora St.',
-    phone: '+44 12342 2232',
-    city: 'London',
-    zip: 'NW10 5W3',
-    state: 'TX',
-    country: 'US',
-  })
-
-  const [fromB, setFromBState] = useState<ContactForm>(() => emptyContact())
-
-  const [billed, setBilledState] = useState<ContactForm>({
-    name: 'Ontlea Ltd',
+  const emptyContact = (): ContactForm => ({
+    name: '',
     email: '',
-    address: 'Address line 1',
+    address: '',
     phone: '',
     city: '',
     zip: '',
@@ -56,77 +38,73 @@ export function InvoiceTool() {
     country: '',
   })
 
-  const [invoiceNo, setInvoiceNo] = useState('0')
-  const [issueDate, setIssueDate] = useState('2026-11-22')
-  const [dueDate, setDueDate] = useState('2026-12-22')
-  const [vatId, setVatId] = useState('FI12341234')
-  const [bankIban, setBankIban] = useState('FI00 0000 0000 0000 00')
-  const [bankBic, setBankBic] = useState('NDEAFIHH')
+  const [fromA, setFromAState] = useState<ContactForm>(emptyContact)
+  const [billed, setBilledState] = useState<ContactForm>(emptyContact)
+
+  const [invoiceNo, setInvoiceNo] = useState('')
+  const [issueDate, setIssueDate] = useState(() => isoDateLocal())
+  const [dueDate, setDueDate] = useState('')
+  const [vatId, setVatId] = useState('')
+  const [bankDetails, setBankDetailsState] = useState<InvoiceBankDetails>(emptyInvoiceBankDetails)
 
   const [currency, setCurrency] = useState<InvoiceCurrency>('GBP')
   const [lineItems, setLineItems] = useState<EditorLineItem[]>([
-    {
-      id: uid(),
-      description: 'Desktop / network support via phone and email',
-      price: 200,
-      quantity: 2,
-    },
-    {id: uid(), description: 'On-call service 800/day', price: 800, quantity: 2},
-    {id: uid(), description: '', price: 0, quantity: 0},
+    {id: uid(), description: '', price: 0, quantity: 1},
   ])
 
-  const [discountPercent, setDiscountPercent] = useState(10)
+  const [discountPercent, setDiscountPercent] = useState(0)
   const [taxPercent, setTaxPercent] = useState(0)
-  const [goodsAndServices, setGoodsAndServices] = useState(200)
-  const [compareTotal, setCompareTotal] = useState(33000)
   const [note, setNote] = useState('')
 
   const setFromA = useCallback((p: Partial<ContactForm>) => {
     setFromAState((s) => ({...s, ...p}))
   }, [])
-  const setFromB = useCallback((p: Partial<ContactForm>) => {
-    setFromBState((s) => ({...s, ...p}))
-  }, [])
   const setBilled = useCallback((p: Partial<ContactForm>) => {
     setBilledState((s) => ({...s, ...p}))
   }, [])
 
+  const setBankDetails = useCallback((p: Partial<InvoiceBankDetails>) => {
+    setBankDetailsState((s) => ({...s, ...p}))
+  }, [])
+
+  useLayoutEffect(() => {
+    const topOffsetPx = 24 // matches sticky `top-6`
+    const bottomBreathingPx = 12
+    const update = () => {
+      const available = window.innerHeight - topOffsetPx - bottomBreathingPx
+      setClipPreview(INVOICE_PREVIEW_HEIGHT_PX > available)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   const subtotal = useMemo(
-    () => lineItems.reduce((s, r) => s + r.price * r.quantity, 0),
+    () => lineItems.reduce((s, r) => s + r.price * Math.max(1, r.quantity), 0),
     [lineItems],
   )
 
+  const discountAmount = useMemo(
+    () => subtotal * (discountPercent / 100),
+    [subtotal, discountPercent],
+  )
+
   const computedFinal = useMemo(() => {
-    const afterDisc = subtotal * (1 - discountPercent / 100)
+    const afterDisc = subtotal - discountAmount
     const taxAmt = afterDisc * (taxPercent / 100)
-    return afterDisc + taxAmt + goodsAndServices
-  }, [subtotal, discountPercent, taxPercent, goodsAndServices])
+    return afterDisc + taxAmt
+  }, [subtotal, discountAmount, taxPercent])
 
-  const previewLinesFrom = useMemo(() => {
-    const lines = [
-      fromA.name || 'Your Company Inc.',
-      fromA.address || 'USA, New Your 39th Street',
-      [fromA.city, fromA.zip].filter(Boolean).join(' ') || 'Second Avenue',
-    ].filter((l) => l.length > 0)
-    return lines.length ? lines : ['Your Company Inc.', 'Address line 1', 'Address line 2']
-  }, [fromA])
-
-  const previewLinesBilled = useMemo(() => {
-    const lines = [
-      billed.name || 'Your Client’s Company Inc.',
-      billed.address || 'Address line 1',
-      [billed.city, billed.zip].filter(Boolean).join(' ') || 'Address line 2',
-    ].filter((l) => l.length > 0)
-    return lines.length ? lines : ['Your Client’s Company Inc.', 'Address line 1', 'Address line 2']
-  }, [billed])
+  const previewLinesFrom = useMemo(() => contactToPreviewLines(fromA), [fromA])
+  const previewLinesBilled = useMemo(() => contactToPreviewLines(billed), [billed])
 
   const previewLineItems: PreviewLineItem[] = useMemo(
     () =>
       lineItems
-        .filter((r) => r.description || r.price > 0 || r.quantity > 0)
+        .filter((r) => r.description.trim().length > 0 || r.price > 0)
         .map((r) => ({
           description: r.description,
-          quantity: Math.max(0, r.quantity),
+          quantity: Math.max(1, r.quantity),
           unitPrice: r.price,
         })),
     [lineItems],
@@ -134,16 +112,33 @@ export function InvoiceTool() {
 
   const noteLines = useMemo(() => {
     const raw = note.trim()
-    if (raw) return raw.split('\n').filter(Boolean)
-    return previewLinesBilled
-  }, [note, previewLinesBilled])
+    if (!raw) return []
+    return raw.split('\n').filter(Boolean)
+  }, [note])
 
   function updateLine(id: string, p: Partial<EditorLineItem>) {
-    setLineItems((rows) => rows.map((r) => (r.id === id ? {...r, ...p} : r)))
+    setLineItems((rows) =>
+      rows.map((r) => {
+        if (r.id !== id) return r
+        const next = {...r, ...p}
+        if ('price' in p) {
+          next.price = Number.parseFloat(String(p.price)) || 0
+        }
+        if ('quantity' in p) {
+          const q = Number.parseInt(String(next.quantity), 10)
+          next.quantity = Number.isFinite(q) && q >= 1 ? q : 1
+        }
+        if (next.price > 0 && next.quantity < 1) {
+          next.quantity = 1
+        }
+        next.quantity = Math.max(1, next.quantity)
+        return next
+      }),
+    )
   }
 
   function addLine() {
-    setLineItems((rows) => [...rows, {id: uid(), description: '', price: 0, quantity: 0}])
+    setLineItems((rows) => [...rows, {id: uid(), description: '', price: 0, quantity: 1}])
   }
 
   function removeLastLine() {
@@ -181,7 +176,7 @@ export function InvoiceTool() {
         pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
         heightLeft -= pageH
       }
-      const safe = invoiceNo.replace(/[^\w.-]+/g, '_') || 'invoice'
+      const safe = (invoiceNo.trim() ? invoiceNo : 'invoice').replace(/[^\w.-]+/g, '_') || 'invoice'
       pdf.save(`${safe}.pdf`)
     } finally {
       setExporting(false)
@@ -191,7 +186,13 @@ export function InvoiceTool() {
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="mx-auto flex max-w-[1710px] flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
-        <div className="sticky top-6 z-10 flex w-full max-w-[641px] flex-col gap-4 self-start overflow-y-auto max-h-[calc(100vh-3rem)]">
+        <div
+          className={
+            clipPreview
+              ? 'sticky top-6 z-10 max-h-[calc(100vh-3rem)] w-full max-w-[641px] shrink-0 self-start overflow-x-hidden overflow-y-auto'
+              : 'sticky top-6 z-10 w-full max-w-[641px] shrink-0 self-start overflow-visible'
+          }
+        >
           <InvoicePreview
             ref={previewRef}
             fromLines={previewLinesFrom}
@@ -200,68 +201,21 @@ export function InvoiceTool() {
             invoiceNo={invoiceNo}
             dueDateIso={dueDate}
             vatId={vatId}
-            lineItems={
-              previewLineItems.length
-                ? previewLineItems
-                : [{description: 'Item Name', quantity: 1, unitPrice: 0}]
-            }
+            lineItems={previewLineItems}
             currency={currency}
             discountPercent={discountPercent}
-            compareTotal={compareTotal}
+            taxPercent={taxPercent}
             displayTotal={computedFinal}
-            bankIban={bankIban}
-            bankBic={bankBic}
+            bankDetails={bankDetails}
             noteLines={noteLines}
           />
-          <details className="font-inter w-full text-sm text-[#636363]">
-            <summary className="cursor-pointer text-black">Bank &amp; VAT (preview)</summary>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label className="flex flex-col gap-1">
-                VAT ID
-                <input
-                  className="rounded border border-[rgba(0,0,0,0.15)] px-2 py-1 text-black"
-                  value={vatId}
-                  onChange={(e) => setVatId(e.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                IBAN
-                <input
-                  className="rounded border border-[rgba(0,0,0,0.15)] px-2 py-1 text-black"
-                  value={bankIban}
-                  onChange={(e) => setBankIban(e.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                SWIFT / BIC
-                <input
-                  className="rounded border border-[rgba(0,0,0,0.15)] px-2 py-1 text-black"
-                  value={bankBic}
-                  onChange={(e) => setBankBic(e.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                Compare total (strikethrough)
-                <input
-                  type="number"
-                  className="rounded border border-[rgba(0,0,0,0.15)] px-2 py-1 text-black"
-                  value={compareTotal}
-                  onChange={(e) => setCompareTotal(Number.parseFloat(e.target.value) || 0)}
-                />
-              </label>
-            </div>
-          </details>
         </div>
 
         <InvoiceEditor
           fromA={fromA}
           setFromA={setFromA}
-          fromB={fromB}
-          setFromB={setFromB}
           fromAExpanded={fromAExpanded}
           setFromAExpanded={setFromAExpanded}
-          fromBExpanded={fromBExpanded}
-          setFromBExpanded={setFromBExpanded}
           billed={billed}
           setBilled={setBilled}
           billedExpanded={billedExpanded}
@@ -282,9 +236,12 @@ export function InvoiceTool() {
           setDiscountPercent={setDiscountPercent}
           taxPercent={taxPercent}
           setTaxPercent={setTaxPercent}
-          goodsAndServices={goodsAndServices}
-          setGoodsAndServices={setGoodsAndServices}
-          compareTotal={compareTotal}
+          subtotal={subtotal}
+          discountAmount={discountAmount}
+          vatId={vatId}
+          setVatId={setVatId}
+          bankDetails={bankDetails}
+          setBankDetails={setBankDetails}
           note={note}
           setNote={setNote}
           computedFinal={computedFinal}
