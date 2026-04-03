@@ -177,7 +177,8 @@ export function InvoiceTool() {
         setBilledExpanded(s.billedExpanded)
         setBankDetailsExpanded(s.bankDetailsExpanded)
         setPaperBackground(s.paperBackground)
-        setPreviewTemplate(s.previewTemplate)
+        /** Keep the template for the row the user clicked — snapshot may still say `classic` if example was entered on One then template was switched. */
+        setPreviewTemplate(rowId)
         return
       }
       if (previewTemplate === rowId && snapshotBeforeExampleRef.current === null) {

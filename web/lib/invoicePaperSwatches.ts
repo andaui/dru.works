@@ -24,3 +24,43 @@ export const INVOICE_PAPER_SWATCHES: readonly InvoicePaperSwatch[] = [
   {id: 'sky', hex: '#CEE7FF', label: 'Sky paper'},
   {id: 'mint', hex: '#CEFFD6', label: 'Mint paper'},
 ] as const
+
+const PILL_BG_TEMPLATE_THREE_DEFAULT = '#ededed'
+
+/** Pill fill behind “Invoice” on template Three — pairs with {@link INVOICE_PAPER_SWATCHES} page fills. White/mist keep default grey pill. */
+export function invoiceTemplateThreePillBackground(paperBackgroundHex: string): string {
+  const n = paperBackgroundHex.trim().toUpperCase().replace(/^#/, '')
+  const key = `#${n}`
+  switch (key) {
+    case '#F1EBD8':
+      return '#DED8CA'
+    case '#DFC392':
+      return '#F1E5D0'
+    case '#D9CEFF':
+      return '#EBE5FF'
+    case '#CEE7FF':
+      return '#E5F3FF'
+    case '#CEFFD6':
+      return '#FAFFFB'
+    default:
+      return PILL_BG_TEMPLATE_THREE_DEFAULT
+  }
+}
+
+const ACCENT_TEMPLATE_THREE_DEFAULT = '#de2475'
+
+/** Total / accent pink on template Three — cream, tan, lavender get bespoke hues; others stay default pink. */
+export function invoiceTemplateThreeAccent(paperBackgroundHex: string): string {
+  const n = paperBackgroundHex.trim().toUpperCase().replace(/^#/, '')
+  const key = `#${n}`
+  switch (key) {
+    case '#F1EBD8':
+      return '#7416E0'
+    case '#DFC392':
+      return '#5F6518'
+    case '#D9CEFF':
+      return '#971B7E'
+    default:
+      return ACCENT_TEMPLATE_THREE_DEFAULT
+  }
+}

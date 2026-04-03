@@ -7,8 +7,8 @@ export type PreviewLineItem = {
   unitPrice: number
 }
 
-/** Classic = current stacked layout; lightMode = Figma "Light Mode" (508:37). */
-export type InvoicePreviewTemplate = 'classic' | 'lightMode'
+/** Classic = stacked layout; lightMode = Figma 508:37; templateThree = Figma 563:103 (pill hero + Item/Price/Qty). */
+export type InvoicePreviewTemplate = 'classic' | 'lightMode' | 'templateThree'
 
 export type InvoicePreviewProps = {
   template?: InvoicePreviewTemplate

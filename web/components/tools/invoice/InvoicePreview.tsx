@@ -3,6 +3,7 @@
 import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import {formatDateDots, formatMoney, formatMoneyCompact} from '@/lib/invoiceFormat'
 import {InvoicePreviewLightMode} from '@/components/tools/invoice/InvoicePreviewLightMode'
+import {InvoicePreviewTemplateThree} from '@/components/tools/invoice/InvoicePreviewTemplateThree'
 import {
   INVOICE_PREVIEW_HEIGHT_PX,
   INVOICE_PREVIEW_WIDTH_PX,
@@ -22,6 +23,9 @@ export function InvoicePreview(props: InvoicePreviewProps) {
   const {template = 'classic', ...rest} = props
   if (template === 'lightMode') {
     return <InvoicePreviewLightMode {...rest} />
+  }
+  if (template === 'templateThree') {
+    return <InvoicePreviewTemplateThree {...rest} />
   }
   return <InvoicePreviewClassic {...rest} />
 }

@@ -2,7 +2,11 @@ import {Document, Page, StyleSheet, Text, View} from '@react-pdf/renderer'
 import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import {formatDateDots, formatMoney, formatMoneyCompact} from '@/lib/invoiceFormat'
 import type {InvoicePreviewProps} from '@/components/tools/invoice/invoicePreviewShared'
-import {DEFAULT_INVOICE_PAPER_HEX} from '@/lib/invoicePaperSwatches'
+import {
+  DEFAULT_INVOICE_PAPER_HEX,
+  invoiceTemplateThreeAccent,
+  invoiceTemplateThreePillBackground,
+} from '@/lib/invoicePaperSwatches'
 import {PDF_FONT_INTER, registerInvoicePdfInterFonts} from '@/components/tools/invoice/invoicePdfFonts'
 
 registerInvoicePdfInterFonts()
@@ -13,7 +17,7 @@ const pt = (px: number) => px * 0.75
 /** A4 width in pt — scale horizontal spacing from 641px design width to usable PDF width. */
 const A4_W_PT = 595.28
 /**
- * Both templates use a 641px-wide preview card with no extra horizontal page gutter.
+ * All templates use a 641px-wide preview card with no extra horizontal page gutter.
  * Classic: inner px-12 / px-14. Light (2): inner px-6 (24px) via LM.padH.
  */
 const PAGE_SIDE_PAD_PT = 0
@@ -376,7 +380,7 @@ const styles = StyleSheet.create({
   },
 })
 
-/** Light Mode template — Figma 508:37 (641×905, pt 21 / pb 17). */
+/** Shared column widths — Light Mode + Template Three PDF. */
 const LM = {
   padH: h(24),
   fromW: h(203),
@@ -390,6 +394,281 @@ const LM = {
   w100: h(100),
 }
 
+const T3_PAD = h(24)
+
+/** Template Three — Figma 563:103 (641×905, pt 17 / pb 17). */
+const t3Styles = StyleSheet.create({
+  page: {
+    paddingTop: v(17),
+    paddingBottom: v(17),
+    paddingLeft: PAGE_SIDE_PAD_PT,
+    paddingRight: PAGE_SIDE_PAD_PT,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(11),
+    lineHeight: 1.35,
+    color: C.ink,
+    flexDirection: 'column',
+  },
+  outer: {
+    width: CONTENT_W_PT,
+    flexDirection: 'column',
+    gap: v(23),
+    flexGrow: 1,
+    minHeight: '100%',
+  },
+  topBlock: {
+    flexDirection: 'column',
+    gap: v(29),
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingLeft: T3_PAD,
+    paddingRight: T3_PAD,
+  },
+  fromCol: {
+    width: LM.fromW,
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  fromLinesCol: {
+    width: LM.fromW,
+    flexDirection: 'column',
+  },
+  fromLabel: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  rightCluster: {
+    flexDirection: 'row',
+    gap: LM.gapMetaAddr,
+  },
+  metaCol: {
+    width: LM.metaW,
+    flexDirection: 'column',
+    gap: v(16),
+  },
+  metaPair: {
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  metaLabel: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 500,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  metaVal: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  addrCol: {
+    width: LM.addrW,
+    flexDirection: 'column',
+  },
+  pillWrap: {
+    paddingLeft: h(10),
+    paddingRight: h(10),
+  },
+  pill: {
+    borderRadius: h(88),
+    paddingLeft: h(50),
+    paddingRight: h(50),
+    paddingTop: v(28),
+    paddingBottom: v(28),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: h(9),
+  },
+  heroInvoice: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 500,
+    fontSize: f(91),
+    lineHeight: 1.15,
+    letterSpacing: pt(-8.19),
+    color: C.ink,
+  },
+  heroNumber: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 500,
+    fontSize: f(47),
+    lineHeight: 1.15,
+    letterSpacing: pt(-4.23),
+    color: C.ink,
+  },
+  itemsBlock: {
+    paddingLeft: T3_PAD,
+    paddingRight: T3_PAD,
+    flexDirection: 'column',
+    flexGrow: 1,
+    minHeight: 0,
+  },
+  /** Item | Price | 32px gap | Qty | Amount — matches template Three preview grid. */
+  tableHdr: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: h(8.666),
+    marginBottom: v(2),
+  },
+  hdrMuted: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(13),
+    opacity: 0.3,
+    color: C.ink,
+  },
+  hdrItem: {width: h(153)},
+  hdrPrice: {width: h(81), textAlign: 'right'},
+  hdrSpacer: {width: h(32), flexShrink: 0},
+  hdrQty: {width: h(56)},
+  hdrAmt: {flex: 1, minWidth: 0},
+  rule: {
+    height: v(1),
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    width: '100%',
+    marginBottom: v(2),
+  },
+  lineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: h(8.666),
+    paddingVertical: v(5),
+  },
+  lineDesc: {
+    width: h(153),
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    minWidth: 0,
+    color: C.ink,
+  },
+  linePrice: {
+    width: h(81),
+    textAlign: 'right',
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  lineSpacer: {
+    width: h(32),
+    flexShrink: 0,
+  },
+  lineQty: {
+    width: h(56),
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  lineAmt: {
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'right',
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  totRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: h(8.666),
+    paddingVertical: v(5),
+  },
+  totLbl153: {
+    width: h(153),
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  totPriceCol: {
+    width: h(81),
+    textAlign: 'right',
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  totSpacer: {
+    width: h(32),
+    flexShrink: 0,
+  },
+  totQtyCol: {
+    width: h(56),
+  },
+  totValLast: {
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'right',
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(10.832),
+    color: C.ink,
+  },
+  totalsTopPad: {
+    paddingTop: v(24),
+  },
+  totalBigRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: h(8.666),
+    paddingVertical: v(5),
+  },
+  totalBigLblCol: {
+    width: h(153),
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(13),
+    color: C.ink,
+  },
+  totalBigSp1: {width: h(81)},
+  totalBigSp2: {width: h(32)},
+  totalBigSp3: {width: h(56)},
+  totalBigRightCol: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    gap: h(13),
+    minWidth: 0,
+  },
+  strike: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(13),
+    textDecoration: 'line-through',
+    opacity: 0.5,
+    color: C.ink,
+  },
+  accentTotal: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(13),
+  },
+  footer: {
+    flexDirection: 'column',
+    gap: v(24),
+  },
+  bodyLine: {
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
+    fontSize: f(11),
+    lineHeight: f(16) / f(11),
+    color: C.ink,
+  },
+})
+
+/** Light Mode template — Figma 508:37 (641×905, pt 21 / pb 17). */
 const lightStyles = StyleSheet.create({
   page: {
     paddingTop: v(21),
@@ -459,6 +738,11 @@ const lightStyles = StyleSheet.create({
     flexDirection: 'column',
     gap: v(6),
   },
+  /** Lines only — no inter-line gap (matches billed `addrCol`); `fromCol` gap is label→lines only. */
+  fromLinesCol: {
+    width: LM.fromW,
+    flexDirection: 'column',
+  },
   fromLabel: {
     fontFamily: PDF_FONT_INTER,
     fontWeight: 700,
@@ -495,6 +779,7 @@ const lightStyles = StyleSheet.create({
   },
   addrCol: {
     width: LM.addrW,
+    flexDirection: 'column',
   },
   itemsBlock: {
     paddingLeft: LM.padH,
@@ -698,6 +983,9 @@ export function InvoicePdfDocument(props: InvoicePreviewProps) {
   void _template
   if (props.template === 'lightMode') {
     return <InvoicePdfDocumentLight {...rest} />
+  }
+  if (props.template === 'templateThree') {
+    return <InvoicePdfDocumentTemplateThree {...rest} />
   }
   return <InvoicePdfDocumentClassic {...rest} />
 }
@@ -936,11 +1224,13 @@ function InvoicePdfDocumentLight({
             <View style={lightStyles.headerRow}>
               <View style={lightStyles.fromCol}>
                 <Text style={lightStyles.fromLabel}>From</Text>
-                {fromLines.map((line, i) => (
-                  <Text key={i} style={lightStyles.bodyLine}>
-                    {line}
-                  </Text>
-                ))}
+                <View style={lightStyles.fromLinesCol}>
+                  {fromLines.map((line, i) => (
+                    <Text key={i} style={lightStyles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
               </View>
               <View style={lightStyles.rightCluster}>
                 {showInvoiceDate ? (
@@ -1021,6 +1311,213 @@ function InvoicePdfDocumentLight({
           </View>
 
           <View style={lightStyles.footer}>
+            {dueDateIso.trim() ? (
+              <View style={lightStyles.dueBlock}>
+                <Text style={lightStyles.dueLbl}>Due Date</Text>
+                <Text style={lightStyles.dueVal}>{formatDateDots(dueDateIso)}</Text>
+              </View>
+            ) : null}
+            {bankRows.length > 0 ? (
+              <View style={styles.bankGap}>
+                <View style={{paddingLeft: LM.padH, paddingRight: LM.padH}}>
+                  <View style={styles.bankRow}>
+                    <View style={styles.bankLabels}>
+                      {bankRows.map((r) => (
+                        <Text key={r.key} style={styles.bankLine}>
+                          {r.label}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={styles.bankValues}>
+                      {bankRows.map((r) => (
+                        <Text key={r.key} style={styles.bankLine}>
+                          {r.value}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+            {noteLines.length > 0 ? (
+              <View style={lightStyles.noteRow}>
+                <Text style={lightStyles.noteLabel}>Note</Text>
+                <View style={{flex: 1, flexDirection: 'column'}}>
+                  {noteLines.map((line, i) => (
+                    <Text key={i} style={lightStyles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
+function InvoicePdfDocumentTemplateThree({
+  fromLines,
+  billedLines,
+  invoiceDateIso,
+  invoiceNo,
+  dueDateIso,
+  lineItems,
+  currency,
+  discountPercent,
+  taxPercent,
+  displayTotal,
+  bankDetails,
+  noteLines,
+  paperBackground = DEFAULT_INVOICE_PAPER_HEX,
+}: Omit<InvoicePreviewProps, 'template'>) {
+  const lineSubtotal = lineItems.reduce((s, r) => s + r.quantity * r.unitPrice, 0)
+  const discountAmt = lineSubtotal * (discountPercent / 100)
+  const afterDisc = lineSubtotal - discountAmt
+  const taxAmt = afterDisc * (taxPercent / 100)
+  const taxMuted = taxPercent === 0
+  const discMuted = discountPercent === 0
+  const totalBeforeDiscount = lineSubtotal + lineSubtotal * (taxPercent / 100)
+  const showPreDiscountTotal = discountAmt > 0
+  const bankRows = buildPreviewBankRows(currency, bankDetails)
+  const showInvoiceDate = Boolean(invoiceDateIso?.trim())
+  const showInvoiceNo = Boolean(invoiceNo.trim())
+
+  return (
+    <Document>
+      <Page size="A4" style={[t3Styles.page, {backgroundColor: paperBackground}]} wrap>
+        <View style={t3Styles.outer}>
+          <View style={t3Styles.topBlock}>
+            <View style={t3Styles.headerRow}>
+              <View style={t3Styles.fromCol}>
+                <Text style={t3Styles.fromLabel}>From</Text>
+                <View style={t3Styles.fromLinesCol}>
+                  {fromLines.map((line, i) => (
+                    <Text key={i} style={t3Styles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+              <View style={t3Styles.rightCluster}>
+                <View style={t3Styles.metaCol}>
+                  {showInvoiceDate ? (
+                    <View style={t3Styles.metaPair}>
+                      <Text style={t3Styles.metaLabel}>Invoice date</Text>
+                      <Text style={t3Styles.metaVal}>{formatDateDots(invoiceDateIso)}</Text>
+                    </View>
+                  ) : null}
+                  {showInvoiceNo ? (
+                    <View style={t3Styles.metaPair}>
+                      <Text style={t3Styles.metaLabel}>Invoice Number</Text>
+                      <Text style={t3Styles.metaVal}>{invoiceNo.trim()}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={t3Styles.addrCol}>
+                  {billedLines.map((line, i) => (
+                    <Text key={i} style={t3Styles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            </View>
+            <View style={t3Styles.pillWrap}>
+              <View
+                style={[
+                  t3Styles.pill,
+                  {backgroundColor: invoiceTemplateThreePillBackground(paperBackground)},
+                ]}
+              >
+                <Text style={t3Styles.heroInvoice}>Invoice</Text>
+                {showInvoiceNo ? <Text style={t3Styles.heroNumber}>{invoiceNo.trim()}</Text> : null}
+              </View>
+            </View>
+          </View>
+
+          <View style={t3Styles.itemsBlock}>
+            <View style={t3Styles.tableHdr}>
+              <Text style={[t3Styles.hdrMuted, t3Styles.hdrItem]}>Item</Text>
+              <Text style={[t3Styles.hdrMuted, t3Styles.hdrPrice]}>Price</Text>
+              <View style={t3Styles.hdrSpacer} />
+              <Text style={[t3Styles.hdrMuted, t3Styles.hdrQty]}>Quantity</Text>
+              <View style={t3Styles.hdrAmt} />
+            </View>
+            <View style={t3Styles.rule} />
+            {lineItems.map((row, i) => {
+              const lineTotal = row.quantity * row.unitPrice
+              return (
+                <View key={i} wrap={false}>
+                  <View style={t3Styles.lineRow}>
+                    <Text style={t3Styles.lineDesc}>{row.description}</Text>
+                    <Text style={t3Styles.linePrice}>{formatMoneyCompact(row.unitPrice, currency)}</Text>
+                    <View style={t3Styles.lineSpacer} />
+                    <Text style={t3Styles.lineQty}>{row.quantity}</Text>
+                    <Text style={t3Styles.lineAmt}>{formatMoney(lineTotal, currency)}</Text>
+                  </View>
+                  <View style={t3Styles.rule} />
+                </View>
+              )
+            })}
+
+            <View style={t3Styles.totalsTopPad}>
+              <View style={t3Styles.totRow}>
+                <Text style={t3Styles.totLbl153}>Subtotal</Text>
+                <View style={{width: h(81)}} />
+                <View style={t3Styles.totSpacer} />
+                <View style={t3Styles.totQtyCol} />
+                <Text style={t3Styles.totValLast}>{formatMoneyCompact(lineSubtotal, currency)}</Text>
+              </View>
+              <View style={t3Styles.rule} />
+              <View style={t3Styles.totRow}>
+                <Text style={t3Styles.totLbl153}>Tax</Text>
+                <Text style={[t3Styles.totPriceCol, taxMuted ? {color: C.muted} : {}]}>
+                  {`${taxPercent}%`}
+                </Text>
+                <View style={t3Styles.totSpacer} />
+                <View style={t3Styles.totQtyCol} />
+                <Text style={t3Styles.totValLast}>{taxAmt > 0 ? formatMoneyCompact(taxAmt, currency) : ''}</Text>
+              </View>
+              <View style={t3Styles.rule} />
+              <View style={t3Styles.totRow}>
+                <Text style={t3Styles.totLbl153}>Discount</Text>
+                <Text style={[t3Styles.totPriceCol, discMuted ? {color: C.muted} : {}]}>
+                  {`${discountPercent}%`}
+                </Text>
+                <View style={t3Styles.totSpacer} />
+                <View style={t3Styles.totQtyCol} />
+                <Text style={[t3Styles.totValLast, discountAmt > 0 ? {opacity: 0.3} : {}]}>
+                  {discountAmt > 0 ? `-${formatMoneyCompact(discountAmt, currency)}` : ''}
+                </Text>
+              </View>
+              <View style={t3Styles.rule} />
+              <View style={t3Styles.totalBigRow}>
+                <Text style={t3Styles.totalBigLblCol}>Total {currency}</Text>
+                <View style={t3Styles.totalBigSp1} />
+                <View style={t3Styles.totalBigSp2} />
+                <View style={t3Styles.totalBigSp3} />
+                <View style={t3Styles.totalBigRightCol}>
+                  {showPreDiscountTotal ? (
+                    <Text style={t3Styles.strike}>{formatMoney(totalBeforeDiscount, currency)}</Text>
+                  ) : null}
+                  <Text
+                    style={[
+                      t3Styles.accentTotal,
+                      {color: invoiceTemplateThreeAccent(paperBackground)},
+                    ]}
+                  >
+                    {formatMoneyCompact(displayTotal, currency)}
+                  </Text>
+                </View>
+              </View>
+              <View style={t3Styles.rule} />
+            </View>
+          </View>
+
+          <View style={t3Styles.footer}>
             {dueDateIso.trim() ? (
               <View style={lightStyles.dueBlock}>
                 <Text style={lightStyles.dueLbl}>Due Date</Text>

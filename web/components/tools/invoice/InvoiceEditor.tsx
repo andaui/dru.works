@@ -129,6 +129,7 @@ const INVOICE_TEMPLATE_ROWS: readonly {
 }[] = [
   {id: 'classic', label: 'One'},
   {id: 'lightMode', label: 'Two'},
+  {id: 'templateThree', label: 'Three'},
 ]
 
 function currencySymbol(code: InvoiceCurrency) {
@@ -209,31 +210,41 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 {INVOICE_TEMPLATE_ROWS.map((row) => {
                   const selected = p.previewTemplate === row.id
                   return (
-                    <div key={row.id} className={`${editorGridClass} min-h-[37px] border-b border-black/[0.08] py-0`}>
+                    <div
+                      key={row.id}
+                      role="radio"
+                      aria-checked={selected}
+                      tabIndex={0}
+                      className={`${editorGridClass} min-h-[37px] cursor-pointer border-b border-black/[0.08] py-0 outline-none select-none focus-visible:bg-black/[0.03]`}
+                      onClick={() => p.setPreviewTemplate(row.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          p.setPreviewTemplate(row.id)
+                        }
+                      }}
+                    >
                       <div className="min-w-0 break-words">
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          onClick={() => p.setPreviewTemplate(row.id)}
-                          className={`cursor-pointer border-0 bg-transparent p-0 text-left outline-none focus-visible:bg-black/[0.03] ${SOEHNE} text-[24px] leading-[37px] not-italic`}
-                        >
+                        <span className={`${SOEHNE} pointer-events-none text-[24px] leading-[37px] not-italic`}>
                           {row.label}
-                        </button>
+                        </span>
                       </div>
                       <div className="min-w-[24px] max-w-[24px] @max-[532px]:hidden" aria-hidden />
                       <div className="col-span-3 flex min-w-0 w-full items-center justify-between gap-3 @max-[532px]:col-span-1">
                         <button
                           type="button"
                           aria-label={`Example data for template ${row.label}`}
-                          onClick={() => p.onExampleClick(row.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            p.onExampleClick(row.id)
+                          }}
                           className={`min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] outline-none focus-visible:bg-black/[0.03] ${
                             selected && p.exampleModeActive ? 'text-black/50' : 'text-[rgba(0,0,0,0.2)]'
                           }`}
                         >
                           Example
                         </button>
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                        <span className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center">
                           {selected ? (
                             <Image
                               src="/select.svg"
