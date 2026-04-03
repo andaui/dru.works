@@ -25,6 +25,7 @@ import {
 } from '@/lib/invoiceBankDetails'
 import {isoDateLocal, type InvoiceCurrency} from '@/lib/invoiceFormat'
 import {DEFAULT_INVOICE_PAPER_HEX} from '@/lib/invoicePaperSwatches'
+import {getExampleInvoicePayload} from '@/lib/invoiceExamplePrefill'
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -103,6 +104,25 @@ export function InvoiceTool() {
 
   const setBankDetails = useCallback((p: Partial<InvoiceBankDetails>) => {
     setBankDetailsState((s) => ({...s, ...p}))
+  }, [])
+
+  const applyExampleInvoiceDefaults = useCallback(() => {
+    const e = getExampleInvoicePayload()
+    setFromAState(e.fromA)
+    setBilledState(e.billed)
+    setInvoiceNo(e.invoiceNo)
+    setIssueDate(e.issueDate)
+    setDueDate(e.dueDate)
+    setVatId(e.vatId)
+    setCurrency(e.currency)
+    setDiscountPercent(e.discountPercent)
+    setTaxPercent(e.taxPercent)
+    setNote(e.note)
+    setBankDetailsState(e.bankDetails)
+    setLineItems(e.lineItemsSeed.map((r) => ({...r, id: uid()})))
+    setFromAExpanded(true)
+    setBilledExpanded(true)
+    setBankDetailsExpanded(true)
   }, [])
 
   useLayoutEffect(() => {
@@ -318,10 +338,12 @@ export function InvoiceTool() {
   const exportPdf = useCallback(async () => {
     setExporting(true)
     try {
-      const [{pdf}, {InvoicePdfDocument}] = await Promise.all([
+      const [{pdf}, {InvoicePdfDocument}, {registerInvoicePdfInterFonts}] = await Promise.all([
         import('@react-pdf/renderer'),
         import('@/components/tools/invoice/InvoicePdfDocument'),
+        import('@/components/tools/invoice/invoicePdfFonts'),
       ])
+      registerInvoicePdfInterFonts()
       const blob = await pdf(
         <InvoicePdfDocument
           template={previewTemplate}
@@ -597,6 +619,7 @@ export function InvoiceTool() {
           setPaperBackground={setPaperBackground}
           previewTemplate={previewTemplate}
           setPreviewTemplate={setPreviewTemplate}
+          onApplyExampleInvoice={applyExampleInvoiceDefaults}
         />
         </div>
       </div>

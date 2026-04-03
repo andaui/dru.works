@@ -124,8 +124,8 @@ export function InvoicePreviewLightMode({
 
         {/* Items + totals — flex-1 so space below totals stays above footer; px 24; gap 40 table↔totals */}
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col px-6">
-          <div className="flex min-h-0 w-full min-w-0 flex-col gap-10">
-            <div className="flex min-h-0 w-full flex-col gap-8 text-[11px] leading-normal not-italic">
+          <div className="flex w-full min-w-0 shrink-0 flex-col gap-10">
+            <div className="flex w-full shrink-0 flex-col gap-8 text-[11px] leading-normal not-italic">
               <div className="flex w-full min-w-0 shrink-0 items-start gap-[30px]">
                 <p className="min-h-0 min-w-0 flex-1 font-medium text-black" style={{fontFamily: INTER}}>
                   Description
@@ -140,7 +140,7 @@ export function InvoicePreviewLightMode({
                   —
                 </p>
               </div>
-              <div className="flex min-h-0 w-full min-w-0 flex-col gap-[6px] font-normal text-black" style={{fontFamily: INTER}}>
+              <div className="flex w-full min-w-0 flex-col gap-[6px] font-normal text-black" style={{fontFamily: INTER}}>
                 {lineItems.map((row, i) => {
                   const lineTotal = row.quantity * row.unitPrice
                   return (
@@ -235,14 +235,16 @@ export function InvoicePreviewLightMode({
             </div>
           ) : null}
           {noteLines.length > 0 ? (
-            <div className="flex w-full min-w-0 items-start gap-[60px] pl-6 pr-3 not-italic">
-              <p className="w-[100px] shrink-0 font-semibold leading-normal">Note</p>
-              <div className="min-h-4 min-w-0 flex-1 font-normal leading-normal break-words [overflow-wrap:anywhere]">
-                {noteLines.map((line, i) => (
-                  <p key={i} className="mb-0 leading-[16px] last:mb-0">
-                    {line}
-                  </p>
-                ))}
+            <div className="flex flex-col gap-0 px-6 not-italic">
+              <div className="flex w-full min-w-0 items-start gap-[40px] font-normal">
+                <p className="w-[158px] shrink-0 font-semibold leading-normal">Note</p>
+                <div className="min-h-4 min-w-0 flex-1 font-normal leading-normal break-words [overflow-wrap:anywhere]">
+                  {noteLines.map((line, i) => (
+                    <p key={i} className="mb-0 leading-[16px] last:mb-0">
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
           ) : null}

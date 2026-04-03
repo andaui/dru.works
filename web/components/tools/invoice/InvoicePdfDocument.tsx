@@ -3,18 +3,21 @@ import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import {formatDateDots, formatMoney, formatMoneyCompact} from '@/lib/invoiceFormat'
 import type {InvoicePreviewProps} from '@/components/tools/invoice/invoicePreviewShared'
 import {DEFAULT_INVOICE_PAPER_HEX} from '@/lib/invoicePaperSwatches'
-/** PDF standard fonts only — custom WOFF + fontWeight often renders invisible in react-pdf. */
-const PDF_REG = 'Helvetica'
-const PDF_BOLD = 'Helvetica-Bold'
+import {PDF_FONT_INTER, registerInvoicePdfInterFonts} from '@/components/tools/invoice/invoicePdfFonts'
+
+registerInvoicePdfInterFonts()
 
 /** CSS px → PDF pt (96dpi). */
 const pt = (px: number) => px * 0.75
 
-/** A4 width in pt — use almost full width like the 641px preview card (no huge side gutters). */
+/** A4 width in pt — scale horizontal spacing from 641px design width to usable PDF width. */
 const A4_W_PT = 595.28
-const PAGE_SIDE_PAD_PT = 18
+/**
+ * Both templates use a 641px-wide preview card with no extra horizontal page gutter.
+ * Classic: inner px-12 / px-14. Light (2): inner px-6 (24px) via LM.padH.
+ */
+const PAGE_SIDE_PAD_PT = 0
 const CONTENT_W_PT = A4_W_PT - 2 * PAGE_SIDE_PAD_PT
-/** Scale horizontal spacing from 641px design width to usable PDF width. */
 const H_SCALE = CONTENT_W_PT / pt(641)
 const h = (px: number) => pt(px) * H_SCALE
 /** Vertical spacing — keep preview proportions on the tall axis. */
@@ -43,7 +46,8 @@ const styles = StyleSheet.create({
     paddingBottom: v(17),
     paddingLeft: PAGE_SIDE_PAD_PT,
     paddingRight: PAGE_SIDE_PAD_PT,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -72,7 +76,8 @@ const styles = StyleSheet.create({
   previewLabel: {
     width: W.label,
     marginRight: W.gapLabel,
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -83,7 +88,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   previewLine: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: f(16) / f(11),
     color: C.ink,
@@ -103,7 +109,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   metaText: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -134,14 +141,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(24.035),
     lineHeight: 1.15,
     letterSpacing: h(-1.2018),
     color: C.ink,
   },
   colHdr: {
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
@@ -170,7 +179,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -178,7 +188,8 @@ const styles = StyleSheet.create({
   colQty: {
     width: W.qty,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
@@ -187,7 +198,8 @@ const styles = StyleSheet.create({
   colMoney: {
     width: W.money,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
@@ -195,7 +207,8 @@ const styles = StyleSheet.create({
   },
   colMoneyLast: {
     width: W.money,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
@@ -217,7 +230,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11.347),
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
@@ -227,7 +241,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11.347),
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
@@ -243,7 +258,8 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     width: W.money,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
@@ -252,7 +268,8 @@ const styles = StyleSheet.create({
   },
   totalValueBold: {
     width: W.money,
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
@@ -262,7 +279,8 @@ const styles = StyleSheet.create({
   taxPct: {
     width: W.qty,
     marginRight: W.gapCol,
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
@@ -272,7 +290,8 @@ const styles = StyleSheet.create({
   discPct: {
     width: W.qty,
     marginRight: W.gapCol,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
@@ -289,7 +308,8 @@ const styles = StyleSheet.create({
     marginRight: h(6),
   },
   strikeText: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11.347),
     textDecoration: 'line-through',
     opacity: 0.45,
@@ -315,7 +335,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   bankLine: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -325,16 +346,18 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexDirection: 'column',
   },
+  /** Same horizontal grid as `bankOuter` + `bankRow` so note body aligns with bank value column. */
   noteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingLeft: h(12),
-    paddingRight: h(12),
+    paddingRight: h(24),
   },
   noteLabel: {
-    width: W.label,
-    marginRight: W.gapLabel,
-    fontFamily: PDF_BOLD,
+    width: h(158),
+    marginRight: h(40),
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -345,7 +368,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   noteLine: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: f(16) / f(11),
     color: C.ink,
@@ -372,7 +396,8 @@ const lightStyles = StyleSheet.create({
     paddingBottom: v(17),
     paddingLeft: PAGE_SIDE_PAD_PT,
     paddingRight: PAGE_SIDE_PAD_PT,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -408,14 +433,16 @@ const lightStyles = StyleSheet.create({
     gap: h(24),
   },
   heroInvoice: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(91),
     lineHeight: 1.15,
     letterSpacing: pt(-8.19),
     color: C.ink,
   },
   heroNumber: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(47),
     lineHeight: 1.15,
     letterSpacing: pt(-4.23),
@@ -433,7 +460,8 @@ const lightStyles = StyleSheet.create({
     gap: v(6),
   },
   fromLabel: {
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
     width: LM.w100,
     color: C.ink,
@@ -452,13 +480,15 @@ const lightStyles = StyleSheet.create({
     gap: v(6),
   },
   metaLabel: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     width: LM.w100,
     color: C.ink,
   },
   metaVal: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     width: LM.w100,
     color: C.ink,
@@ -476,6 +506,7 @@ const lightStyles = StyleSheet.create({
   itemsInner: {
     flexDirection: 'column',
     gap: v(32),
+    flexShrink: 0,
   },
   hdrRow: {
     flexDirection: 'row',
@@ -484,21 +515,24 @@ const lightStyles = StyleSheet.create({
   },
   hdrDesc: {
     flex: 1,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   hdr60: {
     width: LM.w60,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   hdr120: {
     width: LM.w120,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
@@ -514,7 +548,8 @@ const lightStyles = StyleSheet.create({
   },
   lineDesc: {
     flex: 1,
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     minWidth: 0,
     color: C.ink,
@@ -522,6 +557,7 @@ const lightStyles = StyleSheet.create({
   totals: {
     flexDirection: 'column',
     gap: v(6),
+    flexShrink: 0,
   },
   totRowEnd: {
     flexDirection: 'row',
@@ -532,14 +568,16 @@ const lightStyles = StyleSheet.create({
   totLbl120: {
     width: LM.w120,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   totVal90: {
     width: LM.w90,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
@@ -550,7 +588,8 @@ const lightStyles = StyleSheet.create({
     gap: v(2),
   },
   totBold: {
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11.347),
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
@@ -567,20 +606,23 @@ const lightStyles = StyleSheet.create({
     gap: v(6),
   },
   dueLbl: {
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
     width: LM.w100,
     color: C.ink,
   },
+  /** Same inset + label/value columns as bank block in footer. */
   noteRow: {
     flexDirection: 'row',
-    gap: h(60),
+    alignItems: 'flex-start',
     paddingLeft: LM.padH,
-    paddingRight: h(12),
+    paddingRight: LM.padH,
   },
   /** 11px body copy — matches preview `font-normal` */
   bodyLine: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     lineHeight: f(16) / f(11),
     color: C.ink,
@@ -588,39 +630,47 @@ const lightStyles = StyleSheet.create({
   lineQty: {
     width: LM.w60,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   lineUnit: {
     width: LM.w120,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   lineTotal: {
     width: LM.w90,
     textAlign: 'right',
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   totValText: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     color: C.ink,
   },
   dueVal: {
-    fontFamily: PDF_REG,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 400,
     fontSize: f(11),
     width: LM.w100,
     color: C.ink,
   },
   noteLabel: {
-    fontFamily: PDF_BOLD,
+    fontFamily: PDF_FONT_INTER,
+    fontWeight: 700,
     fontSize: f(11),
-    width: LM.w100,
+    lineHeight: 1.35,
+    width: h(158),
+    marginRight: h(40),
     color: C.ink,
   },
 })
@@ -939,7 +989,7 @@ function InvoicePdfDocumentLight({
                   <Text style={lightStyles.totVal90}>{formatMoneyCompact(lineSubtotal, currency)}</Text>
                 </View>
                 <View style={lightStyles.totRowEnd}>
-                  <Text style={[lightStyles.totLbl120, {fontFamily: PDF_BOLD}]}>Tax</Text>
+                  <Text style={[lightStyles.totLbl120, {fontFamily: PDF_FONT_INTER, fontWeight: 600}]}>Tax</Text>
                   <View style={lightStyles.totValCol}>
                     <Text style={taxMuted ? [lightStyles.totValText, {color: C.muted}] : lightStyles.totValText}>
                       {taxPercent}%

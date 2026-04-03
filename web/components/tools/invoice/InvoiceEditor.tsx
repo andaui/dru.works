@@ -25,6 +25,7 @@ import {
   contactHasAnyValue,
   contactToPreviewLines,
 } from '@/lib/invoiceContact'
+import Image from 'next/image'
 import type {InvoicePreviewTemplate} from '@/components/tools/invoice/invoicePreviewShared'
 import {
   INVOICE_PAPER_SWATCHES,
@@ -85,6 +86,8 @@ export type InvoiceEditorProps = {
   setPaperBackground: (hex: string) => void
   previewTemplate: InvoicePreviewTemplate
   setPreviewTemplate: (t: InvoicePreviewTemplate) => void
+  /** Fills the form with shared example data (same for every template). */
+  onApplyExampleInvoice: () => void
 }
 
 const SOEHNE = "font-[family-name:var(--font-soehne)] tracking-[-0.25px] text-black"
@@ -115,6 +118,14 @@ const ITEM_COL_HEADER_TYPO =
 
 const CURRENCY_PRIMARY: readonly InvoiceCurrency[] = ['GBP', 'USD', 'EUR']
 const CURRENCY_EXTRA: readonly InvoiceCurrency[] = ['CHF', 'KRW', 'RUB', 'AUD']
+
+const INVOICE_TEMPLATE_ROWS: readonly {
+  id: InvoicePreviewTemplate
+  label: string
+}[] = [
+  {id: 'classic', label: 'One'},
+  {id: 'lightMode', label: 'Two'},
+]
 
 function currencySymbol(code: InvoiceCurrency) {
   switch (code) {
@@ -185,33 +196,47 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 />
               ))}
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] text-black/50">
-                Preview layout
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => p.setPreviewTemplate('classic')}
-                  className={`rounded-full border px-4 py-1.5 font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] transition-colors ${
-                    p.previewTemplate === 'classic'
-                      ? 'border-black bg-black text-white'
-                      : 'border-black/[0.12] bg-transparent text-black hover:border-black/30'
-                  }`}
-                >
-                  Classic
-                </button>
-                <button
-                  type="button"
-                  onClick={() => p.setPreviewTemplate('lightMode')}
-                  className={`rounded-full border px-4 py-1.5 font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] transition-colors ${
-                    p.previewTemplate === 'lightMode'
-                      ? 'border-black bg-black text-white'
-                      : 'border-black/[0.12] bg-transparent text-black hover:border-black/30'
-                  }`}
-                >
-                  Light
-                </button>
+
+            <div className="mt-[40px] flex w-full min-w-0 flex-col gap-2">
+              <p className="m-0 font-[family-name:var(--font-soehne)] text-[24px] leading-tight tracking-[-0.25px] not-italic text-black/20">
+                Templates
+              </p>
+              <div className="w-full border-t border-black/[0.08]" role="radiogroup" aria-label="Invoice template">
+                {INVOICE_TEMPLATE_ROWS.map((row) => {
+                  const selected = p.previewTemplate === row.id
+                  return (
+                    <button
+                      key={row.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => {
+                        p.setPreviewTemplate(row.id)
+                        p.onApplyExampleInvoice()
+                      }}
+                      className="flex min-h-[37px] w-full min-w-0 cursor-pointer items-center gap-2 border-b border-black/[0.08] bg-transparent py-0 text-left outline-none focus-visible:bg-black/[0.03]"
+                    >
+                      <span className={`shrink-0 ${SOEHNE} text-[24px] leading-[37px] not-italic`}>
+                        {row.label}
+                      </span>
+                      <span className="min-w-0 flex-1 text-center font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-[rgba(0,0,0,0.2)]">
+                        Example
+                      </span>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                        {selected ? (
+                          <Image
+                            src="/select.svg"
+                            alt=""
+                            width={24}
+                            height={24}
+                            className="h-6 w-6"
+                            aria-hidden
+                          />
+                        ) : null}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
