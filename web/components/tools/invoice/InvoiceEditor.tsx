@@ -73,6 +73,8 @@ export type InvoiceEditorProps = {
   setVatId: (v: string) => void
   bankDetails: InvoiceBankDetails
   setBankDetails: (p: Partial<InvoiceBankDetails>) => void
+  bankDetailsExpanded: boolean
+  setBankDetailsExpanded: (v: boolean) => void
   note: string
   setNote: (v: string) => void
   computedFinal: number
@@ -89,14 +91,16 @@ const ROW_LABEL_CLASS =
   'font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic tracking-[-0.25px]'
 
 /**
- * Label | 24px | inputs (wide). Narrow container (532px): single column, label on top.
- * Breakpoint is `@max-[532px]:*` — literal class names so Tailwind can scan them.
+ * Shared 5-column grid used by ALL rows (form rows + items table).
+ * Col 1 (label/Item) shrinks together across every section.
+ * Cols 3-5 are fixed so form values and Price/Qty/Total always share the same x-positions.
+ * Narrow container (532px): collapses to single column.
  */
 const editorGridClass =
-  'grid w-full min-w-0 grid-cols-[minmax(0,283px)_24px_minmax(0,1fr)] items-center gap-x-0 @max-[532px]:grid-cols-1 @max-[532px]:items-start @max-[532px]:gap-y-2'
-/** Item row grid — stacks to one column inside narrow `@container` (same 532px as form rows). */
+  'grid w-full min-w-0 grid-cols-[minmax(0,283px)_24px_120px_72px_minmax(160px,1fr)] items-center gap-x-0 @max-[532px]:grid-cols-1 @max-[532px]:items-start @max-[532px]:gap-y-2'
+/** Same template as editorGridClass — items rows use it directly with 5 explicit cells. */
 const ITEMS_GRID =
-  'grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,150px)_minmax(72px,90px)_minmax(0,1fr)] gap-2 sm:gap-4 @max-[532px]:grid-cols-1 @max-[532px]:gap-y-2'
+  'grid w-full min-w-0 grid-cols-[minmax(0,283px)_24px_120px_72px_minmax(160px,1fr)] gap-x-0 @max-[532px]:grid-cols-1 @max-[532px]:gap-y-2'
 
 /** Item grid + summary lines — 37px line box matches Invoice no. / date rows. */
 const ITEM_LINE_TYPO =
@@ -204,7 +208,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
                 value={p.invoiceNo}
                 onChange={(e) => p.setInvoiceNo(e.target.value)}
-                placeholder="e.g. 001"
+                placeholder="001"
                 aria-label="Invoice number"
               />
             </LabeledInputRow>
@@ -231,79 +235,100 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
           </div>
         </div>
 
-        <div className="flex w-full flex-col items-stretch gap-[52px] py-[60px]">
+        <div className="flex w-full flex-col items-stretch py-[60px]">
+          {/* Items title */}
           <FormRow
             primary={<span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>Items</span>}
-            secondary={
-              <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-right">
-                {CURRENCY_PRIMARY.map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => p.setCurrency(code)}
-                    className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
-                      p.currency === code ? 'text-black' : 'text-black/20'
-                    }`}
-                    aria-pressed={p.currency === code}
-                    aria-label={code}
-                  >
-                    {currencySymbol(code)}
-                  </button>
-                ))}
-                {CURRENCY_EXTRA.map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => p.setCurrency(code)}
-                    className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
-                      p.currency === code ? 'text-black' : 'text-black/20'
-                    }`}
-                    aria-pressed={p.currency === code}
-                    aria-label={code}
-                  >
-                    {currencySymbol(code)}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => p.setCurrency(cycleYenPair(p.currency))}
-                  className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
-                    p.currency === 'JPY' || p.currency === 'CNY' ? 'text-black' : 'text-black/20'
-                  }`}
-                  aria-pressed={p.currency === 'JPY' || p.currency === 'CNY'}
-                  title={
-                    p.currency === 'JPY'
-                      ? 'Japanese yen — click for Chinese yuan'
-                      : p.currency === 'CNY'
-                        ? 'Chinese yuan — click for Japanese yen'
-                        : 'Japanese yen — click again for Chinese yuan'
-                  }
-                  aria-label={
-                    p.currency === 'JPY'
-                      ? 'CNY (switch from JPY)'
-                      : p.currency === 'CNY'
-                        ? 'JPY (switch from CNY)'
-                        : 'JPY or CNY'
-                  }
-                >
-                  ¥
-                </button>
-                <button
-                  type="button"
-                  onClick={() => p.setCurrency('INR')}
-                  className={`font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] ${
-                    p.currency === 'INR' ? 'text-black' : 'text-black/20'
-                  }`}
-                  aria-pressed={p.currency === 'INR'}
-                  aria-label="INR"
-                >
-                  ₹
-                </button>
-              </div>
-            }
+            secondary={<span className="min-w-0" aria-hidden />}
           />
 
-          <div className="flex w-full flex-col gap-[52px]">
+          {/* Currency swatches — 24px below the Items divider */}
+          <div className="mt-[24px] flex flex-wrap gap-[16px]">
+            {([...CURRENCY_PRIMARY, ...CURRENCY_EXTRA] as InvoiceCurrency[]).map((code) => {
+              const selected = p.currency === code
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => p.setCurrency(code)}
+                  aria-pressed={selected}
+                  aria-label={code}
+                  className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border-0 p-0 outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-1"
+                  style={{
+                    width: 37,
+                    height: 37,
+                    backgroundColor: 'rgba(0,0,0,0.07)',
+                  }}
+                >
+                  <span
+                    className={`font-[family-name:var(--font-soehne)] text-[20px] leading-none ${
+                      selected ? 'text-black' : 'text-black/20'
+                    }`}
+                  >
+                    {currencySymbol(code)}
+                  </span>
+                </button>
+              )
+            })}
+            {/* JPY/CNY toggle */}
+            <button
+              type="button"
+              onClick={() => p.setCurrency(cycleYenPair(p.currency))}
+              aria-pressed={p.currency === 'JPY' || p.currency === 'CNY'}
+              title={
+                p.currency === 'JPY'
+                  ? 'Japanese yen — click for Chinese yuan'
+                  : p.currency === 'CNY'
+                    ? 'Chinese yuan — click for Japanese yen'
+                    : 'Japanese yen — click again for Chinese yuan'
+              }
+              aria-label={
+                p.currency === 'JPY'
+                  ? 'CNY (switch from JPY)'
+                  : p.currency === 'CNY'
+                    ? 'JPY (switch from CNY)'
+                    : 'JPY or CNY'
+              }
+              className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border-0 p-0 outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-1"
+              style={{
+                width: 37,
+                height: 37,
+                backgroundColor: 'rgba(0,0,0,0.07)',
+              }}
+            >
+              <span
+                className={`font-[family-name:var(--font-soehne)] text-[20px] leading-none ${
+                  p.currency === 'JPY' || p.currency === 'CNY' ? 'text-black' : 'text-black/20'
+                }`}
+              >
+                ¥
+              </span>
+            </button>
+            {/* INR */}
+            <button
+              type="button"
+              onClick={() => p.setCurrency('INR')}
+              aria-pressed={p.currency === 'INR'}
+              aria-label="INR"
+              className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border-0 p-0 outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-1"
+              style={{
+                width: 37,
+                height: 37,
+                backgroundColor: 'rgba(0,0,0,0.07)',
+              }}
+            >
+              <span
+                className={`font-[family-name:var(--font-soehne)] text-[20px] leading-none ${
+                  p.currency === 'INR' ? 'text-black' : 'text-black/20'
+                }`}
+              >
+                ₹
+              </span>
+            </button>
+          </div>
+
+          {/* 82px gap then big number + items */}
+          <div className="mt-[82px] flex w-full flex-col gap-[52px]">
             <FormRowMainOnly divider={false}>
               <div className="flex w-full min-w-0 items-center justify-between gap-4">
                 <span
@@ -323,63 +348,90 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
             </FormRowMainOnly>
 
             <div className="flex w-full flex-col items-stretch">
-              <FormRowMainOnly>
-                <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
-                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO}`}>Item</span>
-                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO}`}>Price</span>
-                  <span className={`min-w-0 ${ITEM_COL_HEADER_TYPO} whitespace-nowrap`}>Quantity</span>
-                  <span className="min-w-0" aria-hidden />
-                </div>
-              </FormRowMainOnly>
+              <div className="@max-[532px]:hidden">
+                <FormRowMainOnly>
+                  <div className={`${ITEMS_GRID} items-center`}>
+                    <span className={ITEM_COL_HEADER_TYPO}>Item</span>
+                    <span aria-hidden />
+                    <span className={ITEM_COL_HEADER_TYPO}>Price</span>
+                    <span className={`${ITEM_COL_HEADER_TYPO} pl-4 whitespace-nowrap`}>Qty</span>
+                    <span aria-hidden />
+                  </div>
+                </FormRowMainOnly>
+              </div>
 
-              {p.lineItems.map((row, idx) => {
-                const isPlaceholder =
-                  idx === p.lineItems.length - 1 && !row.description && row.price === 0
-                const emptyTint = 'text-[rgba(0,0,0,0.2)] placeholder:text-[rgba(0,0,0,0.2)]'
-                const op = isPlaceholder ? emptyTint : ''
-                const rowTypography = isPlaceholder
-                  ? `home-hero-list-col ${SOEHNE} not-italic`
-                  : `${SOEHNE} not-italic`
-                const priceInputValue =
-                  isPlaceholder && row.price === 0 ? '0' : row.price === 0 ? '' : String(row.price)
+              {p.lineItems.map((row) => {
+                const priceInputValue = row.price === 0 ? '' : String(row.price)
+                const descClass = row.description
+                  ? 'text-black placeholder:text-[rgba(0,0,0,0.3)]'
+                  : 'text-[rgba(0,0,0,0.3)] placeholder:text-[rgba(0,0,0,0.3)]'
+                const qtyInputValue = row.quantity === 1 ? '' : String(row.quantity)
                 return (
                   <FormRowMainOnly key={row.id}>
-                    <div
-                      className={`${ITEMS_GRID} min-h-[37px] items-start text-black ${ITEM_LINE_TYPO} ${rowTypography}`}
-                    >
-                      <ItemDescriptionTextarea
-                        value={row.description}
-                        onChange={(v) => p.updateLine(row.id, {description: v})}
-                        className={`min-w-0 w-full resize-none border-0 bg-transparent p-0 align-top break-words text-[20px] leading-[37px] outline-none ${op}`}
-                        placeholder="Item"
-                        aria-label="Item description"
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        className={`min-w-0 w-full border-0 bg-transparent p-0 text-[20px] leading-[37px] tabular-nums outline-none ${op}`}
-                        value={priceInputValue}
-                        onChange={(e) =>
-                          p.updateLine(row.id, {price: Number.parseFloat(e.target.value) || 0})
-                        }
-                        placeholder="0"
-                      />
-                      <input
-                        type="number"
-                        min={1}
-                        className={`min-w-0 w-full border-0 bg-transparent p-0 text-[20px] leading-[37px] tabular-nums outline-none ${op}`}
-                        value={row.quantity}
-                        onChange={(e) =>
-                          p.updateLine(row.id, {
-                            quantity: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
-                          })
-                        }
-                        placeholder="1"
-                      />
-                      <span className={`min-w-0 text-right text-[20px] leading-[37px] tabular-nums ${op}`}>
-                        {isPlaceholder
-                          ? formatMoneyCompact(0, p.currency)
-                          : formatMoney(row.price * row.quantity, p.currency)}
+                    <div className={`${ITEMS_GRID} items-start`}>
+                      <div className="min-w-0 overflow-hidden">
+                        <ItemDescriptionTextarea
+                          value={row.description}
+                          onChange={(v) => p.updateLine(row.id, {description: v})}
+                          className={`w-full resize-none border-0 bg-transparent p-0 align-top break-words ${ITEM_LINE_TYPO} ${SOEHNE} not-italic outline-none ${descClass}`}
+                          placeholder="Item"
+                          aria-label="Item description"
+                        />
+                      </div>
+                      <span aria-hidden />
+                      <div className="min-w-0 w-full">
+                        {/* Wide: no arrows, "0" placeholder */}
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className={`min-w-0 w-full border-0 bg-transparent p-0 @max-[532px]:hidden ${ITEM_LINE_TYPO} ${SOEHNE} not-italic tabular-nums text-black outline-none placeholder:text-black`}
+                          value={priceInputValue}
+                          onChange={(e) =>
+                            p.updateLine(row.id, {price: Number.parseFloat(e.target.value) || 0})
+                          }
+                          placeholder="0"
+                        />
+                        {/* Narrow: no arrows, "Price" placeholder */}
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className={`hidden min-w-0 w-full border-0 bg-transparent p-0 @max-[532px]:block ${ITEM_LINE_TYPO} ${SOEHNE} not-italic tabular-nums text-black outline-none placeholder:text-[rgba(0,0,0,0.3)]`}
+                          value={priceInputValue}
+                          onChange={(e) =>
+                            p.updateLine(row.id, {price: Number.parseFloat(e.target.value) || 0})
+                          }
+                          placeholder="Price"
+                        />
+                      </div>
+                      <div className="min-w-0 w-full pl-4 @max-[532px]:pl-0">
+                        {/* Wide: arrows work because value is always the real number */}
+                        <input
+                          type="number"
+                          min={1}
+                          className={`min-w-0 w-full border-0 bg-transparent p-0 @max-[532px]:hidden ${ITEM_LINE_TYPO} ${SOEHNE} not-italic tabular-nums text-black outline-none placeholder:text-black`}
+                          value={row.quantity}
+                          onChange={(e) =>
+                            p.updateLine(row.id, {
+                              quantity: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
+                            })
+                          }
+                        />
+                        {/* Narrow: "Quantity" placeholder when default */}
+                        <input
+                          type="number"
+                          min={1}
+                          className={`hidden min-w-0 w-full border-0 bg-transparent p-0 @max-[532px]:block ${ITEM_LINE_TYPO} ${SOEHNE} not-italic tabular-nums text-black outline-none placeholder:text-[rgba(0,0,0,0.3)]`}
+                          value={qtyInputValue}
+                          onChange={(e) =>
+                            p.updateLine(row.id, {
+                              quantity: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
+                            })
+                          }
+                          placeholder="Quantity"
+                        />
+                      </div>
+                      <span className={`w-full pl-4 @max-[532px]:pl-0 whitespace-nowrap text-right ${ITEM_LINE_TYPO} ${SOEHNE} not-italic tabular-nums text-black`}>
+                        {formatMoney(row.price * row.quantity, p.currency)}
                       </span>
                     </div>
                   </FormRowMainOnly>
@@ -390,19 +442,21 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 <div className="flex w-full flex-col">
                   <div className="flex w-full flex-col gap-[6px] pt-[44px]">
                     <FormRowMainOnly>
-                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
-                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Subtotal</span>
-                        <span className="min-w-0 @max-[532px]:hidden" aria-hidden />
-                        <span className="min-w-0 @max-[532px]:hidden" aria-hidden />
-                        <span className={`min-w-0 text-right ${ITEM_LINE_TYPO} text-black tabular-nums`}>
+                      <div className={`${ITEMS_GRID} items-center`}>
+                        <span className={`${ITEM_LINE_TYPO} text-black`}>Subtotal</span>
+                        <span aria-hidden />
+                        <span aria-hidden />
+                        <span aria-hidden />
+                        <span className={`w-full pl-4 @max-[532px]:pl-0 whitespace-nowrap text-right ${ITEM_LINE_TYPO} text-black tabular-nums`}>
                           {formatMoney(p.subtotal, p.currency)}
                         </span>
                       </div>
                     </FormRowMainOnly>
                     <FormRowMainOnly>
-                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
-                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Tax</span>
-                        <div className={`flex min-w-0 items-center gap-2 ${ITEM_LINE_TYPO}`}>
+                      <div className={`${ITEMS_GRID} items-center`}>
+                        <span className={`${ITEM_LINE_TYPO} text-black`}>Tax</span>
+                        <span aria-hidden />
+                        <div className={`flex items-center gap-2 ${ITEM_LINE_TYPO}`}>
                           <input
                             type="number"
                             min={0}
@@ -422,16 +476,17 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                             %
                           </span>
                         </div>
-                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
-                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
+                        <span aria-hidden />
+                        <span aria-hidden />
                       </div>
                     </FormRowMainOnly>
                   </div>
                   <div className="pt-[44px]">
                     <FormRowMainOnly>
-                      <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
-                        <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Discount</span>
-                        <div className={`flex min-w-0 items-center gap-2 ${ITEM_LINE_TYPO} text-black`}>
+                      <div className={`${ITEMS_GRID} items-center`}>
+                        <span className={`${ITEM_LINE_TYPO} text-black`}>Discount</span>
+                        <span aria-hidden />
+                        <div className={`flex items-center gap-2 ${ITEM_LINE_TYPO} text-black`}>
                           <input
                             type="number"
                             min={0}
@@ -443,10 +498,8 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                           />
                           <span className="font-[family-name:var(--font-soehne)]">%</span>
                         </div>
-                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
-                        <span
-                          className={`min-w-0 text-right text-[rgba(0,0,0,0.1)] tabular-nums ${ITEM_LINE_TYPO}`}
-                        >
+                        <span aria-hidden />
+                        <span className={`w-full pl-4 @max-[532px]:pl-0 whitespace-nowrap text-right text-[rgba(0,0,0,0.1)] tabular-nums ${ITEM_LINE_TYPO}`}>
                           {p.discountPercent > 0 && p.discountAmount > 0
                             ? `- ${formatMoneyCompact(p.discountAmount, p.currency)}`
                             : null}
@@ -486,73 +539,13 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
           </div>
         </div>
 
-        <div className="flex w-full flex-col items-stretch">
-          <LabeledInputRow label="Account holder name">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.accountHolderName}
-              onChange={(e) => p.setBankDetails({accountHolderName: e.target.value})}
-              placeholder="Legal name on the account"
-              aria-label="Account holder name"
-            />
-          </LabeledInputRow>
-          <LabeledInputRow label="Bank name">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.bankName}
-              onChange={(e) => p.setBankDetails({bankName: e.target.value})}
-              placeholder="e.g. Barclays, Chase, Monzo"
-              aria-label="Bank name"
-            />
-          </LabeledInputRow>
-          <LabeledInputRow label="Bank address">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.bankAddress}
-              onChange={(e) => p.setBankDetails({bankAddress: e.target.value})}
-              placeholder="City and country, or full address"
-              aria-label="Bank address"
-            />
-          </LabeledInputRow>
-          <LabeledInputRow label="Account number">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.accountNumber}
-              onChange={(e) => p.setBankDetails({accountNumber: e.target.value})}
-              placeholder="Account number"
-              aria-label="Account number"
-            />
-          </LabeledInputRow>
-          {domesticBank ? (
-            <LabeledInputRow label={domesticBank.label}>
-              <input
-                className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-                value={domesticBank.value}
-                onChange={(e) => domesticBank.onChange(e.target.value)}
-                placeholder={domesticBank.label}
-                aria-label={domesticBank.label}
-              />
-            </LabeledInputRow>
-          ) : null}
-          <LabeledInputRow label="IBAN">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.iban}
-              onChange={(e) => p.setBankDetails({iban: e.target.value})}
-              placeholder="IBAN (international)"
-              aria-label="IBAN"
-            />
-          </LabeledInputRow>
-          <LabeledInputRow label="SWIFT / BIC">
-            <input
-              className="min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]"
-              value={p.bankDetails.bic}
-              onChange={(e) => p.setBankDetails({bic: e.target.value})}
-              placeholder="SWIFT / BIC"
-              aria-label="SWIFT or BIC"
-            />
-          </LabeledInputRow>
-        </div>
+        <BankDetailsStack
+          bankDetails={p.bankDetails}
+          setBankDetails={p.setBankDetails}
+          expanded={p.bankDetailsExpanded}
+          onToggle={() => p.setBankDetailsExpanded(!p.bankDetailsExpanded)}
+          domesticBank={domesticBank}
+        />
 
         <NoteFieldSection note={p.note} setNote={p.setNote} />
 
@@ -591,8 +584,9 @@ function NoteFieldSection({
   return (
     <div className="flex w-full flex-col items-stretch">
       <FormRow
+        hideLabelOnNarrow
         primary={
-          <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
+          <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/30' : 'text-black'}`}>
             Note
           </span>
         }
@@ -679,6 +673,138 @@ function ContactStack({
   )
 }
 
+type DomesticBankInput = ReturnType<typeof domesticBankInputForCurrency>
+
+function BankDetailsStack({
+  bankDetails,
+  setBankDetails,
+  expanded,
+  onToggle,
+  domesticBank,
+}: {
+  bankDetails: InvoiceBankDetails
+  setBankDetails: (p: Partial<InvoiceBankDetails>) => void
+  expanded: boolean
+  onToggle: () => void
+  domesticBank: DomesticBankInput
+}) {
+  const hasAny =
+    bankDetails.bankName.trim() ||
+    bankDetails.accountHolderName.trim() ||
+    bankDetails.accountNumber.trim() ||
+    bankDetails.iban.trim() ||
+    bankDetails.bic.trim() ||
+    bankDetails.bankAddress.trim()
+
+  const inputClass =
+    'min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none placeholder:text-[rgba(0,0,0,0.1)]'
+
+  return (
+    <div className="flex w-full flex-col items-stretch">
+      <FormRow
+        primary={
+          <span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>Bank details</span>
+        }
+        secondary={
+          !expanded ? (
+            hasAny ? (
+              <span className="truncate whitespace-nowrap font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+                {bankDetails.bankName.trim() || bankDetails.accountHolderName.trim()}
+              </span>
+            ) : (
+              <span className="whitespace-nowrap font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic text-[rgba(0,0,0,0.1)]">
+                Add bank details
+              </span>
+            )
+          ) : (
+            <span className="min-w-0" />
+          )
+        }
+        trailing={
+          <button
+            type="button"
+            className="size-6 shrink-0 text-black"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            aria-label="Toggle bank details"
+          >
+            {expanded ? <MinusIcon /> : <PlusIcon />}
+          </button>
+        }
+      />
+      {expanded ? (
+        <div className="w-full">
+          <LabeledInputRow label="Acc holder name">
+            <input
+              className={inputClass}
+              value={bankDetails.accountHolderName}
+              onChange={(e) => setBankDetails({accountHolderName: e.target.value})}
+              placeholder="Legal name"
+              aria-label="Account holder name"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Bank name">
+            <input
+              className={inputClass}
+              value={bankDetails.bankName}
+              onChange={(e) => setBankDetails({bankName: e.target.value})}
+              placeholder="Bank name"
+              aria-label="Bank name"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Bank address">
+            <input
+              className={inputClass}
+              value={bankDetails.bankAddress}
+              onChange={(e) => setBankDetails({bankAddress: e.target.value})}
+              placeholder="Full address"
+              aria-label="Bank address"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="Account number">
+            <input
+              className={inputClass}
+              value={bankDetails.accountNumber}
+              onChange={(e) => setBankDetails({accountNumber: e.target.value})}
+              placeholder="Account number"
+              aria-label="Account number"
+            />
+          </LabeledInputRow>
+          {domesticBank ? (
+            <LabeledInputRow label={domesticBank.label}>
+              <input
+                className={inputClass}
+                value={domesticBank.value}
+                onChange={(e) => domesticBank.onChange(e.target.value)}
+                placeholder={domesticBank.label}
+                aria-label={domesticBank.label}
+              />
+            </LabeledInputRow>
+          ) : null}
+          <LabeledInputRow label="IBAN">
+            <input
+              className={inputClass}
+              value={bankDetails.iban}
+              onChange={(e) => setBankDetails({iban: e.target.value})}
+              placeholder="IBAN (international)"
+              aria-label="IBAN"
+            />
+          </LabeledInputRow>
+          <LabeledInputRow label="SWIFT / BIC">
+            <input
+              className={inputClass}
+              value={bankDetails.bic}
+              onChange={(e) => setBankDetails({bic: e.target.value})}
+              placeholder="SWIFT / BIC"
+              aria-label="SWIFT or BIC"
+            />
+          </LabeledInputRow>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function ContactFields({
   contact,
   setContact,
@@ -728,29 +854,35 @@ function LabeledDateRow({
   emptyDisplay?: string
 }) {
   const [focused, setFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const visible =
     iso ? formatDateSlashes(iso) : (emptyDisplay ?? formatDateSlashes(iso))
   const muted = !iso
   const labelInactive = !iso && !focused
   return (
     <FormRow
+      hideLabelOnNarrow
       primary={
-        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
+        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/30' : 'text-black'}`}>
           {label}
         </span>
       }
       secondary={
-        <div className="relative min-h-[37px] w-full min-w-0">
+        <div
+          className="relative min-h-[37px] w-full min-w-0 cursor-pointer"
+          onClick={() => inputRef.current?.showPicker()}
+        >
           <span
-            className={`pointer-events-none absolute right-0 top-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] whitespace-nowrap tabular-nums ${
+            className={`pointer-events-none font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] whitespace-nowrap tabular-nums ${
               muted ? 'text-[rgba(0,0,0,0.1)]' : 'text-black'
             }`}
           >
             {visible}
           </span>
           <input
+            ref={inputRef}
             type="date"
-            className="absolute inset-0 h-full w-full cursor-pointer border-0 bg-transparent p-0 opacity-0 outline-none"
+            className="sr-only"
             value={iso}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -767,17 +899,21 @@ function FormRow({
   primary,
   secondary,
   trailing,
+  hideLabelOnNarrow = false,
 }: {
   primary: ReactNode
   secondary: ReactNode
   trailing?: ReactNode
+  /** When true, the label col is hidden on narrow (≤532px) screens — input placeholder acts as label. */
+  hideLabelOnNarrow?: boolean
 }) {
   return (
     <div className="flex w-full min-w-0 flex-col gap-1 pt-1">
       <div className={editorGridClass}>
-        <div className="min-w-0 break-words">{primary}</div>
+        <div className={`min-w-0 break-words ${hideLabelOnNarrow ? '@max-[532px]:hidden' : ''}`}>{primary}</div>
         <div className="min-w-[24px] max-w-[24px] @max-[532px]:hidden" aria-hidden />
-        <div className="flex min-w-0 w-full items-center justify-between gap-3">
+        {/* col-span-3 spans the Price+Qty+Total columns so form values align with Price start */}
+        <div className="col-span-3 flex min-w-0 w-full items-center justify-between gap-3 @max-[532px]:col-span-1">
           <div className="min-w-0 flex-1">{secondary}</div>
           {trailing ?? null}
         </div>
@@ -818,6 +954,7 @@ function LabeledInputRow({label, children}: {label: string; children: ReactNode}
   if (!isValidElement(children)) {
     return (
       <FormRow
+        hideLabelOnNarrow
         primary={<span className={`${ROW_LABEL_CLASS} text-black`}>{label}</span>}
         secondary={<div className="flex min-w-0 w-full items-center">{children}</div>}
       />
@@ -843,8 +980,9 @@ function LabeledInputRow({label, children}: {label: string; children: ReactNode}
 
   return (
     <FormRow
+      hideLabelOnNarrow
       primary={
-        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
+        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/30' : 'text-black'}`}>
           {label}
         </span>
       }
@@ -893,7 +1031,7 @@ function ItemDescriptionTextarea({
 }
 
 function RowDivider() {
-  return <div className="h-px w-full shrink-0" style={{backgroundColor: 'rgba(0,0,0,0.12)'}} />
+  return <div className="h-px w-full shrink-0" style={{backgroundColor: 'rgba(0,0,0,0.06)'}} />
 }
 
 function PlusIcon() {

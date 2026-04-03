@@ -1,6 +1,14 @@
 'use client'
 
-import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type TransitionEvent,
+} from 'react'
 import {InvoiceEditor, type EditorLineItem} from '@/components/tools/invoice/InvoiceEditor'
 import {
   InvoicePreview,
@@ -21,6 +29,17 @@ function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+const PREVIEW_FLIP_MS = 380
+const PREVIEW_FLIP_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
+type PreviewFsPhase =
+  | 'inline'
+  | 'expandSnap'
+  | 'expandRun'
+  | 'expanded'
+  | 'collapseSnap'
+  | 'collapseRun'
+
 export function InvoiceTool() {
   const [exporting, setExporting] = useState(false)
   /** Only use a scroll container when scaled preview still exceeds viewport (e.g. rounding). */
@@ -29,8 +48,9 @@ export function InvoiceTool() {
   const [previewScale, setPreviewScale] = useState(1)
   const previewMeasureRef = useRef<HTMLDivElement>(null)
 
-  const [fromAExpanded, setFromAExpanded] = useState(false)
-  const [billedExpanded, setBilledExpanded] = useState(false)
+  const [fromAExpanded, setFromAExpanded] = useState(true)
+  const [billedExpanded, setBilledExpanded] = useState(true)
+  const [bankDetailsExpanded, setBankDetailsExpanded] = useState(false)
 
   const emptyContact = (): ContactForm => ({
     name: '',
@@ -61,6 +81,16 @@ export function InvoiceTool() {
   const [taxPercent, setTaxPercent] = useState(0)
   const [note, setNote] = useState('')
   const [paperBackground, setPaperBackground] = useState(DEFAULT_INVOICE_PAPER_HEX)
+  const [previewFsPhase, setPreviewFsPhase] = useState<PreviewFsPhase>('inline')
+  const [fullVw, setFullVw] = useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth : INVOICE_PREVIEW_WIDTH_PX),
+  )
+  const openRectRef = useRef<DOMRect | null>(null)
+  const closeRectRef = useRef<DOMRect | null>(null)
+  const previewClipRef = useRef<HTMLDivElement>(null)
+  const placeholderRef = useRef<HTMLDivElement>(null)
+
+  const previewFsOpen = previewFsPhase !== 'inline'
 
   const setFromA = useCallback((p: Partial<ContactForm>) => {
     setFromAState((s) => ({...s, ...p}))
@@ -137,6 +167,120 @@ export function InvoiceTool() {
     if (!raw) return []
     return raw.split('\n').filter(Boolean)
   }, [note])
+
+  const invoicePreviewProps = useMemo(
+    () => ({
+      fromLines: previewLinesFrom,
+      billedLines: previewLinesBilled,
+      invoiceDateIso: issueDate,
+      invoiceNo,
+      dueDateIso: dueDate,
+      vatId,
+      lineItems: previewLineItems,
+      currency,
+      discountPercent,
+      taxPercent,
+      displayTotal: computedFinal,
+      bankDetails,
+      noteLines,
+      paperBackground,
+    }),
+    [
+      bankDetails,
+      computedFinal,
+      currency,
+      discountPercent,
+      dueDate,
+      invoiceNo,
+      issueDate,
+      noteLines,
+      paperBackground,
+      previewLineItems,
+      previewLinesBilled,
+      previewLinesFrom,
+      taxPercent,
+      vatId,
+    ],
+  )
+
+  useEffect(() => {
+    if (!previewFsOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [previewFsOpen])
+
+  useLayoutEffect(() => {
+    if (previewFsPhase !== 'expandSnap') return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setPreviewFsPhase('expandRun'))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [previewFsPhase])
+
+  useLayoutEffect(() => {
+    if (previewFsPhase !== 'collapseSnap') return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setPreviewFsPhase('collapseRun'))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [previewFsPhase])
+
+  useEffect(() => {
+    if (previewFsPhase !== 'expanded' && previewFsPhase !== 'expandRun') return
+    const onResize = () => setFullVw(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [previewFsPhase])
+
+  const openPreviewFs = useCallback(() => {
+    const el = previewClipRef.current
+    if (!el) return
+    openRectRef.current = el.getBoundingClientRect()
+    setFullVw(window.innerWidth)
+    closeRectRef.current = null
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setPreviewFsPhase('expanded')
+      return
+    }
+    setPreviewFsPhase('expandSnap')
+  }, [])
+
+  const closePreviewFs = useCallback(() => {
+    if (previewFsPhase !== 'expanded') return
+    const ph = placeholderRef.current?.getBoundingClientRect()
+    closeRectRef.current = ph ?? openRectRef.current
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setPreviewFsPhase('inline')
+      return
+    }
+    setPreviewFsPhase('collapseSnap')
+  }, [previewFsPhase])
+
+  const onPreviewFsTransitionEnd = useCallback((e: TransitionEvent<HTMLDivElement>) => {
+    if (e.propertyName !== 'transform' || e.target !== e.currentTarget) return
+    setPreviewFsPhase((p) => {
+      if (p === 'expandRun') return 'expanded'
+      if (p === 'collapseRun') return 'inline'
+      return p
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!previewFsOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && previewFsPhase === 'expanded') {
+        e.preventDefault()
+        closePreviewFs()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [previewFsOpen, previewFsPhase, closePreviewFs])
 
   function updateLine(id: string, p: Partial<EditorLineItem>) {
     setLineItems((rows) =>
@@ -219,6 +363,87 @@ export function InvoiceTool() {
     vatId,
   ])
 
+  const clipW = INVOICE_PREVIEW_WIDTH_PX * previewScale
+  const clipH = INVOICE_PREVIEW_HEIGHT_PX * previewScale
+
+  const previewMotion = useMemo(() => {
+    const openR = openRectRef.current
+    const closeR = closeRectRef.current
+    const sFull = fullVw / INVOICE_PREVIEW_WIDTH_PX
+
+    if (previewFsPhase === 'inline') {
+      return {
+        position: 'absolute' as const,
+        top: 0,
+        left: 0,
+        width: INVOICE_PREVIEW_WIDTH_PX,
+        height: INVOICE_PREVIEW_HEIGHT_PX,
+        transform: `scale(${previewScale})`,
+        transformOrigin: 'top left' as const,
+        transition: undefined as string | undefined,
+        zIndex: undefined as number | undefined,
+      }
+    }
+
+    const sOpen = openR ? openR.width / INVOICE_PREVIEW_WIDTH_PX : previewScale
+
+    if (previewFsPhase === 'expandSnap') {
+      return {
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        width: INVOICE_PREVIEW_WIDTH_PX,
+        height: INVOICE_PREVIEW_HEIGHT_PX,
+        transform: `translate(${openR?.left ?? 0}px, ${openR?.top ?? 0}px) scale(${sOpen})`,
+        transformOrigin: 'top left' as const,
+        transition: undefined as string | undefined,
+        zIndex: 200,
+      }
+    }
+
+    if (previewFsPhase === 'expandRun') {
+      return {
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        width: INVOICE_PREVIEW_WIDTH_PX,
+        height: INVOICE_PREVIEW_HEIGHT_PX,
+        transform: `translate(0px, 0px) scale(${sFull})`,
+        transformOrigin: 'top left' as const,
+        transition: `transform ${PREVIEW_FLIP_MS}ms ${PREVIEW_FLIP_EASE}`,
+        zIndex: 200,
+      }
+    }
+
+    // collapseSnap: appear at fullscreen position instantly (no transition), then collapseRun animates it away
+    if (previewFsPhase === 'collapseSnap') {
+      return {
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        width: INVOICE_PREVIEW_WIDTH_PX,
+        height: INVOICE_PREVIEW_HEIGHT_PX,
+        transform: `translate(0px, 0px) scale(${sFull})`,
+        transformOrigin: 'top left' as const,
+        transition: undefined as string | undefined,
+        zIndex: 200,
+      }
+    }
+
+    const sClose = closeR ? closeR.width / INVOICE_PREVIEW_WIDTH_PX : previewScale
+    return {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      width: INVOICE_PREVIEW_WIDTH_PX,
+      height: INVOICE_PREVIEW_HEIGHT_PX,
+      transform: `translate(${closeR?.left ?? 0}px, ${closeR?.top ?? 0}px) scale(${sClose})`,
+      transformOrigin: 'top left' as const,
+      transition: `transform ${PREVIEW_FLIP_MS}ms ${PREVIEW_FLIP_EASE}`,
+      zIndex: 200,
+    }
+  }, [previewFsPhase, fullVw, previewScale])
+
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="mx-auto flex min-w-0 w-full flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
@@ -230,40 +455,94 @@ export function InvoiceTool() {
           }
         >
           <div
-            ref={previewMeasureRef}
-            className="flex w-full max-w-[641px] shrink-0 justify-start"
+            role="button"
+            tabIndex={0}
+            aria-label={
+              previewFsPhase === 'expanded'
+                ? 'Close full screen invoice preview'
+                : 'View invoice full screen'
+            }
+            aria-expanded={previewFsOpen}
+            onClick={() => {
+              if (previewFsPhase === 'inline') openPreviewFs()
+            }}
+            onKeyDown={(e) => {
+              if (previewFsPhase === 'inline' && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                openPreviewFs()
+              }
+            }}
+            className={`rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-2 ${
+              previewFsPhase === 'inline' ? 'cursor-zoom-in' : 'cursor-default'
+            }`}
           >
             <div
-              className="relative shrink-0 overflow-hidden"
-              style={{
-                width: INVOICE_PREVIEW_WIDTH_PX * previewScale,
-                height: INVOICE_PREVIEW_HEIGHT_PX * previewScale,
-              }}
+              ref={previewMeasureRef}
+              className="flex w-full max-w-[641px] shrink-0 flex-col justify-start"
             >
+              {/* Placeholder holds the space while preview is out-of-flow */}
+              {previewFsOpen ? (
+                <div
+                  ref={placeholderRef}
+                  className="shrink-0"
+                  style={{width: clipW, height: clipH}}
+                  aria-hidden
+                />
+              ) : null}
+
+              {/* ── Scroll overlay: only during 'expanded' phase ── */}
+              {previewFsPhase === 'expanded' ? (
+                <div
+                  className="fixed inset-0 z-[200] cursor-zoom-out overflow-y-auto"
+                  style={{backgroundColor: paperBackground}}
+                  onClick={closePreviewFs}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Invoice full screen — click to close"
+                >
+                  {/* Sized to scaled height so the fixed container actually scrolls */}
+                  <div
+                    className="shrink-0"
+                    style={{
+                      width: fullVw,
+                      height: INVOICE_PREVIEW_HEIGHT_PX * (fullVw / INVOICE_PREVIEW_WIDTH_PX),
+                    }}
+                  >
+                    <div
+                      className="origin-top-left"
+                      style={{
+                        width: INVOICE_PREVIEW_WIDTH_PX,
+                        height: INVOICE_PREVIEW_HEIGHT_PX,
+                        transform: `scale(${fullVw / INVOICE_PREVIEW_WIDTH_PX})`,
+                      }}
+                    >
+                      <InvoicePreview {...invoicePreviewProps} />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* ── FLIP element: used for all animation phases + inline ── */}
               <div
-                className="pointer-events-auto absolute left-0 top-0 origin-top-left will-change-transform"
-                style={{
-                  width: INVOICE_PREVIEW_WIDTH_PX,
-                  height: INVOICE_PREVIEW_HEIGHT_PX,
-                  transform: `scale(${previewScale})`,
-                }}
+                ref={previewClipRef}
+                className={
+                  previewFsOpen
+                    ? 'pointer-events-none size-0 shrink-0 overflow-visible'
+                    : 'relative shrink-0 overflow-hidden'
+                }
+                style={previewFsOpen ? {width: 0, height: 0} : {width: clipW, height: clipH}}
               >
-              <InvoicePreview
-                fromLines={previewLinesFrom}
-                billedLines={previewLinesBilled}
-                invoiceDateIso={issueDate}
-                invoiceNo={invoiceNo}
-                dueDateIso={dueDate}
-                vatId={vatId}
-                lineItems={previewLineItems}
-                currency={currency}
-                discountPercent={discountPercent}
-                taxPercent={taxPercent}
-                displayTotal={computedFinal}
-                bankDetails={bankDetails}
-                noteLines={noteLines}
-                paperBackground={paperBackground}
-              />
+                {previewFsPhase !== 'expanded' ? (
+                  <div
+                    className={`pointer-events-auto origin-top-left will-change-transform ${
+                      previewFsPhase === 'inline' ? 'cursor-zoom-in' : 'cursor-default'
+                    }`}
+                    style={previewMotion}
+                    onTransitionEnd={onPreviewFsTransitionEnd}
+                  >
+                    <InvoicePreview {...invoicePreviewProps} />
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -301,6 +580,8 @@ export function InvoiceTool() {
           setVatId={setVatId}
           bankDetails={bankDetails}
           setBankDetails={setBankDetails}
+          bankDetailsExpanded={bankDetailsExpanded}
+          setBankDetailsExpanded={setBankDetailsExpanded}
           note={note}
           setNote={setNote}
           computedFinal={computedFinal}

@@ -64,8 +64,7 @@ export function InvoicePreview({
     const discountAmt = lineSubtotal * (discountPercent / 100)
     const afterDisc = lineSubtotal - discountAmt
     const taxAmt = afterDisc * (taxPercent / 100)
-    const totalBeforeDiscount = lineSubtotal + lineSubtotal * (taxPercent / 100)
-    const showPreDiscountTotal = discountAmt > 0
+
 
     const metaRows: {key: string; label: string; value: string}[] = []
     if (invoiceDateIso?.trim()) {
@@ -270,12 +269,6 @@ export function InvoicePreview({
                   <span className="w-[60px] shrink-0" aria-hidden />
                   <span className="w-[120px] shrink-0" aria-hidden />
                   <div className="flex w-[120px] min-w-0 shrink-0 flex-row items-center justify-end gap-[6px] tabular-nums">
-                    {showPreDiscountTotal ? (
-                      <StrikethroughAmount
-                        color={c.ink}
-                        text={formatMoneyCompact(totalBeforeDiscount, currency)}
-                      />
-                    ) : null}
                     <span className="shrink-0" style={{color: c.ink}}>
                       {formatMoneyCompact(displayTotal, currency)}
                     </span>
@@ -327,21 +320,6 @@ export function InvoicePreview({
   )
 }
 
-/** Manual strikethrough for on-screen preview (CSS line-through can look offset at small sizes). */
-function StrikethroughAmount({color, text}: {color: string; text: string}) {
-  return (
-    <span className="relative inline-block shrink-0 align-middle" style={{color}}>
-      <span className="relative z-[1]" style={{opacity: 0.4}}>
-        {text}
-      </span>
-      <span
-        className="pointer-events-none absolute left-0 right-0 top-1/2 z-[2] h-[1.5px] -translate-y-1/2"
-        style={{backgroundColor: color, opacity: 0.55}}
-        aria-hidden
-      />
-    </span>
-  )
-}
 
 function PreviewRow({label, lines}: {label: string; lines: string[]}) {
   return (
