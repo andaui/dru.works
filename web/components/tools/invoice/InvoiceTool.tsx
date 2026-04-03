@@ -34,6 +34,10 @@ function uid() {
 const PREVIEW_FLIP_MS = 380
 const PREVIEW_FLIP_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
+/** Below this width: form is full-width left; preview is a fixed bottom-right thumb. */
+const INVOICE_LAYOUT_WIDE_MIN_PX = 1084
+const NARROW_PREVIEW_THUMB_W_PX = 130
+
 type PreviewFsPhase =
   | 'inline'
   | 'expandSnap'
@@ -199,6 +203,11 @@ export function InvoiceTool() {
     if (!el) return
 
     const update = () => {
+      if (window.innerWidth < INVOICE_LAYOUT_WIDE_MIN_PX) {
+        setPreviewScale(NARROW_PREVIEW_THUMB_W_PX / INVOICE_PREVIEW_WIDTH_PX)
+        setClipPreview(false)
+        return
+      }
       const w = el.getBoundingClientRect().width
       const available = window.innerHeight - topOffsetPx - bottomBreathingPx
       const sW = w > 0 ? Math.min(1, w / INVOICE_PREVIEW_WIDTH_PX) : 1
@@ -561,12 +570,12 @@ export function InvoiceTool() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <div className="mx-auto flex min-w-0 w-full flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
+      <div className="mx-auto flex min-w-0 w-full flex-col items-stretch justify-between gap-10 px-6 py-5 min-[1084px]:flex-row min-[1084px]:items-start min-[1084px]:gap-6">
         <div
           className={
             clipPreview
-              ? 'sticky top-6 z-10 max-h-[calc(100vh-3rem)] w-full max-w-[641px] shrink-0 self-start overflow-x-hidden overflow-y-auto'
-              : 'sticky top-6 z-10 w-full max-w-[641px] shrink-0 self-start overflow-visible'
+              ? 'z-10 w-full max-w-[641px] shrink-0 self-start overflow-x-hidden overflow-y-auto max-[1083px]:fixed max-[1083px]:bottom-4 max-[1083px]:right-4 max-[1083px]:z-50 max-[1083px]:w-[130px] max-[1083px]:max-w-[130px] max-[1083px]:max-h-none max-[1083px]:overflow-visible min-[1084px]:sticky min-[1084px]:top-6 min-[1084px]:max-h-[calc(100vh-3rem)]'
+              : 'z-10 w-full max-w-[641px] shrink-0 self-start overflow-visible max-[1083px]:fixed max-[1083px]:bottom-4 max-[1083px]:right-4 max-[1083px]:z-50 max-[1083px]:w-[130px] max-[1083px]:max-w-[130px] min-[1084px]:sticky min-[1084px]:top-6'
           }
         >
           <div
@@ -587,13 +596,13 @@ export function InvoiceTool() {
                 openPreviewFs()
               }
             }}
-            className={`rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-2 ${
+            className={`rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-2 max-[1083px]:shadow-lg max-[1083px]:ring-1 max-[1083px]:ring-black/10 min-[1084px]:shadow-none min-[1084px]:ring-0 ${
               previewFsPhase === 'inline' ? 'cursor-zoom-in' : 'cursor-default'
             }`}
           >
             <div
               ref={previewMeasureRef}
-              className="flex w-full max-w-[641px] shrink-0 flex-col justify-start"
+              className="flex w-full shrink-0 flex-col justify-start max-[1083px]:w-[130px] min-[1084px]:max-w-[641px]"
             >
               {/* Placeholder holds the space while preview is out-of-flow */}
               {previewFsOpen ? (
@@ -663,7 +672,7 @@ export function InvoiceTool() {
           </div>
         </div>
 
-        <div className="min-w-0 w-full flex-1 lg:min-w-0">
+        <div className="min-w-0 w-full flex-1 min-[1084px]:min-w-0 max-[1083px]:pb-52">
         <InvoiceEditor
           fromA={fromA}
           setFromA={setFromA}

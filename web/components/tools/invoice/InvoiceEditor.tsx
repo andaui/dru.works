@@ -168,7 +168,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
   const domesticBank = domesticBankInputForCurrency(p.currency, p.bankDetails, p.setBankDetails)
 
   return (
-    <div className="@container ms-auto flex w-[min(100%,781px)] min-w-0 flex-col gap-[74px]">
+    <div className="@container flex w-[min(100%,781px)] min-w-0 flex-col gap-[74px] max-[1083px]:ms-0 min-[1084px]:ms-auto">
       <p className="self-end font-inter whitespace-nowrap text-[13px] font-normal leading-[19px] text-[#989898]">
         Dark
       </p>
