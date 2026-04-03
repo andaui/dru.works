@@ -86,8 +86,12 @@ export type InvoiceEditorProps = {
   setPaperBackground: (hex: string) => void
   previewTemplate: InvoicePreviewTemplate
   setPreviewTemplate: (t: InvoicePreviewTemplate) => void
-  /** Fills the form with shared example data (same for every template). */
-  onApplyExampleInvoice: () => void
+  /** True while example data is shown (second click on Example restores prior form state). */
+  exampleModeActive: boolean
+  /**
+   * Example column only: fill with shared example, or restore snapshot when clicking Example again on the selected template; switching template + example preserves snapshot.
+   */
+  onExampleClick: (template: InvoicePreviewTemplate) => void
 }
 
 const SOEHNE = "font-[family-name:var(--font-soehne)] tracking-[-0.25px] text-black"
@@ -197,7 +201,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
               ))}
             </div>
 
-            <div className="mt-[40px] flex w-full min-w-0 flex-col gap-2">
+            <div className="mt-[60px] flex w-full min-w-0 flex-col gap-2">
               <p className="m-0 font-[family-name:var(--font-soehne)] text-[24px] leading-tight tracking-[-0.25px] not-italic text-black/20">
                 Templates
               </p>
@@ -205,36 +209,44 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                 {INVOICE_TEMPLATE_ROWS.map((row) => {
                   const selected = p.previewTemplate === row.id
                   return (
-                    <button
-                      key={row.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => {
-                        p.setPreviewTemplate(row.id)
-                        p.onApplyExampleInvoice()
-                      }}
-                      className="flex min-h-[37px] w-full min-w-0 cursor-pointer items-center gap-2 border-b border-black/[0.08] bg-transparent py-0 text-left outline-none focus-visible:bg-black/[0.03]"
-                    >
-                      <span className={`shrink-0 ${SOEHNE} text-[24px] leading-[37px] not-italic`}>
-                        {row.label}
-                      </span>
-                      <span className="min-w-0 flex-1 text-center font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-[rgba(0,0,0,0.2)]">
-                        Example
-                      </span>
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                        {selected ? (
-                          <Image
-                            src="/select.svg"
-                            alt=""
-                            width={24}
-                            height={24}
-                            className="h-6 w-6"
-                            aria-hidden
-                          />
-                        ) : null}
-                      </span>
-                    </button>
+                    <div key={row.id} className={`${editorGridClass} min-h-[37px] border-b border-black/[0.08] py-0`}>
+                      <div className="min-w-0 break-words">
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => p.setPreviewTemplate(row.id)}
+                          className={`cursor-pointer border-0 bg-transparent p-0 text-left outline-none focus-visible:bg-black/[0.03] ${SOEHNE} text-[24px] leading-[37px] not-italic`}
+                        >
+                          {row.label}
+                        </button>
+                      </div>
+                      <div className="min-w-[24px] max-w-[24px] @max-[532px]:hidden" aria-hidden />
+                      <div className="col-span-3 flex min-w-0 w-full items-center justify-between gap-3 @max-[532px]:col-span-1">
+                        <button
+                          type="button"
+                          aria-label={`Example data for template ${row.label}`}
+                          onClick={() => p.onExampleClick(row.id)}
+                          className={`min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] outline-none focus-visible:bg-black/[0.03] ${
+                            selected && p.exampleModeActive ? 'text-black/50' : 'text-[rgba(0,0,0,0.2)]'
+                          }`}
+                        >
+                          Example
+                        </button>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                          {selected ? (
+                            <Image
+                              src="/select.svg"
+                              alt=""
+                              width={24}
+                              height={24}
+                              className="h-6 w-6"
+                              aria-hidden
+                            />
+                          ) : null}
+                        </span>
+                      </div>
+                    </div>
                   )
                 })}
               </div>

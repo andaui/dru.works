@@ -42,6 +42,26 @@ type PreviewFsPhase =
   | 'collapseSnap'
   | 'collapseRun'
 
+type InvoiceFormSnapshot = {
+  fromA: ContactForm
+  billed: ContactForm
+  invoiceNo: string
+  issueDate: string
+  dueDate: string
+  vatId: string
+  bankDetails: InvoiceBankDetails
+  currency: InvoiceCurrency
+  lineItems: EditorLineItem[]
+  discountPercent: number
+  taxPercent: number
+  note: string
+  fromAExpanded: boolean
+  billedExpanded: boolean
+  bankDetailsExpanded: boolean
+  paperBackground: string
+  previewTemplate: InvoicePreviewTemplate
+}
+
 export function InvoiceTool() {
   const [exporting, setExporting] = useState(false)
   /** Only use a scroll container when scaled preview still exceeds viewport (e.g. rounding). */
@@ -84,6 +104,12 @@ export function InvoiceTool() {
   const [note, setNote] = useState('')
   const [paperBackground, setPaperBackground] = useState(DEFAULT_INVOICE_PAPER_HEX)
   const [previewTemplate, setPreviewTemplate] = useState<InvoicePreviewTemplate>('classic')
+  /** Drives Example label at 50% black while example payload is showing. */
+  const [exampleModeActive, setExampleModeActive] = useState(false)
+
+  /** Full form snapshot while example is shown; restore on second click of Example on the selected template. */
+  const snapshotBeforeExampleRef = useRef<InvoiceFormSnapshot | null>(null)
+  const formStateRef = useRef<InvoiceFormSnapshot | null>(null)
   const [previewFsPhase, setPreviewFsPhase] = useState<PreviewFsPhase>('inline')
   const [fullVw, setFullVw] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth : INVOICE_PREVIEW_WIDTH_PX),
@@ -106,7 +132,7 @@ export function InvoiceTool() {
     setBankDetailsState((s) => ({...s, ...p}))
   }, [])
 
-  const applyExampleInvoiceDefaults = useCallback(() => {
+  const applyExamplePayload = useCallback(() => {
     const e = getExampleInvoicePayload()
     setFromAState(e.fromA)
     setBilledState(e.billed)
@@ -124,6 +150,47 @@ export function InvoiceTool() {
     setBilledExpanded(true)
     setBankDetailsExpanded(true)
   }, [])
+
+  const onExampleClick = useCallback(
+    (rowId: InvoicePreviewTemplate) => {
+      if (snapshotBeforeExampleRef.current !== null && previewTemplate === rowId) {
+        const s = snapshotBeforeExampleRef.current
+        snapshotBeforeExampleRef.current = null
+        setExampleModeActive(false)
+        setFromAState(s.fromA)
+        setBilledState(s.billed)
+        setInvoiceNo(s.invoiceNo)
+        setIssueDate(s.issueDate)
+        setDueDate(s.dueDate)
+        setVatId(s.vatId)
+        setBankDetailsState(s.bankDetails)
+        setCurrency(s.currency)
+        setDiscountPercent(s.discountPercent)
+        setTaxPercent(s.taxPercent)
+        setNote(s.note)
+        setLineItems(s.lineItems.map((r) => ({...r})))
+        setFromAExpanded(s.fromAExpanded)
+        setBilledExpanded(s.billedExpanded)
+        setBankDetailsExpanded(s.bankDetailsExpanded)
+        setPaperBackground(s.paperBackground)
+        setPreviewTemplate(s.previewTemplate)
+        return
+      }
+      if (previewTemplate === rowId && snapshotBeforeExampleRef.current === null) {
+        snapshotBeforeExampleRef.current = structuredClone(formStateRef.current!)
+        setExampleModeActive(true)
+        applyExamplePayload()
+        return
+      }
+      if (snapshotBeforeExampleRef.current === null) {
+        snapshotBeforeExampleRef.current = structuredClone(formStateRef.current!)
+        setExampleModeActive(true)
+      }
+      setPreviewTemplate(rowId)
+      applyExamplePayload()
+    },
+    [previewTemplate, applyExamplePayload],
+  )
 
   useLayoutEffect(() => {
     const topOffsetPx = 24 // matches sticky `top-6`
@@ -472,6 +539,26 @@ export function InvoiceTool() {
     }
   }, [previewFsPhase, fullVw, previewScale])
 
+  formStateRef.current = {
+    fromA,
+    billed,
+    invoiceNo,
+    issueDate,
+    dueDate,
+    vatId,
+    bankDetails,
+    currency,
+    lineItems,
+    discountPercent,
+    taxPercent,
+    note,
+    fromAExpanded,
+    billedExpanded,
+    bankDetailsExpanded,
+    paperBackground,
+    previewTemplate,
+  }
+
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="mx-auto flex min-w-0 w-full flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
@@ -619,7 +706,8 @@ export function InvoiceTool() {
           setPaperBackground={setPaperBackground}
           previewTemplate={previewTemplate}
           setPreviewTemplate={setPreviewTemplate}
-          onApplyExampleInvoice={applyExampleInvoiceDefaults}
+          exampleModeActive={exampleModeActive}
+          onExampleClick={onExampleClick}
         />
         </div>
       </div>
