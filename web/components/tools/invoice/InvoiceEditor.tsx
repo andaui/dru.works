@@ -1,7 +1,15 @@
 'use client'
 
-import type {ReactNode} from 'react'
-import {useLayoutEffect, useRef} from 'react'
+import {
+  cloneElement,
+  isValidElement,
+  type FocusEvent,
+  type ReactElement,
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import type {InvoiceCurrency} from '@/lib/invoiceFormat'
 import {
   dueDatePlaceholderDisplay,
@@ -17,6 +25,11 @@ import {
   contactHasAnyValue,
   contactToPreviewLines,
 } from '@/lib/invoiceContact'
+import {
+  INVOICE_PAPER_SWATCHES,
+  INVOICE_PAPER_SWATCH_GAP_PX,
+  INVOICE_PAPER_SWATCH_SIZE_PX,
+} from '@/lib/invoicePaperSwatches'
 
 export type {ContactForm} from '@/lib/invoiceContact'
 
@@ -65,15 +78,25 @@ export type InvoiceEditorProps = {
   computedFinal: number
   exporting: boolean
   onDownloadPdf: () => void
+  paperBackground: string
+  setPaperBackground: (hex: string) => void
 }
 
 const SOEHNE = "font-[family-name:var(--font-soehne)] tracking-[-0.25px] text-black"
-/** Panel grid: label | gutter | main — first column matches item description (283px). */
-const EDITOR_GRID =
-  'grid w-full grid-cols-[minmax(0,283px)_24px_minmax(0,1fr)] items-center gap-x-0'
-/** Item / price / qty / line total — lives in column 3; widths sum with gap-4 to match main column at max width. */
+
+/** Form row label — matches inactive currency when field empty and not focused. */
+const ROW_LABEL_CLASS =
+  'font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic tracking-[-0.25px]'
+
+/**
+ * Label | 24px | inputs (wide). Narrow container (532px): single column, label on top.
+ * Breakpoint is `@max-[532px]:*` — literal class names so Tailwind can scan them.
+ */
+const editorGridClass =
+  'grid w-full min-w-0 grid-cols-[minmax(0,283px)_24px_minmax(0,1fr)] items-center gap-x-0 @max-[532px]:grid-cols-1 @max-[532px]:items-start @max-[532px]:gap-y-2'
+/** Item row grid — stacks to one column inside narrow `@container` (same 532px as form rows). */
 const ITEMS_GRID =
-  'grid w-full grid-cols-[minmax(0,283px)_minmax(0,150px)_minmax(0,90px)_minmax(0,1fr)] gap-4'
+  'grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,150px)_minmax(72px,90px)_minmax(0,1fr)] gap-2 sm:gap-4 @max-[532px]:grid-cols-1 @max-[532px]:gap-y-2'
 
 /** Item grid + summary lines — 37px line box matches Invoice no. / date rows. */
 const ITEM_LINE_TYPO =
@@ -123,13 +146,39 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
   const domesticBank = domesticBankInputForCurrency(p.currency, p.bankDetails, p.setBankDetails)
 
   return (
-    <div className="flex w-full max-w-[781px] shrink-0 flex-col items-end gap-[61px]">
-      <p className="font-inter whitespace-nowrap text-[13px] font-normal leading-[19px] text-[#989898]">
+    <div className="@container ms-auto flex w-[min(100%,781px)] min-w-0 flex-col gap-[74px]">
+      <p className="self-end font-inter whitespace-nowrap text-[13px] font-normal leading-[19px] text-[#989898]">
         Dark
       </p>
 
-      <div className="flex w-full flex-col items-stretch gap-[40px]">
-        <div className="flex w-full flex-col items-start gap-[52px]">
+      <div className="flex w-full min-w-0 flex-col items-stretch gap-[40px]">
+        <div className="flex w-full min-w-0 flex-col items-start gap-[52px]">
+          <div className="flex w-full flex-col items-start">
+            <h2 className="m-0 p-0 font-[family-name:var(--font-soehne)] text-[77px] font-normal leading-[1.23] tracking-[-0.22px] text-black">
+              Invoice
+            </h2>
+            <div
+              className="mt-[74px] flex flex-row flex-wrap items-center"
+              style={{gap: `${INVOICE_PAPER_SWATCH_GAP_PX}px`}}
+            >
+              {INVOICE_PAPER_SWATCHES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  aria-label={s.label}
+                  onClick={() => p.setPaperBackground(s.hex)}
+                  className={`shrink-0 cursor-pointer rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-black/25 focus-visible:ring-offset-2 ${
+                    s.id === 'white' ? 'border border-black/[0.08]' : 'border-0'
+                  }`}
+                  style={{
+                    width: `${INVOICE_PAPER_SWATCH_SIZE_PX}px`,
+                    height: `${INVOICE_PAPER_SWATCH_SIZE_PX}px`,
+                    backgroundColor: s.hex,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
           <ContactStack
             title="From"
             emptyHint="Add your details"
@@ -256,13 +305,13 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
 
           <div className="flex w-full flex-col gap-[52px]">
             <FormRowMainOnly divider={false}>
-              <div className="flex w-full items-center justify-between gap-4">
+              <div className="flex w-full min-w-0 items-center justify-between gap-4">
                 <span
-                  className={`min-h-0 min-w-0 font-[family-name:var(--font-soehne)] text-[125px] leading-[100px] tracking-[-0.25px] text-black not-italic`}
+                  className={`min-h-0 min-w-0 font-[family-name:var(--font-soehne)] text-[clamp(3rem,14vw,7.8125rem)] leading-[0.82] tracking-[-0.25px] text-black not-italic`}
                 >
                   {p.lineItems.length}
                 </span>
-                <div className="flex w-[118.625px] shrink-0 items-center justify-between">
+                <div className="flex w-[118.625px] max-w-[40%] shrink-0 items-center justify-between">
                   <button type="button" className="size-6 text-black" onClick={p.removeLastLine} aria-label="Remove line">
                     <MinusIcon />
                   </button>
@@ -343,8 +392,8 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                     <FormRowMainOnly>
                       <div className={`${ITEMS_GRID} min-h-[37px] items-center`}>
                         <span className={`min-w-0 ${ITEM_LINE_TYPO} text-black`}>Subtotal</span>
-                        <span className="min-w-0" aria-hidden />
-                        <span className="min-w-0" aria-hidden />
+                        <span className="min-w-0 @max-[532px]:hidden" aria-hidden />
+                        <span className="min-w-0 @max-[532px]:hidden" aria-hidden />
                         <span className={`min-w-0 text-right ${ITEM_LINE_TYPO} text-black tabular-nums`}>
                           {formatMoney(p.subtotal, p.currency)}
                         </span>
@@ -373,8 +422,8 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                             %
                           </span>
                         </div>
-                        <div className="min-w-0" aria-hidden />
-                        <div className="min-w-0" aria-hidden />
+                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
+                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
                       </div>
                     </FormRowMainOnly>
                   </div>
@@ -394,7 +443,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                           />
                           <span className="font-[family-name:var(--font-soehne)]">%</span>
                         </div>
-                        <div className="min-w-0" aria-hidden />
+                        <div className="min-w-0 @max-[532px]:hidden" aria-hidden />
                         <span
                           className={`min-w-0 text-right text-[rgba(0,0,0,0.1)] tabular-nums ${ITEM_LINE_TYPO}`}
                         >
@@ -505,31 +554,7 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
           </LabeledInputRow>
         </div>
 
-        <div className="flex w-full flex-col items-stretch">
-          <FormRow
-            primary={<span className={`${SOEHNE} text-[24px] leading-[37px] not-italic`}>Note</span>}
-            secondary={<span className="min-w-0" aria-hidden />}
-          />
-          <FormRowMainOnly>
-            <div className="flex w-full items-center">
-              <textarea
-                className="min-h-[37px] min-w-0 flex-1 resize-none border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none not-italic placeholder:text-[rgba(0,0,0,0.1)]"
-                placeholder="Add note"
-                value={p.note}
-                onChange={(e) => p.setNote(e.target.value)}
-                rows={2}
-                aria-label="Note"
-              />
-              <p className="shrink-0 whitespace-nowrap text-right opacity-20">
-                <span className="font-inter text-[16px] font-bold leading-[37px]">⇧</span>
-                <span className="font-inter text-[16px] font-normal leading-[37px]">
-                  {' '}
-                  + ↵ for fresh line
-                </span>
-              </p>
-            </div>
-          </FormRowMainOnly>
-        </div>
+        <NoteFieldSection note={p.note} setNote={p.setNote} />
 
         <div className="flex w-full flex-col items-stretch pt-[89px]">
           <FormRowMainOnly>
@@ -550,6 +575,50 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
           </FormRowMainOnly>
         </div>
       </div>
+    </div>
+  )
+}
+
+function NoteFieldSection({
+  note,
+  setNote,
+}: {
+  note: string
+  setNote: (v: string) => void
+}) {
+  const [focused, setFocused] = useState(false)
+  const labelInactive = !note.trim() && !focused
+  return (
+    <div className="flex w-full flex-col items-stretch">
+      <FormRow
+        primary={
+          <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
+            Note
+          </span>
+        }
+        secondary={<span className="min-w-0" aria-hidden />}
+      />
+      <FormRowMainOnly>
+        <div className="flex w-full min-w-0 flex-wrap items-start gap-x-2 gap-y-1 sm:flex-nowrap sm:items-center">
+          <textarea
+            className="min-h-[37px] min-w-0 flex-1 basis-[min(100%,20rem)] resize-none border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none not-italic placeholder:text-[rgba(0,0,0,0.1)] sm:basis-auto"
+            placeholder="Add note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            rows={2}
+            aria-label="Note"
+          />
+          <p className="max-w-full shrink-0 text-right text-xs opacity-20 sm:whitespace-nowrap">
+            <span className="font-inter text-[16px] font-bold leading-[37px]">⇧</span>
+            <span className="font-inter text-[16px] font-normal leading-[37px]">
+              {' '}
+              + ↵ for fresh line
+            </span>
+          </p>
+        </div>
+      </FormRowMainOnly>
     </div>
   )
 }
@@ -628,26 +697,19 @@ function ContactFields({
     {key: 'country', label: 'Country'},
   ]
   const ph = 'placeholder:text-[rgba(0,0,0,0.1)]'
+  const inputClass = `min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none ${ph}`
   return (
     <div className="w-full">
       {fields.map(({key, label}) => (
-        <FormRow
-          key={key}
-          primary={
-            <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
-              {label}
-            </span>
-          }
-          secondary={
-            <input
-              className={`min-w-0 w-full border-0 bg-transparent p-0 font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] tracking-[-0.25px] text-black outline-none ${ph}`}
-              value={contact[key]}
-              onChange={(e) => setContact({[key]: e.target.value} as Partial<ContactForm>)}
-              placeholder={CONTACT_PLACEHOLDERS[key]}
-              aria-label={label}
-            />
-          }
-        />
+        <LabeledInputRow key={key} label={label}>
+          <input
+            className={inputClass}
+            value={contact[key]}
+            onChange={(e) => setContact({[key]: e.target.value} as Partial<ContactForm>)}
+            placeholder={CONTACT_PLACEHOLDERS[key]}
+            aria-label={label}
+          />
+        </LabeledInputRow>
       ))}
     </div>
   )
@@ -665,13 +727,15 @@ function LabeledDateRow({
   /** When `iso` is empty, show this instead of an em dash (e.g. due date hint). */
   emptyDisplay?: string
 }) {
+  const [focused, setFocused] = useState(false)
   const visible =
     iso ? formatDateSlashes(iso) : (emptyDisplay ?? formatDateSlashes(iso))
   const muted = !iso
+  const labelInactive = !iso && !focused
   return (
     <FormRow
       primary={
-        <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
           {label}
         </span>
       }
@@ -689,6 +753,8 @@ function LabeledDateRow({
             className="absolute inset-0 h-full w-full cursor-pointer border-0 bg-transparent p-0 opacity-0 outline-none"
             value={iso}
             onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             aria-label={label}
           />
         </div>
@@ -707,11 +773,11 @@ function FormRow({
   trailing?: ReactNode
 }) {
   return (
-    <div className="flex w-full flex-col gap-1 pt-1">
-      <div className={EDITOR_GRID}>
-        <div className="min-w-0">{primary}</div>
-        <div className="min-w-[24px] max-w-[24px]" aria-hidden />
-        <div className="flex min-w-0 items-center justify-between gap-3">
+    <div className="flex w-full min-w-0 flex-col gap-1 pt-1">
+      <div className={editorGridClass}>
+        <div className="min-w-0 break-words">{primary}</div>
+        <div className="min-w-[24px] max-w-[24px] @max-[532px]:hidden" aria-hidden />
+        <div className="flex min-w-0 w-full items-center justify-between gap-3">
           <div className="min-w-0 flex-1">{secondary}</div>
           {trailing ?? null}
         </div>
@@ -731,24 +797,58 @@ function FormRowMainOnly({
   divider?: boolean
 }) {
   return (
-    <div className="flex w-full flex-col gap-1 pt-1">
-      <div className={EDITOR_GRID}>
-        <div className="col-span-3 min-w-0">{children}</div>
+    <div className="flex w-full min-w-0 flex-col gap-1 pt-1">
+      <div className={editorGridClass}>
+        <div className="col-span-full min-w-0">{children}</div>
       </div>
       {divider ? <RowDivider /> : null}
     </div>
   )
 }
 
+type LabeledInputChildProps = {
+  value?: string | number
+  onFocus?: (e: FocusEvent<HTMLInputElement>) => void
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void
+}
+
 function LabeledInputRow({label, children}: {label: string; children: ReactNode}) {
+  const [focused, setFocused] = useState(false)
+
+  if (!isValidElement(children)) {
+    return (
+      <FormRow
+        primary={<span className={`${ROW_LABEL_CLASS} text-black`}>{label}</span>}
+        secondary={<div className="flex min-w-0 w-full items-center">{children}</div>}
+      />
+    )
+  }
+
+  const child = children as ReactElement<LabeledInputChildProps>
+  const raw = child.props.value
+  const valueStr = raw === undefined || raw === null ? '' : String(raw)
+  const empty = !valueStr.trim()
+  const labelInactive = empty && !focused
+
+  const input = cloneElement(child, {
+    onFocus: (e: FocusEvent<HTMLInputElement>) => {
+      child.props.onFocus?.(e)
+      setFocused(true)
+    },
+    onBlur: (e: FocusEvent<HTMLInputElement>) => {
+      child.props.onBlur?.(e)
+      setFocused(false)
+    },
+  })
+
   return (
     <FormRow
       primary={
-        <span className="font-[family-name:var(--font-soehne)] text-[24px] leading-[37px] not-italic">
+        <span className={`${ROW_LABEL_CLASS} ${labelInactive ? 'text-black/20' : 'text-black'}`}>
           {label}
         </span>
       }
-      secondary={<div className="flex min-w-0 w-full items-center">{children}</div>}
+      secondary={<div className="flex min-w-0 w-full items-center">{input}</div>}
     />
   )
 }

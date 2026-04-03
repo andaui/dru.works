@@ -2,7 +2,12 @@
 
 import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {InvoiceEditor, type EditorLineItem} from '@/components/tools/invoice/InvoiceEditor'
-import {InvoicePreview, type PreviewLineItem} from '@/components/tools/invoice/InvoicePreview'
+import {
+  InvoicePreview,
+  INVOICE_PREVIEW_HEIGHT_PX,
+  INVOICE_PREVIEW_WIDTH_PX,
+  type PreviewLineItem,
+} from '@/components/tools/invoice/InvoicePreview'
 import type {ContactForm} from '@/lib/invoiceContact'
 import {contactToPreviewLines} from '@/lib/invoiceContact'
 import {
@@ -10,19 +15,19 @@ import {
   type InvoiceBankDetails,
 } from '@/lib/invoiceBankDetails'
 import {isoDateLocal, type InvoiceCurrency} from '@/lib/invoiceFormat'
+import {DEFAULT_INVOICE_PAPER_HEX} from '@/lib/invoicePaperSwatches'
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-/** Must match fixed height in `InvoicePreview` root. */
-const INVOICE_PREVIEW_HEIGHT_PX = 905
-
 export function InvoiceTool() {
-  const previewRef = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
-  /** Only use a scroll container when the preview is taller than the viewport (avoids empty scrollbars). */
+  /** Only use a scroll container when scaled preview still exceeds viewport (e.g. rounding). */
   const [clipPreview, setClipPreview] = useState(false)
+  /** Uniform scale so 641×905 fits both column width and available viewport height. */
+  const [previewScale, setPreviewScale] = useState(1)
+  const previewMeasureRef = useRef<HTMLDivElement>(null)
 
   const [fromAExpanded, setFromAExpanded] = useState(false)
   const [billedExpanded, setBilledExpanded] = useState(false)
@@ -55,6 +60,7 @@ export function InvoiceTool() {
   const [discountPercent, setDiscountPercent] = useState(0)
   const [taxPercent, setTaxPercent] = useState(0)
   const [note, setNote] = useState('')
+  const [paperBackground, setPaperBackground] = useState(DEFAULT_INVOICE_PAPER_HEX)
 
   const setFromA = useCallback((p: Partial<ContactForm>) => {
     setFromAState((s) => ({...s, ...p}))
@@ -70,13 +76,29 @@ export function InvoiceTool() {
   useLayoutEffect(() => {
     const topOffsetPx = 24 // matches sticky `top-6`
     const bottomBreathingPx = 12
+    const el = previewMeasureRef.current
+    if (!el) return
+
     const update = () => {
+      const w = el.getBoundingClientRect().width
       const available = window.innerHeight - topOffsetPx - bottomBreathingPx
-      setClipPreview(INVOICE_PREVIEW_HEIGHT_PX > available)
+      const sW = w > 0 ? Math.min(1, w / INVOICE_PREVIEW_WIDTH_PX) : 1
+      const sH =
+        available > 0 ? Math.min(1, available / INVOICE_PREVIEW_HEIGHT_PX) : 1
+      const s = Math.min(sW, sH)
+      setPreviewScale(s)
+      const scaledH = INVOICE_PREVIEW_HEIGHT_PX * s
+      setClipPreview(scaledH > available + 1)
     }
+
     update()
+    const ro = new ResizeObserver(() => update())
+    ro.observe(el)
     window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   const subtotal = useMemo(
@@ -146,46 +168,60 @@ export function InvoiceTool() {
   }
 
   const exportPdf = useCallback(async () => {
-    const el = previewRef.current
-    if (!el) return
     setExporting(true)
     try {
-      const [{default: html2canvas}, {default: jsPDF}] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
+      const [{pdf}, {InvoicePdfDocument}] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/tools/invoice/InvoicePdfDocument'),
       ])
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#f8f8f8',
-        logging: false,
-      })
-      const imgData = canvas.toDataURL('image/png', 1)
-      const pdf = new jsPDF({orientation: 'portrait', unit: 'mm', format: 'a4'})
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const imgW = pageW
-      const imgH = (canvas.height * imgW) / canvas.width
-      let heightLeft = imgH
-      let position = 0
-      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-      heightLeft -= pageH
-      while (heightLeft > 0) {
-        position -= pageH
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-        heightLeft -= pageH
-      }
+      const blob = await pdf(
+        <InvoicePdfDocument
+          fromLines={previewLinesFrom}
+          billedLines={previewLinesBilled}
+          invoiceDateIso={issueDate}
+          invoiceNo={invoiceNo}
+          dueDateIso={dueDate}
+          vatId={vatId}
+          lineItems={previewLineItems}
+          currency={currency}
+          discountPercent={discountPercent}
+          taxPercent={taxPercent}
+          displayTotal={computedFinal}
+          bankDetails={bankDetails}
+          noteLines={noteLines}
+          paperBackground={paperBackground}
+        />,
+      ).toBlob()
       const safe = (invoiceNo.trim() ? invoiceNo : 'invoice').replace(/[^\w.-]+/g, '_') || 'invoice'
-      pdf.save(`${safe}.pdf`)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${safe}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
     } finally {
       setExporting(false)
     }
-  }, [invoiceNo])
+  }, [
+    bankDetails,
+    computedFinal,
+    currency,
+    discountPercent,
+    dueDate,
+    invoiceNo,
+    issueDate,
+    noteLines,
+    paperBackground,
+    previewLineItems,
+    previewLinesBilled,
+    previewLinesFrom,
+    taxPercent,
+    vatId,
+  ])
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <div className="mx-auto flex max-w-[1710px] flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
+      <div className="mx-auto flex min-w-0 w-full flex-col items-stretch justify-between gap-10 px-6 py-5 lg:flex-row lg:items-start lg:gap-6">
         <div
           className={
             clipPreview
@@ -193,24 +229,47 @@ export function InvoiceTool() {
               : 'sticky top-6 z-10 w-full max-w-[641px] shrink-0 self-start overflow-visible'
           }
         >
-          <InvoicePreview
-            ref={previewRef}
-            fromLines={previewLinesFrom}
-            billedLines={previewLinesBilled}
-            invoiceDateIso={issueDate}
-            invoiceNo={invoiceNo}
-            dueDateIso={dueDate}
-            vatId={vatId}
-            lineItems={previewLineItems}
-            currency={currency}
-            discountPercent={discountPercent}
-            taxPercent={taxPercent}
-            displayTotal={computedFinal}
-            bankDetails={bankDetails}
-            noteLines={noteLines}
-          />
+          <div
+            ref={previewMeasureRef}
+            className="flex w-full max-w-[641px] shrink-0 justify-start"
+          >
+            <div
+              className="relative shrink-0 overflow-hidden"
+              style={{
+                width: INVOICE_PREVIEW_WIDTH_PX * previewScale,
+                height: INVOICE_PREVIEW_HEIGHT_PX * previewScale,
+              }}
+            >
+              <div
+                className="pointer-events-auto absolute left-0 top-0 origin-top-left will-change-transform"
+                style={{
+                  width: INVOICE_PREVIEW_WIDTH_PX,
+                  height: INVOICE_PREVIEW_HEIGHT_PX,
+                  transform: `scale(${previewScale})`,
+                }}
+              >
+              <InvoicePreview
+                fromLines={previewLinesFrom}
+                billedLines={previewLinesBilled}
+                invoiceDateIso={issueDate}
+                invoiceNo={invoiceNo}
+                dueDateIso={dueDate}
+                vatId={vatId}
+                lineItems={previewLineItems}
+                currency={currency}
+                discountPercent={discountPercent}
+                taxPercent={taxPercent}
+                displayTotal={computedFinal}
+                bankDetails={bankDetails}
+                noteLines={noteLines}
+                paperBackground={paperBackground}
+              />
+              </div>
+            </div>
+          </div>
         </div>
 
+        <div className="min-w-0 w-full flex-1 lg:min-w-0">
         <InvoiceEditor
           fromA={fromA}
           setFromA={setFromA}
@@ -247,7 +306,10 @@ export function InvoiceTool() {
           computedFinal={computedFinal}
           exporting={exporting}
           onDownloadPdf={() => void exportPdf()}
+          paperBackground={paperBackground}
+          setPaperBackground={setPaperBackground}
         />
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,4 @@
 'use client'
-
-import {forwardRef} from 'react'
 import type {InvoiceBankDetails} from '@/lib/invoiceBankDetails'
 import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import type {InvoiceCurrency} from '@/lib/invoiceFormat'
@@ -29,34 +27,37 @@ export type InvoicePreviewProps = {
   displayTotal: number
   bankDetails: InvoiceBankDetails
   noteLines: string[]
+  /** Preview card + PDF page fill */
+  paperBackground: string
 }
 
+/** Figma artboard size — used for PDF parity and responsive scale on screen. */
+export const INVOICE_PREVIEW_WIDTH_PX = 641
+export const INVOICE_PREVIEW_HEIGHT_PX = 905
+
 /**
- * Figma "Light Mode" invoice — #f8f8f8, 641×905, auto-layout as flex.
- * All colors inline rgba/hex for html2canvas (no oklab from Tailwind).
+ * Figma invoice — 641×905, auto-layout as flex; page fill from `paperBackground`.
+ * Inline hex/rgba avoids Tailwind `oklab()` in computed styles (stable in browsers).
  */
-export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
-  function InvoicePreview(
-    {
-      fromLines,
-      billedLines,
-      invoiceDateIso,
-      invoiceNo,
-      dueDateIso,
-      vatId,
-      lineItems,
-      currency,
-      discountPercent,
-      taxPercent,
-      displayTotal,
-      bankDetails,
-      noteLines,
-    },
-    ref,
-  ) {
+export function InvoicePreview({
+  fromLines,
+  billedLines,
+  invoiceDateIso,
+  invoiceNo,
+  dueDateIso,
+  vatId,
+  lineItems,
+  currency,
+  discountPercent,
+  taxPercent,
+  displayTotal,
+  bankDetails,
+  noteLines,
+  paperBackground,
+}: InvoicePreviewProps) {
     const c = {
       ink: '#000000',
-      bg: '#f8f8f8',
+      bg: paperBackground,
     }
 
     const lineSubtotal = lineItems.reduce((s, r) => s + r.quantity * r.unitPrice, 0)
@@ -91,13 +92,12 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     const bankRows = buildPreviewBankRows(currency, bankDetails)
     const hasBankDetails = bankRows.length > 0
 
-    return (
+  return (
       <div
-        ref={ref}
         className="invoice-pdf-root shrink-0 overflow-hidden"
         style={{
-          width: '641px',
-          height: '905px',
+          width: `${INVOICE_PREVIEW_WIDTH_PX}px`,
+          height: `${INVOICE_PREVIEW_HEIGHT_PX}px`,
           backgroundColor: c.bg,
           boxSizing: 'border-box',
           paddingTop: '17px',
@@ -108,7 +108,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       >
         <div
           className="flex h-full w-full flex-col justify-between"
-          style={{width: '641px'}}
+          style={{width: `${INVOICE_PREVIEW_WIDTH_PX}px`}}
         >
           <div className="flex w-full flex-col items-start gap-[29px]">
             <PreviewRow label="From" lines={fromLines} />
@@ -119,12 +119,12 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 style={{color: c.ink}}
               >
                 <div className="flex items-center gap-[60px] text-[11px] leading-normal">
-                  <div className="flex w-[100px] flex-col gap-[6px] font-normal">
+                  <div className="flex w-[100px] flex-col gap-0 font-normal">
                     {metaRows.map((r) => (
                       <span key={r.key}>{r.label}</span>
                     ))}
                   </div>
-                  <div className="flex flex-col gap-[6px] whitespace-nowrap font-normal">
+                  <div className="flex flex-col gap-0 whitespace-nowrap font-normal">
                     {metaRows.map((r) => (
                       <span key={r.key}>{r.value}</span>
                     ))}
@@ -187,21 +187,28 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     const lineTotal = row.quantity * row.unitPrice
                     return (
                       <div key={i} className="flex w-full items-start gap-[30px]">
-                        <p
-                          className="min-h-0 min-w-0 flex-1"
+                        {/* Block wrapper: overflow on flex children can clip ascenders wrongly in some raster paths */}
+                        <div
+                          className="min-w-0 flex-1 self-start"
                           style={{
-                            color: c.ink,
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: 2,
-                            overflow: 'hidden',
-                            wordBreak: 'break-word',
-                            whiteSpace: 'pre-wrap',
+                            fontSize: 11,
                             lineHeight: 1.35,
+                            maxHeight: 32,
+                            overflow: 'hidden',
                           }}
                         >
-                          {row.description}
-                        </p>
+                          <div
+                            style={{
+                              color: c.ink,
+                              wordBreak: 'break-word',
+                              whiteSpace: 'pre-wrap',
+                              margin: 0,
+                              padding: 0,
+                            }}
+                          >
+                            {row.description}
+                          </div>
+                        </div>
                         <p className="w-[60px] shrink-0 text-right tabular-nums" style={{color: c.ink}}>
                           {row.quantity}
                         </p>
@@ -264,12 +271,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <span className="w-[120px] shrink-0" aria-hidden />
                   <div className="flex w-[120px] min-w-0 shrink-0 flex-row items-center justify-end gap-[6px] tabular-nums">
                     {showPreDiscountTotal ? (
-                      <span
-                        className="line-through decoration-solid shrink-0"
-                        style={{opacity: 0.4, color: c.ink, textDecorationSkipInk: 'none'}}
-                      >
-                        {formatMoneyCompact(totalBeforeDiscount, currency)}
-                      </span>
+                      <StrikethroughAmount
+                        color={c.ink}
+                        text={formatMoneyCompact(totalBeforeDiscount, currency)}
+                      />
                     ) : null}
                     <span className="shrink-0" style={{color: c.ink}}>
                       {formatMoneyCompact(displayTotal, currency)}
@@ -282,16 +287,16 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
           <div className="flex w-full flex-col gap-[24px] text-[11px]" style={{color: c.ink}}>
             {hasBankDetails ? (
-              <div className="flex flex-col gap-[16px] pl-[12px] pr-[24px] leading-normal">
+              <div className="flex flex-col gap-0 pl-[12px] pr-[24px] leading-normal">
                 <div className="flex items-start gap-[40px] font-normal">
-                  <div className="flex w-[158px] shrink-0 flex-col gap-[6px]">
+                  <div className="flex w-[158px] shrink-0 flex-col gap-0">
                     {bankRows.map((r) => (
                       <span key={r.key} className="break-words">
                         {r.label}
                       </span>
                     ))}
                   </div>
-                  <div className="flex min-w-0 flex-1 flex-col gap-[6px] break-words">
+                  <div className="flex min-w-0 flex-1 flex-col gap-0 break-words">
                     {bankRows.map((r) => (
                       <span key={r.key}>{r.value}</span>
                     ))}
@@ -319,9 +324,24 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
         </div>
       </div>
-    )
-  },
-)
+  )
+}
+
+/** Manual strikethrough for on-screen preview (CSS line-through can look offset at small sizes). */
+function StrikethroughAmount({color, text}: {color: string; text: string}) {
+  return (
+    <span className="relative inline-block shrink-0 align-middle" style={{color}}>
+      <span className="relative z-[1]" style={{opacity: 0.4}}>
+        {text}
+      </span>
+      <span
+        className="pointer-events-none absolute left-0 right-0 top-1/2 z-[2] h-[1.5px] -translate-y-1/2"
+        style={{backgroundColor: color, opacity: 0.55}}
+        aria-hidden
+      />
+    </span>
+  )
+}
 
 function PreviewRow({label, lines}: {label: string; lines: string[]}) {
   return (
