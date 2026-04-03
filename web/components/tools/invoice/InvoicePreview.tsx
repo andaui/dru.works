@@ -297,23 +297,23 @@ export function InvoicePreview({
                 </div>
               </div>
             ) : null}
-            <div className="flex w-full items-start gap-[60px] px-[12px]">
-              <p
-                className="w-[100px] shrink-0 font-semibold leading-normal"
-                style={{fontFamily: 'var(--font-inter), sans-serif'}}
-              >
-                Note
-              </p>
-              <div className="min-h-[16px] font-normal leading-[0] whitespace-nowrap">
-                {noteLines.length === 0 ? null : (
-                  noteLines.map((line, i) => (
+            {noteLines.length > 0 && (
+              <div className="flex w-full items-start gap-[60px] px-[12px]">
+                <p
+                  className="w-[100px] shrink-0 font-semibold leading-normal"
+                  style={{fontFamily: 'var(--font-inter), sans-serif'}}
+                >
+                  Note
+                </p>
+                <div className="min-h-[16px] font-normal leading-[0] whitespace-nowrap">
+                  {noteLines.map((line, i) => (
                     <p key={i} className="mb-0 leading-[16px] last:mb-0">
                       {line}
                     </p>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

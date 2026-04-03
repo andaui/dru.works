@@ -337,10 +337,21 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                   {p.lineItems.length}
                 </span>
                 <div className="flex w-[118.625px] max-w-[40%] shrink-0 items-center justify-between">
-                  <button type="button" className="size-6 text-black" onClick={p.removeLastLine} aria-label="Remove line">
+                  <button
+                    type="button"
+                    onClick={p.removeLastLine}
+                    disabled={p.lineItems.length <= 1}
+                    className="flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer text-black disabled:opacity-25 disabled:pointer-events-none hover:opacity-70 transition-opacity"
+                    aria-label="Remove line"
+                  >
                     <MinusIcon />
                   </button>
-                  <button type="button" className="size-6 text-black" onClick={p.addLine} aria-label="Add line">
+                  <button
+                    type="button"
+                    onClick={p.addLine}
+                    className="flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer text-black hover:opacity-70 transition-opacity"
+                    aria-label="Add line"
+                  >
                     <PlusSquareIcon />
                   </button>
                 </div>
@@ -659,7 +670,7 @@ function ContactStack({
         trailing={
           <button
             type="button"
-            className="size-6 shrink-0 text-black"
+            className="size-6 shrink-0 text-black opacity-20 hover:opacity-50 transition-opacity"
             onClick={onToggle}
             aria-expanded={expanded}
             aria-label={ariaLabelToggle}
@@ -723,7 +734,7 @@ function BankDetailsStack({
         trailing={
           <button
             type="button"
-            className="size-6 shrink-0 text-black"
+            className="size-6 shrink-0 text-black opacity-20 hover:opacity-50 transition-opacity"
             onClick={onToggle}
             aria-expanded={expanded}
             aria-label="Toggle bank details"
@@ -1037,7 +1048,10 @@ function RowDivider() {
 function PlusIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M14.0927 9.95253H22.7777V14.1375H14.0927V22.9125H9.86266V14.1375H1.22266V9.95253H9.86266V1.08752H14.0927V9.95253Z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
@@ -1045,7 +1059,10 @@ function PlusIcon() {
 function PlusSquareIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 7v10M7 12h10" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M14.0927 9.95253H22.7777V14.1375H14.0927V22.9125H9.86266V14.1375H1.22266V9.95253H9.86266V1.08752H14.0927V9.95253Z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
@@ -1053,7 +1070,10 @@ function PlusSquareIcon() {
 function MinusIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M6 12h12" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M14.0927 9.90747H22.7777V14.0925H14.0927H9.86266H1.22266V9.90747H9.86266H14.0927Z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
