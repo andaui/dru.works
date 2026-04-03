@@ -16,6 +16,7 @@ import {
   INVOICE_PREVIEW_WIDTH_PX,
   type PreviewLineItem,
 } from '@/components/tools/invoice/InvoicePreview'
+import type {InvoicePreviewTemplate} from '@/components/tools/invoice/invoicePreviewShared'
 import type {ContactForm} from '@/lib/invoiceContact'
 import {contactToPreviewLines} from '@/lib/invoiceContact'
 import {
@@ -81,6 +82,7 @@ export function InvoiceTool() {
   const [taxPercent, setTaxPercent] = useState(0)
   const [note, setNote] = useState('')
   const [paperBackground, setPaperBackground] = useState(DEFAULT_INVOICE_PAPER_HEX)
+  const [previewTemplate, setPreviewTemplate] = useState<InvoicePreviewTemplate>('classic')
   const [previewFsPhase, setPreviewFsPhase] = useState<PreviewFsPhase>('inline')
   const [fullVw, setFullVw] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth : INVOICE_PREVIEW_WIDTH_PX),
@@ -170,6 +172,7 @@ export function InvoiceTool() {
 
   const invoicePreviewProps = useMemo(
     () => ({
+      template: previewTemplate,
       fromLines: previewLinesFrom,
       billedLines: previewLinesBilled,
       invoiceDateIso: issueDate,
@@ -198,6 +201,7 @@ export function InvoiceTool() {
       previewLineItems,
       previewLinesBilled,
       previewLinesFrom,
+      previewTemplate,
       taxPercent,
       vatId,
     ],
@@ -320,6 +324,7 @@ export function InvoiceTool() {
       ])
       const blob = await pdf(
         <InvoicePdfDocument
+          template={previewTemplate}
           fromLines={previewLinesFrom}
           billedLines={previewLinesBilled}
           invoiceDateIso={issueDate}
@@ -359,6 +364,7 @@ export function InvoiceTool() {
     previewLineItems,
     previewLinesBilled,
     previewLinesFrom,
+    previewTemplate,
     taxPercent,
     vatId,
   ])
@@ -493,7 +499,7 @@ export function InvoiceTool() {
               {/* ── Scroll overlay: only during 'expanded' phase ── */}
               {previewFsPhase === 'expanded' ? (
                 <div
-                  className="fixed inset-0 z-[200] cursor-zoom-out overflow-y-auto"
+                  className="fixed inset-0 z-[200] cursor-zoom-out overflow-y-auto text-black"
                   style={{backgroundColor: paperBackground}}
                   onClick={closePreviewFs}
                   role="dialog"
@@ -589,6 +595,8 @@ export function InvoiceTool() {
           onDownloadPdf={() => void exportPdf()}
           paperBackground={paperBackground}
           setPaperBackground={setPaperBackground}
+          previewTemplate={previewTemplate}
+          setPreviewTemplate={setPreviewTemplate}
         />
         </div>
       </div>

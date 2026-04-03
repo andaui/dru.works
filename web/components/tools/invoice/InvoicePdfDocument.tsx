@@ -1,8 +1,11 @@
 import {Document, Page, StyleSheet, Text, View} from '@react-pdf/renderer'
 import {buildPreviewBankRows} from '@/lib/invoiceBankDetails'
 import {formatDateDots, formatMoney, formatMoneyCompact} from '@/lib/invoiceFormat'
-import type {InvoicePreviewProps} from '@/components/tools/invoice/InvoicePreview'
+import type {InvoicePreviewProps} from '@/components/tools/invoice/invoicePreviewShared'
 import {DEFAULT_INVOICE_PAPER_HEX} from '@/lib/invoicePaperSwatches'
+/** PDF standard fonts only — custom WOFF + fontWeight often renders invisible in react-pdf. */
+const PDF_REG = 'Helvetica'
+const PDF_BOLD = 'Helvetica-Bold'
 
 /** CSS px → PDF pt (96dpi). */
 const pt = (px: number) => px * 0.75
@@ -40,7 +43,7 @@ const styles = StyleSheet.create({
     paddingBottom: v(17),
     paddingLeft: PAGE_SIDE_PAD_PT,
     paddingRight: PAGE_SIDE_PAD_PT,
-    fontFamily: 'Helvetica',
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: 1.35,
     color: C.ink,
@@ -69,9 +72,10 @@ const styles = StyleSheet.create({
   previewLabel: {
     width: W.label,
     marginRight: W.gapLabel,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11),
     lineHeight: 1.35,
+    color: C.ink,
   },
   previewLinesCol: {
     flex: 1,
@@ -79,8 +83,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   previewLine: {
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: f(16) / f(11),
+    color: C.ink,
   },
   metaOuter: {
     flexDirection: 'row',
@@ -97,8 +103,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   metaText: {
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: 1.35,
+    color: C.ink,
   },
   /** `px-[14px]` on items shell — width matches full content strip. */
   itemsShell: {
@@ -126,16 +134,18 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: 'Helvetica',
+    fontFamily: PDF_REG,
     fontSize: f(24.035),
     lineHeight: 1.15,
     letterSpacing: h(-1.2018),
+    color: C.ink,
   },
   colHdr: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
+    color: C.ink,
   },
   colHdrQty: {
     width: W.qty,
@@ -160,28 +170,36 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: 1.35,
+    color: C.ink,
   },
   colQty: {
     width: W.qty,
     marginRight: W.gapCol,
+    fontFamily: PDF_REG,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
+    color: C.ink,
   },
   colMoney: {
     width: W.money,
     marginRight: W.gapCol,
+    fontFamily: PDF_REG,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
+    color: C.ink,
   },
   colMoneyLast: {
     width: W.money,
+    fontFamily: PDF_REG,
     fontSize: f(11),
     textAlign: 'right',
     lineHeight: 1.35,
+    color: C.ink,
   },
   totalsBlock: {
     flexDirection: 'column',
@@ -199,18 +217,21 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
+    fontFamily: PDF_REG,
     fontSize: f(11.347),
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   totalLabelBold: {
     flex: 1,
     minWidth: 0,
     marginRight: W.gapCol,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11.347),
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   totalSpacerQty: {
     width: W.qty,
@@ -222,35 +243,41 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     width: W.money,
+    fontFamily: PDF_REG,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   totalValueBold: {
     width: W.money,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   taxPct: {
     width: W.qty,
     marginRight: W.gapCol,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   discPct: {
     width: W.qty,
     marginRight: W.gapCol,
+    fontFamily: PDF_REG,
     fontSize: f(11.347),
     textAlign: 'right',
     lineHeight: 1.15,
     letterSpacing: h(-0.5674),
+    color: C.ink,
   },
   totalRightCluster: {
     width: W.money,
@@ -262,9 +289,11 @@ const styles = StyleSheet.create({
     marginRight: h(6),
   },
   strikeText: {
+    fontFamily: PDF_REG,
     fontSize: f(11.347),
     textDecoration: 'line-through',
     opacity: 0.45,
+    color: C.ink,
   },
   bottomStack: {
     flexDirection: 'column',
@@ -286,8 +315,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   bankLine: {
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: 1.35,
+    color: C.ink,
   },
   bankValues: {
     flex: 1,
@@ -303,9 +334,10 @@ const styles = StyleSheet.create({
   noteLabel: {
     width: W.label,
     marginRight: W.gapLabel,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: PDF_BOLD,
     fontSize: f(11),
     lineHeight: 1.35,
+    color: C.ink,
   },
   noteLinesCol: {
     flex: 1,
@@ -313,8 +345,283 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   noteLine: {
+    fontFamily: PDF_REG,
     fontSize: f(11),
     lineHeight: f(16) / f(11),
+    color: C.ink,
+  },
+})
+
+/** Light Mode template — Figma 508:37 (641×905, pt 21 / pb 17). */
+const LM = {
+  padH: h(24),
+  fromW: h(203),
+  metaW: h(119),
+  addrW: h(169),
+  gapMetaAddr: h(24),
+  gap30: h(30),
+  w60: h(60),
+  w120: h(120),
+  w90: h(90),
+  w100: h(100),
+}
+
+const lightStyles = StyleSheet.create({
+  page: {
+    paddingTop: v(21),
+    paddingBottom: v(17),
+    paddingLeft: PAGE_SIDE_PAD_PT,
+    paddingRight: PAGE_SIDE_PAD_PT,
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    lineHeight: 1.35,
+    color: C.ink,
+    flexDirection: 'column',
+  },
+  outer: {
+    width: CONTENT_W_PT,
+    flexDirection: 'column',
+    gap: v(60),
+    flexGrow: 1,
+    minHeight: '100%',
+  },
+  /** Hero → header → items (items grows so footer sits at page bottom). */
+  mainColumn: {
+    flexDirection: 'column',
+    gap: v(60),
+    flexGrow: 1,
+    minHeight: 0,
+  },
+  /** Hero — same horizontal inset as header/items (LM.padH); wider gap between word and number */
+  heroRow: {
+    width: '100%',
+    paddingLeft: LM.padH,
+    paddingRight: LM.padH,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: v(199),
+  },
+  heroInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexGrow: 1,
+    gap: h(24),
+  },
+  heroInvoice: {
+    fontFamily: PDF_REG,
+    fontSize: f(91),
+    lineHeight: 1.15,
+    letterSpacing: pt(-8.19),
+    color: C.ink,
+  },
+  heroNumber: {
+    fontFamily: PDF_REG,
+    fontSize: f(47),
+    lineHeight: 1.15,
+    letterSpacing: pt(-4.23),
+    color: C.ink,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingLeft: LM.padH,
+    paddingRight: LM.padH,
+  },
+  fromCol: {
+    width: LM.fromW,
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  fromLabel: {
+    fontFamily: PDF_BOLD,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  rightCluster: {
+    flexDirection: 'row',
+    gap: LM.gapMetaAddr,
+  },
+  metaCol: {
+    width: LM.metaW,
+    flexDirection: 'column',
+    gap: v(16),
+  },
+  metaPair: {
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  metaLabel: {
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  metaVal: {
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  addrCol: {
+    width: LM.addrW,
+  },
+  itemsBlock: {
+    paddingLeft: LM.padH,
+    paddingRight: LM.padH,
+    flexDirection: 'column',
+    gap: v(40),
+    flexGrow: 1,
+  },
+  itemsInner: {
+    flexDirection: 'column',
+    gap: v(32),
+  },
+  hdrRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: LM.gap30,
+  },
+  hdrDesc: {
+    flex: 1,
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  hdr60: {
+    width: LM.w60,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  hdr120: {
+    width: LM.w120,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  hdr90: {width: LM.w90, opacity: 0},
+  lineRows: {
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  lineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: LM.gap30,
+  },
+  lineDesc: {
+    flex: 1,
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    minWidth: 0,
+    color: C.ink,
+  },
+  totals: {
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  totRowEnd: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
+    gap: LM.gap30,
+  },
+  totLbl120: {
+    width: LM.w120,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  totVal90: {
+    width: LM.w90,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  totValCol: {
+    width: LM.w90,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: v(2),
+  },
+  totBold: {
+    fontFamily: PDF_BOLD,
+    fontSize: f(11.347),
+    lineHeight: 1.15,
+    letterSpacing: h(-0.5674),
+    color: C.ink,
+  },
+  footer: {
+    flexDirection: 'column',
+    gap: v(24),
+  },
+  dueBlock: {
+    paddingLeft: LM.padH,
+    paddingRight: LM.padH,
+    flexDirection: 'column',
+    gap: v(6),
+  },
+  dueLbl: {
+    fontFamily: PDF_BOLD,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  noteRow: {
+    flexDirection: 'row',
+    gap: h(60),
+    paddingLeft: LM.padH,
+    paddingRight: h(12),
+  },
+  /** 11px body copy — matches preview `font-normal` */
+  bodyLine: {
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    lineHeight: f(16) / f(11),
+    color: C.ink,
+  },
+  lineQty: {
+    width: LM.w60,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  lineUnit: {
+    width: LM.w120,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  lineTotal: {
+    width: LM.w90,
+    textAlign: 'right',
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  totValText: {
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    color: C.ink,
+  },
+  dueVal: {
+    fontFamily: PDF_REG,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
+  },
+  noteLabel: {
+    fontFamily: PDF_BOLD,
+    fontSize: f(11),
+    width: LM.w100,
+    color: C.ink,
   },
 })
 
@@ -337,23 +644,30 @@ function PreviewBlock({label, lines}: {label: string; lines: string[]}) {
 
 /** Vector PDF — dimensions mirror {@link InvoicePreview} (641×905 canvas, same gaps/columns). */
 export function InvoicePdfDocument(props: InvoicePreviewProps) {
-  const {
-    fromLines,
-    billedLines,
-    invoiceDateIso,
-    invoiceNo,
-    dueDateIso,
-    vatId,
-    lineItems,
-    currency,
-    discountPercent,
-    taxPercent,
-    displayTotal,
-    bankDetails,
-    noteLines,
-    paperBackground = DEFAULT_INVOICE_PAPER_HEX,
-  } = props
+  const {template: _template, ...rest} = props
+  void _template
+  if (props.template === 'lightMode') {
+    return <InvoicePdfDocumentLight {...rest} />
+  }
+  return <InvoicePdfDocumentClassic {...rest} />
+}
 
+function InvoicePdfDocumentClassic({
+  fromLines,
+  billedLines,
+  invoiceDateIso,
+  invoiceNo,
+  dueDateIso,
+  vatId,
+  lineItems,
+  currency,
+  discountPercent,
+  taxPercent,
+  displayTotal,
+  bankDetails,
+  noteLines,
+  paperBackground = DEFAULT_INVOICE_PAPER_HEX,
+}: Omit<InvoicePreviewProps, 'template'>) {
   const lineSubtotal = lineItems.reduce((s, r) => s + r.quantity * r.unitPrice, 0)
   const discountAmt = lineSubtotal * (discountPercent / 100)
   const taxAmt = (lineSubtotal - discountAmt) * (taxPercent / 100)
@@ -526,6 +840,177 @@ export function InvoicePdfDocument(props: InvoicePreviewProps) {
                     ))}
               </View>
             </View>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
+function InvoicePdfDocumentLight({
+  fromLines,
+  billedLines,
+  invoiceDateIso,
+  invoiceNo,
+  dueDateIso,
+  lineItems,
+  currency,
+  discountPercent,
+  taxPercent,
+  displayTotal,
+  bankDetails,
+  noteLines,
+  paperBackground = DEFAULT_INVOICE_PAPER_HEX,
+}: Omit<InvoicePreviewProps, 'template'>) {
+  const lineSubtotal = lineItems.reduce((s, r) => s + r.quantity * r.unitPrice, 0)
+  const discountAmt = lineSubtotal * (discountPercent / 100)
+  const afterDisc = lineSubtotal - discountAmt
+  const taxAmt = afterDisc * (taxPercent / 100)
+  const taxMuted = taxPercent === 0
+  const discMuted = discountPercent === 0
+  const bankRows = buildPreviewBankRows(currency, bankDetails)
+  const showInvoiceDate = Boolean(invoiceDateIso?.trim())
+  const showInvoiceNo = Boolean(invoiceNo.trim())
+
+  return (
+    <Document>
+      <Page size="A4" style={[lightStyles.page, {backgroundColor: paperBackground}]} wrap>
+        <View style={lightStyles.outer}>
+          <View style={lightStyles.mainColumn}>
+            <View style={lightStyles.heroRow}>
+              <View style={lightStyles.heroInner}>
+                <Text style={lightStyles.heroInvoice}>Invoice</Text>
+                {showInvoiceNo ? <Text style={lightStyles.heroNumber}>{invoiceNo.trim()}</Text> : null}
+              </View>
+            </View>
+            <View style={lightStyles.headerRow}>
+              <View style={lightStyles.fromCol}>
+                <Text style={lightStyles.fromLabel}>From</Text>
+                {fromLines.map((line, i) => (
+                  <Text key={i} style={lightStyles.bodyLine}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+              <View style={lightStyles.rightCluster}>
+                {showInvoiceDate ? (
+                  <View style={lightStyles.metaCol}>
+                    <View style={lightStyles.metaPair}>
+                      <Text style={lightStyles.metaLabel}>Invoice date</Text>
+                      <Text style={lightStyles.metaVal}>{formatDateDots(invoiceDateIso)}</Text>
+                    </View>
+                  </View>
+                ) : null}
+                <View style={lightStyles.addrCol}>
+                  {billedLines.map((line, i) => (
+                    <Text key={i} style={lightStyles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View style={lightStyles.itemsBlock}>
+              <View style={lightStyles.itemsInner}>
+                <View style={lightStyles.hdrRow}>
+                  <Text style={lightStyles.hdrDesc}>Description</Text>
+                  <Text style={lightStyles.hdr60}>Quantity</Text>
+                  <Text style={lightStyles.hdr120}>Unit Price</Text>
+                  <Text style={lightStyles.hdr90}> </Text>
+                </View>
+                <View style={lightStyles.lineRows}>
+                  {lineItems.map((row, i) => {
+                    const lineTotal = row.quantity * row.unitPrice
+                    return (
+                      <View key={i} style={lightStyles.lineRow}>
+                        <Text style={lightStyles.lineDesc}>{row.description}</Text>
+                        <Text style={lightStyles.lineQty}>{row.quantity}</Text>
+                        <Text style={lightStyles.lineUnit}>{formatMoneyCompact(row.unitPrice, currency)}</Text>
+                        <Text style={lightStyles.lineTotal}>{formatMoney(lineTotal, currency)}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              </View>
+              <View style={lightStyles.totals}>
+                <View style={lightStyles.totRowEnd}>
+                  <Text style={lightStyles.totLbl120}>Subtotal</Text>
+                  <Text style={lightStyles.totVal90}>{formatMoneyCompact(lineSubtotal, currency)}</Text>
+                </View>
+                <View style={lightStyles.totRowEnd}>
+                  <Text style={[lightStyles.totLbl120, {fontFamily: PDF_BOLD}]}>Tax</Text>
+                  <View style={lightStyles.totValCol}>
+                    <Text style={taxMuted ? [lightStyles.totValText, {color: C.muted}] : lightStyles.totValText}>
+                      {taxPercent}%
+                    </Text>
+                    <Text style={lightStyles.totValText}>
+                      {taxAmt > 0 ? formatMoneyCompact(taxAmt, currency) : ''}
+                    </Text>
+                  </View>
+                </View>
+                <View style={lightStyles.totRowEnd}>
+                  <Text style={lightStyles.totLbl120}>Discount</Text>
+                  <View style={lightStyles.totValCol}>
+                    <Text style={discMuted ? [lightStyles.totValText, {color: C.muted}] : lightStyles.totValText}>
+                      {discountPercent}%
+                    </Text>
+                    <Text style={discountAmt > 0 ? [lightStyles.totValText, {opacity: 0.4}] : lightStyles.totValText}>
+                      {discountAmt > 0 ? `-${formatMoneyCompact(discountAmt, currency)}` : ''}
+                    </Text>
+                  </View>
+                </View>
+                <View style={lightStyles.totRowEnd}>
+                  <Text style={[lightStyles.totLbl120, lightStyles.totBold]}>Total {currency}</Text>
+                  <Text style={[lightStyles.totVal90, lightStyles.totBold]}>
+                    {formatMoneyCompact(displayTotal, currency)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={lightStyles.footer}>
+            {dueDateIso.trim() ? (
+              <View style={lightStyles.dueBlock}>
+                <Text style={lightStyles.dueLbl}>Due Date</Text>
+                <Text style={lightStyles.dueVal}>{formatDateDots(dueDateIso)}</Text>
+              </View>
+            ) : null}
+            {bankRows.length > 0 ? (
+              <View style={styles.bankGap}>
+                <View style={{paddingLeft: LM.padH, paddingRight: LM.padH}}>
+                  <View style={styles.bankRow}>
+                    <View style={styles.bankLabels}>
+                      {bankRows.map((r) => (
+                        <Text key={r.key} style={styles.bankLine}>
+                          {r.label}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={styles.bankValues}>
+                      {bankRows.map((r) => (
+                        <Text key={r.key} style={styles.bankLine}>
+                          {r.value}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+            {noteLines.length > 0 ? (
+              <View style={lightStyles.noteRow}>
+                <Text style={lightStyles.noteLabel}>Note</Text>
+                <View style={{flex: 1, flexDirection: 'column'}}>
+                  {noteLines.map((line, i) => (
+                    <Text key={i} style={lightStyles.bodyLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            ) : null}
           </View>
         </View>
       </Page>

@@ -25,6 +25,7 @@ import {
   contactHasAnyValue,
   contactToPreviewLines,
 } from '@/lib/invoiceContact'
+import type {InvoicePreviewTemplate} from '@/components/tools/invoice/invoicePreviewShared'
 import {
   INVOICE_PAPER_SWATCHES,
   INVOICE_PAPER_SWATCH_GAP_PX,
@@ -82,6 +83,8 @@ export type InvoiceEditorProps = {
   onDownloadPdf: () => void
   paperBackground: string
   setPaperBackground: (hex: string) => void
+  previewTemplate: InvoicePreviewTemplate
+  setPreviewTemplate: (t: InvoicePreviewTemplate) => void
 }
 
 const SOEHNE = "font-[family-name:var(--font-soehne)] tracking-[-0.25px] text-black"
@@ -181,6 +184,35 @@ export function InvoiceEditor(p: InvoiceEditorProps) {
                   }}
                 />
               ))}
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <span className="font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] text-black/50">
+                Preview layout
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => p.setPreviewTemplate('classic')}
+                  className={`rounded-full border px-4 py-1.5 font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] transition-colors ${
+                    p.previewTemplate === 'classic'
+                      ? 'border-black bg-black text-white'
+                      : 'border-black/[0.12] bg-transparent text-black hover:border-black/30'
+                  }`}
+                >
+                  Classic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => p.setPreviewTemplate('lightMode')}
+                  className={`rounded-full border px-4 py-1.5 font-[family-name:var(--font-soehne)] text-[13px] tracking-[-0.25px] transition-colors ${
+                    p.previewTemplate === 'lightMode'
+                      ? 'border-black bg-black text-white'
+                      : 'border-black/[0.12] bg-transparent text-black hover:border-black/30'
+                  }`}
+                >
+                  Light
+                </button>
+              </div>
             </div>
           </div>
           <ContactStack

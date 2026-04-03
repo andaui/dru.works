@@ -44,7 +44,7 @@ html.dark {
   --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-inter: var(--font-inter);
+  /* Inter is provided by next/font on <body> via inter.variable — do not self-reference here */
   --font-soehne: "Test Söhne", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -102,4 +102,9 @@ html.dark .home-hero-list-col {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Invoice preview card — always black ink on paper swatch (avoid inheriting body text-foreground in dark mode). */
+.invoice-pdf-root {
+  color: #000000;
 }
