@@ -671,6 +671,8 @@ export default async function Home() {
       {/* 1 — Hero: logo + top-right nav + intro text */}
       <HomeHeroIntro
         introParagraph={homepageData?.homepageDescription ?? null}
+        aboutContent={aboutPageData?.homepageDescription ?? null}
+        services={indexServicesColumns ? indexServicesColumns.flat() : undefined}
         projectsLabel={navProjectsTitle}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
@@ -726,7 +728,7 @@ export default async function Home() {
       </div>
 
       {/* 6 — Footer: world clocks + sign-off */}
-      <footer className="w-full px-[2.5%] sm:px-6 pt-[120px] lg:pt-[200px] pb-[80px]">
+      <footer className="w-full px-[2.5%] sm:px-6 pt-[120px] lg:pt-[200px] pb-[40px]">
         <HomeFooterClock />
       </footer>
 

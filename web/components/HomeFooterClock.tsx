@@ -15,7 +15,6 @@ type Angles = { h: number; m: number; s: number };
 const ZONES: { code: string; timeZone: string }[] = [
   { code: "LON", timeZone: "Europe/London" },
   { code: "TOK", timeZone: "Asia/Tokyo" },
-  { code: "SF", timeZone: "America/Los_Angeles" },
 ];
 
 function anglesFor(now: Date, timeZone: string): Angles {
@@ -100,38 +99,25 @@ export default function HomeFooterClock() {
 
   return (
     <div className="flex flex-col w-full">
-      {/* Three world-clock dials */}
-      <div className="grid grid-cols-3 gap-6 sm:gap-10 w-full max-w-[1300px]">
+      {/* World-clock dials */}
+      <div className="grid grid-cols-2 gap-6 sm:gap-10 w-full max-w-[912px]">
         {ZONES.map((z, i) => (
           <div key={z.code} className="flex flex-col items-start gap-4 sm:gap-6">
             <div className="w-full max-w-[436px]">
               <DialFace angles={angles[i]} dim={!mounted} />
             </div>
-            <p className="font-plex-mono text-[13.7px] leading-[18px] tracking-[-0.17px] text-foreground tabular-nums whitespace-nowrap">
+            <p className="font-plex-mono text-[14px] leading-[18px] tracking-[-0.17px] text-foreground tabular-nums whitespace-nowrap">
               {z.code} {times[i]}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Address + sign-off */}
-      <div className="mt-[80px] flex flex-col md:flex-row items-start justify-between gap-10 w-full font-soehne font-normal text-[18px] sm:text-[20px] leading-[26px] sm:leading-[27px] tracking-[-0.25px] text-foreground">
-        <div className="max-w-[360px]">
-          5th Floor 167-169 Great Portland Street,
-          <br />
-          England, W1W 5PF
-        </div>
-        <div className="flex flex-col items-start md:items-end text-left md:text-right">
-          <div className="font-soehne font-normal text-[40px] sm:text-[70px] leading-[1] sm:leading-[65px] tracking-[-0.25px] text-black dark:text-white">
-            dru.works
-          </div>
-          <a
-            href="mailto:carterandrew93@gmail.com"
-            className="mt-[8px] font-soehne font-normal text-[40px] sm:text-[70px] leading-[1] sm:leading-[65px] tracking-[-0.25px] text-black dark:text-white opacity-30 hover:opacity-100 transition-opacity"
-          >
-            contact
-          </a>
-        </div>
+      {/* Address — same size as the clock times */}
+      <div className="mt-[40px] w-full font-plex-mono text-[14px] leading-[18px] tracking-[-0.17px] text-foreground">
+        5th Floor 167-169 Great Portland Street,
+        <br />
+        England, W1W 5PF
       </div>
     </div>
   );
