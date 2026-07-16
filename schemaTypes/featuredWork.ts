@@ -23,7 +23,14 @@ export default defineType({
       title: 'Coming soon',
       type: 'boolean',
       initialValue: false,
-      description: 'When enabled, "soon" is shown on the project cover next to the project title.',
+      description: 'When enabled, a "Coming soon" badge shows on the project cover on the homepage.',
+    }),
+    defineField({
+      name: 'homepageTag',
+      title: 'Homepage tag',
+      type: 'string',
+      description:
+        'Custom badge shown on the project cover on the homepage (top-right pill). Overrides "Coming soon". Leave empty to show "Coming soon" when that toggle is on, or no badge otherwise.',
     }),
     defineField({
       name: 'projectDescriptionShort',

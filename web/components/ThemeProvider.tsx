@@ -15,9 +15,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_KEY = 'dru-theme';
 
 function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  const stored = localStorage.getItem(THEME_KEY);
-  if (stored === 'dark') return 'dark';
+  // Dark mode is currently disabled site-wide — always light (dark styles remain in CSS).
   return 'light';
 }
 
@@ -46,8 +44,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme, mounted]);
 
-  const setTheme = (next: Theme) => setThemeState(next);
-  const toggleTheme = () => setThemeState((t) => (t === 'light' ? 'dark' : 'light'));
+  // Dark mode disabled — setTheme/toggle are no-ops so the site stays light.
+  const setTheme = (_next: Theme) => {};
+  const toggleTheme = () => {};
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>

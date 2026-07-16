@@ -1,5 +1,13 @@
 import HomeProjectCard from "@/components/HomeProjectCard";
 import HomeLandingHero from "@/components/HomeLandingHero";
+import HomeHeroIntro from "@/components/HomeHeroIntro";
+import HomeApproachBlock from "@/components/HomeApproachBlock";
+import HomeClientsPricing from "@/components/HomeClientsPricing";
+import HomeLayoutBlock, {
+  type HomeLayoutProject,
+  type HomepageLayout,
+  type LayoutMedia,
+} from "@/components/HomeLayoutBlock";
 import HomePricingCalculator, {
   type HomePricingSideImage,
   type HomePricingTierRates,
@@ -68,6 +76,165 @@ function processGridCoverImage(media: any, fallbackTitle: string): { url: string
     }
   }
   return null;
+}
+
+/** Homepage layout blocks. Returns the raw Sanity asset URL + real dimensions so the
+ *  next/image Sanity loader can request correctly-sized variants straight from the CDN. */
+function processLayoutMedia(media: any, fallbackTitle: string): LayoutMedia | null {
+  if (!media) return null;
+  if (media._type === "image" && media.asset?.url) {
+    const dims = media.asset?.metadata?.dimensions;
+    return {
+      url: media.asset.url,
+      alt: media.alt || fallbackTitle || "Project image",
+      type: "image",
+      width: dims?.width,
+      height: dims?.height,
+    };
+  }
+  if (media._type === "file" && media.asset?.mimeType?.startsWith?.("video/") && media.asset?.url) {
+    return { url: media.asset.url, alt: media.alt || fallbackTitle || "Project video", type: "video" };
+  }
+  return null;
+}
+
+/** Default editorial layout order (Figma sequence) used by the fallback when no sections are configured. */
+const POSITIONAL_LAYOUTS: HomepageLayout[] = [
+  "two-up-65-35",
+  "left-42",
+  "center-70",
+  "two-up-20-30",
+  "right-70",
+  "left-60",
+  "grid-3",
+  "grid-3",
+  "grid-3",
+];
+
+/** Resolve a project reference into its cover + second image + link. */
+function resolveProjectRef(item: any) {
+  const title = item.projectTitle || "Project";
+  const coverMedia = item.cover?.[0] ?? (Array.isArray(item.images) ? item.images[0] : null);
+  const cover = processLayoutMedia(coverMedia, title);
+  const galleryImages = Array.isArray(item.images) ? item.images : [];
+  const secondaryMedia = galleryImages.find((m: any) => m && m !== coverMedia) ?? galleryImages[0] ?? null;
+  const secondary = processLayoutMedia(secondaryMedia, title);
+  // Badge label: custom tag wins, else "Coming soon" when enabled, else none.
+  const tag =
+    (item.homepageTag && String(item.homepageTag).trim()) ||
+    (item.comingSoon ? "Coming soon" : null);
+  return {
+    id: item._id || "project",
+    title,
+    cover,
+    secondary,
+    href: item.slug ? `/work/${item.slug}` : null,
+    tag,
+  };
+}
+
+/** Fallback path: assign the positional Figma layout to each legacy project by order. */
+function toLayoutProject(item: any, index: number): HomeLayoutProject {
+  const p = resolveProjectRef(item);
+  return {
+    id: `${p.id}-${index}`,
+    layout: POSITIONAL_LAYOUTS[index % POSITIONAL_LAYOUTS.length],
+    cover: p.cover,
+    secondary: p.secondary,
+    title: p.title,
+    caption: null,
+    href: p.href,
+    tag: p.tag,
+  };
+}
+
+/** Group consecutive grid-3 projects into rows of three; everything else stands alone. */
+type SequenceUnit =
+  | { type: "grid"; items: HomeLayoutProject[] }
+  | { type: "single"; item: HomeLayoutProject };
+
+/** Turn Sanity Homepage sections into render units (the primary path). */
+function sectionsToUnits(sections: any[]): SequenceUnit[] {
+  const units: SequenceUnit[] = [];
+  sections.forEach((section: any, si: number) => {
+    const layout = (section?.layout as HomepageLayout) || "center-70";
+    const caption = section?.caption ?? null;
+    const projs = (section?.projects || [])
+      .filter(Boolean)
+      .filter(isNotMotionStudies)
+      .map(resolveProjectRef);
+    if (!projs.length) return;
+
+    if (layout === "grid-3") {
+      units.push({
+        type: "grid",
+        items: projs.map((p: ReturnType<typeof resolveProjectRef>, i: number) => ({
+          id: `${p.id}-s${si}-${i}`,
+          layout: "grid-3" as HomepageLayout,
+          cover: p.cover,
+          secondary: null,
+          title: p.title,
+          caption: null,
+          href: p.href,
+          tag: p.tag,
+        })),
+      });
+      return;
+    }
+
+    if (layout === "two-up-65-35" || layout === "two-up-20-30") {
+      const big = projs[0];
+      const small = projs[1];
+      units.push({
+        type: "single",
+        item: {
+          id: `${big.id}-s${si}`,
+          layout,
+          cover: big.cover,
+          secondary: small ? small.cover : big.secondary,
+          title: big.title,
+          caption,
+          href: big.href,
+          secondaryHref: small?.href ?? big.href,
+          tag: big.tag,
+        },
+      });
+      return;
+    }
+
+    const p = projs[0];
+    units.push({
+      type: "single",
+      item: {
+        id: `${p.id}-s${si}`,
+        layout,
+        cover: p.cover,
+        secondary: p.secondary,
+        title: p.title,
+        caption,
+        href: p.href,
+        tag: p.tag,
+      },
+    });
+  });
+  return units;
+}
+
+function groupSequence(projects: HomeLayoutProject[]): SequenceUnit[] {
+  const units: SequenceUnit[] = [];
+  for (const p of projects) {
+    if (p.layout === "grid-3") {
+      const last = units[units.length - 1];
+      if (last && last.type === "grid" && last.items.length < 3) {
+        last.items.push(p);
+      } else {
+        units.push({ type: "grid", items: [p] });
+      }
+    } else {
+      units.push({ type: "single", item: p });
+    }
+  }
+  return units;
 }
 
 function processWorkItemImages(item: any) {
@@ -446,131 +613,192 @@ export default async function Home() {
     };
   }).filter((item: any) => item.url); // Filter out items without valid media URLs
 
+  // ---- New homepage sequence (Figma redesign) ----
+  // Figma nav uses "Projects" (the Sanity page title is "Work").
+  const navProjectsTitle = "Projects";
+
+  // Fallback ordering: flatten legacy fields (used only when no Homepage sections are set).
+  const legacyFlat = [
+    ...(homepageWork?.featuredTwoCol || []),
+    ...(homepageWork?.featuredMain ? [homepageWork.featuredMain] : []),
+    ...(homepageWork?.gridItems || []),
+    ...(homepageWork?.belowLogosProject ? [homepageWork.belowLogosProject] : []),
+  ];
+  const seenProjectIds = new Set<string>();
+  const layoutProjects: HomeLayoutProject[] = legacyFlat
+    .filter(Boolean)
+    .filter(isNotMotionStudies)
+    .filter((item: any) => {
+      const id = item?._id;
+      if (!id) return true;
+      if (seenProjectIds.has(id)) return false;
+      seenProjectIds.add(id);
+      return true;
+    })
+    .map((item: any, i: number) => toLayoutProject(item, i));
+
+  // Primary path: Homepage sections from Sanity; fall back to the positional legacy layout.
+  const sequenceUnits: SequenceUnit[] = homepageWork?.homepageSections?.length
+    ? sectionsToUnits(homepageWork.homepageSections)
+    : groupSequence(layoutProjects);
+
+  // Approach block (80% width, above the notes): cover + badge from the "Recent" project,
+  // else the first section/legacy project. The reel is intentionally not shown.
+  const recentRef = homepageWork?.recentProject
+    ? resolveProjectRef(homepageWork.recentProject)
+    : null;
+  const firstSectionProject = homepageWork?.homepageSections?.[0]?.projects?.[0];
+  const firstSectionRef = firstSectionProject ? resolveProjectRef(firstSectionProject) : null;
+  const approachSource =
+    (recentRef?.cover ? recentRef : null) ??
+    (firstSectionRef?.cover ? firstSectionRef : null) ??
+    (layoutProjects[0]?.cover
+      ? { cover: layoutProjects[0].cover, tag: layoutProjects[0].tag }
+      : null);
+  const approachCover: LayoutMedia | null = approachSource?.cover ?? null;
+  const approachTag: string | null = approachSource?.tag ?? null;
+
+  // Pricing strip
+  const baseMonthly = pricingRates?.baseMonthly ?? pricingDoc?.baseMonthlyLead ?? 20000;
+  const monthlyRateValue = `GBP ${Number(baseMonthly).toLocaleString("en-GB")}`;
+  const teamDetail =
+    (pricingDoc?.howIWorkDescription && String(pricingDoc.howIWorkDescription).trim()) ||
+    (pricingDoc?.moreInfoDescription && String(pricingDoc.moreInfoDescription).trim()) ||
+    null;
+
   return (
-    <div className="relative w-full bg-background min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
-      <HomeLandingHero
-        heroTitle={heroTitle}
-        homepageDescription={homepageData?.homepageDescription}
-        aboutPageDescription={aboutPageData?.homepageDescription}
-        servicesPageDescription={servicesPageData?.homepageDescription}
-        servicesHeroTitle={servicesPageData?.heroTitle ?? null}
-        servicesSectionsForHome={servicesSectionsForHome}
-        heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
+    <div className="relative w-full bg-background min-h-screen overflow-x-hidden">
+      {/* 1 — Hero: logo + top-right nav + intro text */}
+      <HomeHeroIntro
+        introParagraph={homepageData?.homepageDescription ?? null}
+        projectsLabel={navProjectsTitle}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
-        indexClientColumns={indexClientColumns}
-        indexServicesColumns={indexServicesColumns}
-        indexContactButtonText={indexContactButtonText}
       />
 
-      <div className="w-full px-[2.5%] sm:px-6 pb-12 lg:pb-16">
-        <HomePricingCalculator
-          maxDesigners={pricingMaxTeamSize}
-          pricingRates={pricingRates}
-          monthlyRateSideImage={monthlyRateSideImage}
-          teamPricingSideImages={teamPricingSideImages}
-          moreInfoTitle={pricingDoc?.moreInfoTitle ?? null}
-          moreInfoDescription={pricingDoc?.moreInfoDescription ?? null}
-          howIWorkTitle={pricingDoc?.howIWorkTitle ?? null}
-          howIWorkDescription={pricingDoc?.howIWorkDescription ?? null}
-        />
-      </div>
+      {/* 2 — Approach: 80% cover + four notes */}
+      <HomeApproachBlock cover={approachCover} tag={approachTag} />
 
-      {/* Content Section - Normal Flow */}
-      <div className="w-full relative z-0">
-        {/* Featured projects: desktop only (2-col row + main 70%). On mobile these appear in the grid below. */}
-        {featuredThree.length >= 3 && (
-          <section className="hidden md:block w-full pt-8 lg:pt-12 px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4">
-              <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[0].cover} variant="hero-half" title={featuredThree[0].item.projectTitle} creative={featuredThree[0].item.creative} href={featuredThree[0].item.slug ? `/work/${featuredThree[0].item.slug}` : null} comingSoon={featuredThree[0].item.comingSoon} />
-              </div>
-              <div className="min-w-0">
-                <HomeProjectCard cover={featuredThree[1].cover} variant="hero-half" title={featuredThree[1].item.projectTitle} creative={featuredThree[1].item.creative} href={featuredThree[1].item.slug ? `/work/${featuredThree[1].item.slug}` : null} comingSoon={featuredThree[1].item.comingSoon} />
-              </div>
-              <div className="min-w-0 w-full md:col-span-2 flex md:justify-center pt-0 md:pt-[120px]">
-                <div className="w-full md:max-w-[70%]">
-                  <HomeProjectCard cover={featuredThree[2].cover} variant="hero-main" title={featuredThree[2].item.projectTitle} creative={featuredThree[2].item.creative} href={featuredThree[2].item.slug ? `/work/${featuredThree[2].item.slug}` : null} comingSoon={featuredThree[2].item.comingSoon} />
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+      {/* 3 — Clients + pricing */}
+      <HomeClientsPricing
+        clientColumns={indexClientColumns}
+        monthlyRateValue={monthlyRateValue}
+        teamDetail={teamDetail}
+      />
 
-        {/* Testimonials — after featured work, before Spotlight */}
-        <div className="w-full px-[2.5%] sm:px-6 pt-[calc(var(--spacing)*30)]">
-          <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
+      {/* 4 — Project layout sequence.
+           Spacing: 264px below clients/pricing; 140px between sections; but a 3-col grid,
+           and any section following a two-up 20/30, sit just 36px below. */}
+      {sequenceUnits.length > 0 && (
+        <div className="w-full px-[2.5%] sm:px-6 pt-[120px] lg:pt-[264px] flex flex-col">
+          {sequenceUnits.map((unit, i) => {
+            const prev = sequenceUnits[i - 1];
+            const prevIsTwoUp2030 =
+              prev?.type === "single" && prev.item.layout === "two-up-20-30";
+            const isGrid = unit.type === "grid";
+            const mt =
+              i === 0
+                ? ""
+                : isGrid || prevIsTwoUp2030
+                  ? "mt-[36px]"
+                  : "mt-[100px] lg:mt-[140px]";
+            return unit.type === "grid" ? (
+              <div
+                key={`grid-${i}`}
+                className={`${mt} grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[28px]`}
+              >
+                {unit.items.map((item) => (
+                  <HomeLayoutBlock key={item.id} project={item} />
+                ))}
+              </div>
+            ) : (
+              <div key={unit.item.id} className={mt}>
+                <HomeLayoutBlock project={unit.item} />
+              </div>
+            );
+          })}
         </div>
-
-        {/* Spotlight Carousel — below testimonials (desktop only) */}
-        {processedSpotlightItems.length > 0 && (
-          <section className="hidden md:block w-full pt-16 lg:pt-[100px]">
-            <SpotlightCarouselWrapper items={processedSpotlightItems} />
-          </section>
-        )}
-
-      </div>
-
-      {/* Work grid: 3 cols (md+), 16px column gap, 152px row gap, 58px horizontal padding; 7:8 tiles with 20px radius. Mobile: 1 col, featured three then remaining grid items (hidden md+ in hero strip). */}
-      <div className="w-full mt-[40px] lg:mt-[220px] px-[58px]">
-        {(featuredThree.length >= 3 || gridItems.length > 0) ? (
-          <div className="grid grid-cols-1 gap-x-4 gap-y-[152px] md:grid-cols-3">
-            {featuredThree.length >= 3 &&
-              featuredThree.map(({ item, gridCover }: WorkWithMedia) => (
-                <div key={item._id} className="md:hidden min-w-0">
-                  <HomeProjectCard
-                    cover={gridCover}
-                    variant="grid"
-                    gridPortrait
-                    title={item.projectTitle}
-                    creative={item.creative ?? null}
-                    href={item.slug ? `/work/${item.slug}` : null}
-                    comingSoon={item.comingSoon}
-                  />
-                </div>
-              ))}
-            {gridItems.map(({ item, gridCover }: WorkWithMedia, i: number) => (
-              <div key={item._id || i} className="min-w-0">
-                <HomeProjectCard
-                  cover={gridCover}
-                  variant="grid"
-                  gridPortrait
-                  title={item.projectTitle}
-                  creative={item.creative ?? null}
-                  href={item.slug ? `/work/${item.slug}` : null}
-                  comingSoon={item.comingSoon}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-muted text-sm">No featured work items found. Please add items in Sanity Studio.</div>
-        )}
-      </div>
-
-      {/* Project below logos: desktop only, 40% width (hero-main) */}
-      {belowLogosProject && (
-        <section className="hidden md:block w-full pt-[80px]">
-          <div className="w-full flex justify-center px-6">
-            <div className="w-full max-w-[40%]">
-              <HomeProjectCard
-                cover={belowLogosProject.cover}
-                variant="hero-main"
-                title={belowLogosProject.item.projectTitle}
-                creative={belowLogosProject.item.creative}
-                href={belowLogosProject.item.slug ? `/work/${belowLogosProject.item.slug}` : "/work"}
-                comingSoon={belowLogosProject.item.comingSoon}
-              />
-            </div>
-          </div>
-        </section>
       )}
 
-      {/* UK clock: last on page, left 90px on desktop, center on mobile */}
-      <footer className="flex w-full justify-center md:justify-start px-6 md:px-0 md:pl-[52px] pb-[80px] md:pb-[50px] pt-[150px] md:pt-[500px]">
+      {/* 5 — Testimonials (2-col). No left padding so cards sit close to the edge. */}
+      <div className="w-full pr-[2.5%] sm:pr-6 pt-[120px] lg:pt-[180px]">
+        <HomeTestimonialsGrid testimonials={homeGridTestimonials} />
+      </div>
+
+      {/* 6 — Footer: world clocks + sign-off */}
+      <footer className="w-full px-[2.5%] sm:px-6 pt-[120px] lg:pt-[200px] pb-[80px]">
         <HomeFooterClock />
       </footer>
 
+      {/*
+        Legacy homepage — kept intentionally (per redesign brief) but not rendered.
+        Restore by changing `false` to a real condition.
+      */}
+      {false && (
+        <>
+          <HomeLandingHero
+            heroTitle={heroTitle}
+            homepageDescription={homepageData?.homepageDescription}
+            aboutPageDescription={aboutPageData?.homepageDescription}
+            servicesPageDescription={servicesPageData?.homepageDescription}
+            servicesHeroTitle={servicesPageData?.heroTitle ?? null}
+            servicesSectionsForHome={servicesSectionsForHome}
+            heroReelVideoUrl={homepageWork?.heroReelVideo?.asset?.url ?? null}
+            aboutLabel={navAboutTitle}
+            servicesLabel={navServicesTitle}
+            indexClientColumns={indexClientColumns}
+            indexServicesColumns={indexServicesColumns}
+            indexContactButtonText={indexContactButtonText}
+          />
+          <HomePricingCalculator
+            maxDesigners={pricingMaxTeamSize}
+            pricingRates={pricingRates}
+            monthlyRateSideImage={monthlyRateSideImage}
+            teamPricingSideImages={teamPricingSideImages}
+            moreInfoTitle={pricingDoc?.moreInfoTitle ?? null}
+            moreInfoDescription={pricingDoc?.moreInfoDescription ?? null}
+            howIWorkTitle={pricingDoc?.howIWorkTitle ?? null}
+            howIWorkDescription={pricingDoc?.howIWorkDescription ?? null}
+          />
+          {featuredThree.length >= 3 &&
+            featuredThree.map(({ item, cover, gridCover }: WorkWithMedia) => (
+              <HomeProjectCard
+                key={item._id}
+                cover={cover ?? gridCover}
+                variant="hero-half"
+                title={item.projectTitle}
+                creative={item.creative}
+                href={item.slug ? `/work/${item.slug}` : null}
+                comingSoon={item.comingSoon}
+              />
+            ))}
+          {gridItems.map(({ item, gridCover }: WorkWithMedia, i: number) => (
+            <HomeProjectCard
+              key={item._id || i}
+              cover={gridCover}
+              variant="grid"
+              gridPortrait
+              title={item.projectTitle}
+              creative={item.creative ?? null}
+              href={item.slug ? `/work/${item.slug}` : null}
+              comingSoon={item.comingSoon}
+            />
+          ))}
+          {belowLogosProject && (
+            <HomeProjectCard
+              cover={belowLogosProject?.cover ?? null}
+              variant="hero-main"
+              title={belowLogosProject?.item.projectTitle}
+              creative={belowLogosProject?.item.creative}
+              href={belowLogosProject?.item.slug ? `/work/${belowLogosProject?.item.slug}` : "/work"}
+              comingSoon={belowLogosProject?.item.comingSoon}
+            />
+          )}
+          {processedSpotlightItems.length > 0 && (
+            <SpotlightCarouselWrapper items={processedSpotlightItems} />
+          )}
+        </>
+      )}
     </div>
   );
 }

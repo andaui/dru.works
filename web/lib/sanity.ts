@@ -17,6 +17,24 @@ export function urlFor(source: any) {
   return builder.image(source)
 }
 
+/**
+ * next/image loader that resizes directly on Sanity's CDN (skips Next's optimizer).
+ * `src` must be a raw Sanity asset URL (e.g. https://cdn.sanity.io/images/.../xxx.png).
+ * Sanity returns a correctly-sized, auto-formatted (webp/avif) image per srcset width.
+ */
+export function sanityImageLoader({
+  src,
+  width,
+  quality,
+}: {
+  src: string
+  width: number
+  quality?: number
+}) {
+  const sep = src.includes('?') ? '&' : '?'
+  return `${src}${sep}w=${width}&q=${quality || 82}&fit=max&auto=format`
+}
+
 // GROQ query to fetch navigation pages (work, about, services)
 export const navigationPagesQuery = `*[_type == "page" && slug.current in ["work", "about", "services"]] {
   _id,
@@ -29,6 +47,7 @@ const featuredWorkFields = `_id,
   _type,
   projectTitle,
   comingSoon,
+  homepageTag,
   projectDescriptionShort,
   teamContribution,
   roleImpact,
@@ -172,6 +191,12 @@ export const homepageWorkQuery = `*[_type == "homepageWork"][0] {
       url,
       mimeType
     }
+  },
+  "recentProject": recentProject-> { ${featuredWorkFields} },
+  "homepageSections": homepageSections[] {
+    layout,
+    caption,
+    "projects": projects[]-> { ${featuredWorkFields} }
   },
   "featuredTwoCol": featuredTwoCol[]-> { ${featuredWorkFields} },
   "featuredMain": featuredMain-> { ${featuredWorkFields} },

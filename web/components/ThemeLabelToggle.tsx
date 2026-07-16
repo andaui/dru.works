@@ -6,8 +6,13 @@ type ThemeLabelToggleProps = {
   className?: string;
 };
 
+/** Dark mode is disabled site-wide; flip to true to bring the toggle back. */
+const DARK_MODE_ENABLED = false;
+
 export default function ThemeLabelToggle({ className = "" }: ThemeLabelToggleProps) {
   const { theme, setTheme } = useTheme();
+
+  if (!DARK_MODE_ENABLED) return null;
 
   return (
     <button

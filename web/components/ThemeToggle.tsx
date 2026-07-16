@@ -2,8 +2,13 @@
 
 import { useTheme } from './ThemeProvider';
 
+/** Dark mode is disabled site-wide; flip to true to bring the toggle back. */
+const DARK_MODE_ENABLED = false;
+
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+
+  if (!DARK_MODE_ENABLED) return null;
 
   return (
     <button

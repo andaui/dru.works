@@ -45,13 +45,15 @@ html.dark {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-inter: var(--font-inter);
+  --font-plex: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-plex-mono: var(--font-plex-mono), ui-monospace, monospace;
   --font-soehne: "Test Söhne", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-plex), Arial, Helvetica, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
