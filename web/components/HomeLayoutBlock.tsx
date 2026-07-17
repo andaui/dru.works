@@ -4,6 +4,7 @@ import Image from "next/image";
 import NextLink from "next/link";
 import { sanityImageLoader } from "@/lib/sanity";
 import HomeBadgePill from "@/components/HomeBadgePill";
+import AutoVideo from "@/components/AutoVideo";
 
 export type HomepageLayout =
   | "full-80"
@@ -42,53 +43,34 @@ export interface HomeLayoutProject {
 function Media({
   media,
   sizes,
-  aspectClass,
+  frame,
   priority,
 }: {
   media: LayoutMedia | null;
   sizes: string;
-  /** e.g. "aspect-square" | "aspect-[4/3]"; omit for natural height. */
-  aspectClass?: string;
+  /** "square" = 1:1 at every breakpoint. "wide" = 1:1 on mobile, natural height from `sm` up. */
+  frame: "square" | "wide";
   priority?: boolean;
 }) {
-  const base = `relative w-full overflow-hidden rounded-none bg-zinc-100 dark:bg-white/[0.06] ${aspectClass ?? ""}`;
+  const box = "relative w-full overflow-hidden rounded-none bg-zinc-100 dark:bg-white/[0.06]";
+  // Mobile is always a square tile (matches the 3-col grid); wide layouts relax to natural from sm.
+  const shape =
+    frame === "wide"
+      ? "w-full aspect-square object-cover object-center sm:aspect-auto sm:h-auto"
+      : "w-full aspect-square object-cover object-center";
+
   if (!media) {
-    return <div className={`${base} ${aspectClass ? "" : "aspect-square"}`} aria-hidden />;
+    return <div className={`${box} ${frame === "wide" ? "aspect-square sm:aspect-[3/2]" : "aspect-square"}`} aria-hidden />;
   }
-  const objectClass = "object-cover object-center";
   if (media.type === "video") {
     return (
-      <div className={base}>
-        <video
-          src={media.url}
-          className={aspectClass ? `absolute inset-0 h-full w-full ${objectClass}` : `block w-full h-auto ${objectClass}`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-        />
-      </div>
-    );
-  }
-  if (aspectClass) {
-    return (
-      <div className={base}>
-        <Image
-          loader={sanityImageLoader}
-          src={media.url}
-          alt={media.alt}
-          fill
-          quality={90}
-          className={objectClass}
-          sizes={sizes}
-          priority={priority}
-        />
+      <div className={box}>
+        <AutoVideo src={media.url} alt={media.alt} className={`block ${shape}`} />
       </div>
     );
   }
   return (
-    <div className={base}>
+    <div className={box}>
       <Image
         loader={sanityImageLoader}
         src={media.url}
@@ -96,7 +78,7 @@ function Media({
         width={media.width || 1600}
         height={media.height || 1067}
         quality={90}
-        className={`w-full h-auto ${objectClass}`}
+        className={shape}
         sizes={sizes}
         priority={priority}
       />
@@ -106,7 +88,7 @@ function Media({
 
 function Caption({ text }: { text: string }) {
   return (
-    <p className="mt-4 font-plex text-[14px] leading-[21px] text-foreground max-w-[720px]">
+    <p className="hidden sm:block mt-4 font-plex text-[14px] leading-[21px] text-foreground max-w-[720px]">
       {text}
     </p>
   );
@@ -139,7 +121,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
           <Linked href={href}>
             <div className="relative">
               {pill}
-              <Media media={cover} sizes="(max-width:1024px) 100vw, 80vw" />
+              <Media media={cover} sizes="(max-width:1024px) 100vw, 80vw" frame="wide" />
             </div>
           </Linked>
           {caption ? <Caption text={caption} /> : null}
@@ -152,7 +134,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
           <Linked href={href}>
             <div className="relative">
               {pill}
-              <Media media={cover} sizes="(max-width:1024px) 100vw, 70vw" />
+              <Media media={cover} sizes="(max-width:1024px) 100vw, 70vw" frame="wide" />
             </div>
           </Linked>
           {caption ? <Caption text={caption} /> : null}
@@ -165,7 +147,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
           <Linked href={href}>
             <div className="relative">
               {pill}
-              <Media media={cover} sizes="(max-width:1024px) 100vw, 70vw" />
+              <Media media={cover} sizes="(max-width:1024px) 100vw, 70vw" frame="wide" />
             </div>
           </Linked>
           {caption ? <Caption text={caption} /> : null}
@@ -178,7 +160,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
           <Linked href={href}>
             <div className="relative">
               {pill}
-              <Media media={cover} sizes="(max-width:1024px) 60vw, 43vw" aspectClass="aspect-square" />
+              <Media media={cover} sizes="(max-width:1024px) 60vw, 43vw" frame="square" />
             </div>
           </Linked>
           {caption ? <Caption text={caption} /> : null}
@@ -191,7 +173,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
           <Linked href={href}>
             <div className="relative">
               {pill}
-              <Media media={cover} sizes="(max-width:1024px) 100vw, 66vw" aspectClass="aspect-square" />
+              <Media media={cover} sizes="(max-width:1024px) 100vw, 66vw" frame="square" />
             </div>
           </Linked>
           {caption ? <Caption text={caption} /> : null}
@@ -205,13 +187,13 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
             <Linked href={href}>
               <div className="relative">
                 {pill}
-                <Media media={cover} sizes="(max-width:640px) 100vw, 65vw" aspectClass="aspect-square" />
+                <Media media={cover} sizes="(max-width:640px) 100vw, 65vw" frame="square" />
               </div>
             </Linked>
           </div>
           <div className="w-full sm:w-[33%]">
             <Linked href={secondaryHref ?? href}>
-              <Media media={secondary ?? cover} sizes="(max-width:640px) 100vw, 33vw" aspectClass="aspect-square" />
+              <Media media={secondary ?? cover} sizes="(max-width:640px) 100vw, 33vw" frame="square" />
             </Linked>
           </div>
           {caption ? <Caption text={caption} /> : null}
@@ -223,14 +205,14 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
         <div className="w-full flex flex-col sm:flex-row items-end justify-between gap-[28px]">
           <div className="w-full sm:w-[21%]">
             <Linked href={secondaryHref ?? href}>
-              <Media media={secondary ?? cover} sizes="(max-width:640px) 100vw, 21vw" aspectClass="aspect-square" />
+              <Media media={secondary ?? cover} sizes="(max-width:640px) 100vw, 21vw" frame="square" />
             </Linked>
           </div>
           <div className="w-full sm:w-[33%]">
             <Linked href={href}>
               <div className="relative">
                 {pill}
-                <Media media={cover} sizes="(max-width:640px) 100vw, 33vw" aspectClass="aspect-square" />
+                <Media media={cover} sizes="(max-width:640px) 100vw, 33vw" frame="square" />
               </div>
             </Linked>
           </div>
@@ -243,7 +225,7 @@ export default function HomeLayoutBlock({ project }: { project: HomeLayoutProjec
         <Linked href={href}>
           <div className="relative">
             {pill}
-            <Media media={cover} sizes="(max-width:768px) 100vw, 33vw" aspectClass="aspect-square" />
+            <Media media={cover} sizes="(max-width:768px) 100vw, 33vw" frame="square" />
           </div>
         </Linked>
       );

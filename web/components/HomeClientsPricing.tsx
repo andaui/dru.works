@@ -91,7 +91,7 @@ export default function HomeClientsPricing({
     >
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-12 lg:gap-8 w-full">
         {/* Client columns */}
-        <div className="flex gap-12 sm:gap-[79px] shrink-0 pl-1">
+        <div className="flex gap-8 sm:gap-[79px] pl-1 min-w-0">
           {cols.map((col, i) => (
             <ul key={i} className="flex flex-col gap-1 m-0 p-0 list-none">
               {col.map((name, j) => (

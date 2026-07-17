@@ -699,8 +699,8 @@ export default async function Home() {
               i === 0
                 ? ""
                 : isGrid || prevIsTwoUp2030
-                  ? "mt-[36px]"
-                  : "mt-[100px] lg:mt-[140px]";
+                  ? "mt-[28px] sm:mt-[36px]"
+                  : "mt-[28px] sm:mt-[100px] lg:mt-[140px]";
             return unit.type === "grid" ? (
               <div
                 key={`grid-${i}`}

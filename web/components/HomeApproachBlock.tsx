@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { sanityImageLoader } from "@/lib/sanity";
 import HomeBadgePill from "@/components/HomeBadgePill";
+import AutoVideo from "@/components/AutoVideo";
 
 interface CoverMedia {
   url: string;
@@ -55,14 +56,10 @@ export default function HomeApproachBlock({
           {tag ? <HomeBadgePill label={tag} /> : null}
           {cover ? (
             cover.type === "video" ? (
-              <video
+              <AutoVideo
                 src={cover.url}
-                className="w-full h-auto block object-cover object-center"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
+                alt={cover.alt}
+                className="block w-full aspect-square object-cover object-center sm:aspect-auto sm:h-auto"
               />
             ) : (
               <Image
@@ -72,13 +69,13 @@ export default function HomeApproachBlock({
                 width={cover.width || 1600}
                 height={cover.height || 1067}
                 quality={90}
-                className="w-full h-auto object-cover object-center"
+                className="w-full aspect-square object-cover object-center sm:aspect-auto sm:h-auto"
                 sizes="(max-width: 1024px) 100vw, 80vw"
                 priority
               />
             )
           ) : (
-            <div className="w-full aspect-[1332/892]" aria-hidden />
+            <div className="w-full aspect-square sm:aspect-[1332/892]" aria-hidden />
           )}
         </div>
       </div>

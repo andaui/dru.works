@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import ThemeToggle from "@/components/ThemeToggle";
 
-/** The five "/"-prefixed intro clauses (Figma 2190:61). Each renders on its own line. */
+/** The five "/"-prefixed intro clauses (desktop only). */
 const DEFAULT_INTRO_LINES = [
   "/ I’m a design partner with engineering fluency, unafraid to push things further than briefs ask",
   "/ Working with founders and product teams shipping software worth using",
@@ -69,7 +68,7 @@ export default function HomeHeroIntro({
       await navigator.clipboard.writeText("carterandrew93@gmail.com");
       setEmailCopied(true);
     } catch {
-      /* clipboard unavailable — the mobile mailto link still works */
+      /* clipboard unavailable */
     }
   };
 
@@ -82,8 +81,8 @@ export default function HomeHeroIntro({
 
   return (
     <section className="w-full px-[2.5%] sm:px-6 pt-[22px]" aria-label="Introduction">
-      {/* Top bar: logo (left) + nav (right) */}
-      <div className="flex w-full items-center justify-between gap-x-4 gap-y-3 flex-wrap">
+      {/* Top bar — mobile: logo then nav stacked; desktop: logo left, nav right */}
+      <div className="flex flex-col gap-[16px] w-full sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-[7.73px] whitespace-nowrap pl-1">
           <span className="font-soehne text-[15.46px] leading-[28.6px] tracking-[-0.19px]">
             ドゥル
@@ -93,7 +92,10 @@ export default function HomeHeroIntro({
           </span>
         </div>
 
-        <nav className="flex items-center gap-[16px] sm:gap-[22px] shrink-0" aria-label="Primary">
+        <nav
+          className="flex items-center gap-[16px] sm:gap-[22px] pl-1 sm:pl-0 sm:shrink-0"
+          aria-label="Primary"
+        >
           <button
             type="button"
             onClick={() => setTab("index")}
@@ -118,29 +120,23 @@ export default function HomeHeroIntro({
           >
             {servicesLabel}
           </button>
-          {/* Contact: desktop copies email, mobile uses mailto */}
+          {/* Contact — desktop only */}
           <button
             type="button"
             onClick={handleContactClick}
-            className={`${navBase} hidden md:inline text-[#989898] hover:text-foreground`}
+            className={`${navBase} hidden sm:inline text-[#989898] hover:text-foreground`}
           >
             {emailCopied ? "Email copied" : "Contact"}
           </button>
-          <a
-            href="mailto:carterandrew93@gmail.com"
-            className={`${navBase} md:hidden text-[#989898] hover:text-foreground`}
-          >
-            Contact
-          </a>
-          <ThemeToggle />
         </nav>
       </div>
 
       {/* Intro text — swaps between default / about / services in place */}
-      <div className="mt-[24px] flex flex-col gap-[34px] font-plex text-[14px] text-foreground pl-1 max-w-[640px]">
+      <div className="mt-[24px] flex flex-col gap-[34px] font-plex text-[14px] text-foreground pl-1 w-full max-w-[640px]">
         {tab === "index" && (
           <>
-            <div className="flex flex-col">
+            {/* Slash clauses — desktop only */}
+            <div className="hidden sm:flex flex-col">
               {introLines.map((line, i) => (
                 <p key={i} className={lineClass}>
                   {line}

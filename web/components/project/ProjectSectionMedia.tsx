@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { ProjectMediaResult } from "@/lib/projectMedia";
+import AutoVideo from "@/components/AutoVideo";
 
 interface ProjectSectionMediaProps {
   media: ProjectMediaResult;
@@ -15,15 +16,10 @@ export default function ProjectSectionMedia({ media, className = "" }: ProjectSe
   if (media.type === "video") {
     return (
       <div className={`w-full overflow-hidden rounded-none bg-transparent ${className}`}>
-        <video
+        <AutoVideo
           src={media.url}
+          alt={media.alt}
           className="w-full h-auto block object-cover object-center origin-center scale-[1.01]"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-label={media.alt}
         />
       </div>
     );

@@ -82,7 +82,7 @@ export default function LoginForm({ homepageDescription }: LoginFormProps) {
 
   return (
     <section
-      className="relative w-full min-h-[100dvh] min-h-screen px-[2.5%] sm:px-6 pt-[22px] pb-[80px] bg-background"
+      className="relative w-full min-h-[100dvh] min-h-screen px-[2.5%] sm:px-6 pt-[22px] pb-[80px] bg-background overflow-x-hidden"
       aria-label="Sign in"
     >
       {/* Right-aligned 812px column: description, then form */}

@@ -76,6 +76,6 @@ export default function ProjectWorkShell({ mode, children }: ProjectWorkShellPro
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background">{inner}</div>
+    <div className="relative flex min-h-screen w-full flex-col bg-background overflow-x-hidden">{inner}</div>
   );
 }
