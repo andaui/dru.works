@@ -27,7 +27,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-[100dvh] min-h-screen w-full bg-background px-[2.5%] sm:px-6 pt-[22px]">
-          <div className="font-soehne text-[26px] text-foreground/50">Loading…</div>
+          <div className="font-plex text-[14px] text-foreground/50">Loading…</div>
         </div>
       }
     >
