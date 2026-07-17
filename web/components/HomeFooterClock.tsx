@@ -100,10 +100,10 @@ export default function HomeFooterClock() {
   return (
     <div className="flex flex-col w-full">
       {/* World-clock dials */}
-      <div className="grid grid-cols-2 gap-6 sm:gap-10 w-full max-w-[912px]">
+      <div className="flex flex-wrap gap-[20px] w-full">
         {ZONES.map((z, i) => (
-          <div key={z.code} className="flex flex-col items-start gap-4 sm:gap-6">
-            <div className="w-full max-w-[436px]">
+          <div key={z.code} className="flex flex-col items-start gap-4 sm:gap-6 w-[334px] max-w-full">
+            <div className="w-full">
               <DialFace angles={angles[i]} dim={!mounted} />
             </div>
             <p className="font-plex-mono text-[14px] leading-[18px] tracking-[-0.17px] text-foreground tabular-nums whitespace-nowrap">
