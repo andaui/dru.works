@@ -22,24 +22,24 @@ export default function ProjectSectionWhatIDidOutcomes({
       <div className="flex flex-col gap-[34px] mt-[100px] mb-[100px] px-6">
         <div className="flex flex-col gap-3">
           {whatIDidTitle != null && whatIDidTitle !== "" && (
-            <p className="font-normal m-0 text-[13px] leading-[19px] text-foreground">
+            <p className="font-plex font-semibold m-0 text-[14px] leading-[23px] text-foreground">
               {whatIDidTitle}
             </p>
           )}
           {whatIDidText != null && whatIDidText !== "" && (
-            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
+            <p className="font-plex m-0 whitespace-pre-line text-[14px] leading-[21px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
               {whatIDidText}
             </p>
           )}
         </div>
         <div className="flex flex-col gap-3">
           {outcomesTitle != null && outcomesTitle !== "" && (
-            <p className="font-normal m-0 text-[13px] leading-[19px] text-foreground">
+            <p className="font-plex font-semibold m-0 text-[14px] leading-[23px] text-foreground">
               {outcomesTitle}
             </p>
           )}
           {outcomesText != null && outcomesText !== "" && (
-            <p className="font-normal m-0 whitespace-pre-line text-[13px] leading-[24px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
+            <p className="font-plex m-0 whitespace-pre-line text-[14px] leading-[21px] !text-[#8a8a8a] dark:!text-[#a3a3a3]">
               {outcomesText}
             </p>
           )}

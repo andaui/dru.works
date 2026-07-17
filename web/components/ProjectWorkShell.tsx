@@ -1,7 +1,5 @@
 "use client";
 
-import ThemeLabelToggle from "@/components/ThemeLabelToggle";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
@@ -38,66 +36,30 @@ export default function ProjectWorkShell({ mode, children }: ProjectWorkShellPro
     }
   };
 
-  const navItemClass =
-    "relative shrink-0 z-50 pointer-events-auto transition-opacity text-[14px] leading-[19px] not-italic font-inter";
-  const navMutedClass = "text-[#989898] dark:text-muted hover:text-foreground";
-
-  const nav = (
-    <nav
-      className="w-full px-[2.5%] sm:px-6 pt-[22px] pb-[24px] relative border-b border-transparent"
-      aria-label={isOverlay ? "Project dialog" : "Project"}
+  // Simple Close, top-left, aligned with the top of the featured hero (no nav bar).
+  const closeButton = (
+    <button
+      type="button"
+      onClick={close}
+      className="absolute top-[22px] left-6 z-[60] font-plex text-[14px] leading-[19px] text-foreground hover:opacity-70 transition-opacity bg-transparent border-0 p-0 m-0 cursor-pointer pointer-events-auto"
     >
-      <div className="flex w-full items-center justify-between gap-4 pl-2 relative">
-        <div className="flex items-center gap-[15px] min-w-0">
-          <button
-            type="button"
-            onClick={close}
-            className={`${navItemClass} ${navMutedClass} bg-transparent border-0 p-0 m-0 cursor-pointer`}
-          >
-            Index
-          </button>
-          <Link href="/about" className={`${navItemClass} ${navMutedClass}`}>
-            About
-          </Link>
-          <Link href="/services" className={`${navItemClass} ${navMutedClass}`}>
-            Services
-          </Link>
-        </div>
+      Close
+    </button>
+  );
 
-        {/* True page-centered close (independent of side widths) */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 h-full flex items-center pointer-events-none">
-          <button
-            type="button"
-            onClick={close}
-            className={`${navItemClass} text-accent hover:opacity-70 opacity-100 bg-transparent border-0 cursor-pointer p-0 m-0 pointer-events-auto`}
-          >
-            Close
-          </button>
-        </div>
-
-        <ThemeLabelToggle />
-      </div>
-    </nav>
+  const content = (
+    <div className="relative w-full min-h-full pt-[22px] pb-[50px] px-6">
+      {closeButton}
+      {children}
+    </div>
   );
 
   const inner = isOverlay ? (
-    // Overlay: nav scrolls with content (not sticky/pinned).
     <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-auto">
-      {nav}
-      <div className="relative w-full min-h-full pb-[50px] px-6">
-        {children}
-      </div>
+      {content}
     </div>
   ) : (
-    // Page: nav stays at top of the document flow.
-    <>
-      {nav}
-      <div className="flex-1 w-full min-h-0">
-        <div className="relative w-full min-h-full pb-[50px] px-6">
-          {children}
-        </div>
-      </div>
-    </>
+    <div className="flex-1 w-full min-h-0">{content}</div>
   );
 
   if (isOverlay) {

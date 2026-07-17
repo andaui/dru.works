@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import {
+  DEFAULT_HOME_PRICING_RATES,
+  type HomePricingTierRates,
+} from "@/components/HomePricingCalculator";
 
 /** Figma 2190:171 — three client-name columns. Overridable from Sanity (homeIndex.clientColumns). */
 const DEFAULT_CLIENT_COLS: string[][] = [
@@ -13,23 +17,72 @@ type HomeClientsPricingProps = {
   clientColumns?: string[][];
   /** Monthly rate figure, formatted (e.g. "GBP 20,000"). */
   monthlyRateValue?: string;
-  /** Second row label + expandable detail (team/designers). */
+  /** Second row label. */
   teamLabel?: string;
-  teamDetail?: string | null;
+  /** Pricing amounts from Sanity (partial allowed; merged with defaults). */
+  pricingRates?: Partial<HomePricingTierRates>;
+  /** Max designers the stepper allows. */
+  maxDesigners?: number;
 };
 
 const rowLabelClass = "m-0 font-plex font-semibold text-[14px] leading-[23px] text-foreground";
 const rowValueClass = "m-0 font-plex text-[14px] leading-[21px] text-foreground";
 const ruleClass = "h-px w-full bg-border";
+const stepperBtnClass =
+  "w-6 h-6 flex items-center justify-center rounded-full bg-[#F2F2F2] text-foreground text-[14px] leading-none disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#e8e8e8] transition-colors";
+
+const gbp = (n: number) => `GBP ${n.toLocaleString("en-GB")}`;
+
+/** All additional designers bill at the tier rate for the current count (volume pricing). */
+function tierRateFor(additionalCount: number, r: HomePricingTierRates): number {
+  if (additionalCount <= 1) return r.rateAdditional1;
+  if (additionalCount === 2) return r.rateAdditional2;
+  return r.rateAdditional3Plus;
+}
+
+/** One pricing line: label left, value right, rule beneath. */
+function PriceRow({
+  label,
+  value,
+  emphasis,
+}: {
+  label: string;
+  value: string;
+  emphasis?: boolean;
+}) {
+  const cls = emphasis ? rowLabelClass : rowValueClass;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-start justify-between gap-4">
+        <span className={cls}>{label}</span>
+        <span className={`${cls} shrink-0 tabular-nums ${emphasis ? "" : "text-foreground/70"}`}>
+          {value}
+        </span>
+      </div>
+      <div className={ruleClass} />
+    </div>
+  );
+}
 
 export default function HomeClientsPricing({
   clientColumns = DEFAULT_CLIENT_COLS,
   monthlyRateValue = "GBP 20,000",
   teamLabel = "When a broader team is needed, I can bring in trusted designers",
-  teamDetail,
+  pricingRates,
+  maxDesigners = 8,
 }: HomeClientsPricingProps) {
   const [expanded, setExpanded] = useState(false);
+  const [teamSize, setTeamSize] = useState(2);
   const cols = clientColumns.length ? clientColumns : DEFAULT_CLIENT_COLS;
+
+  const rates: HomePricingTierRates = { ...DEFAULT_HOME_PRICING_RATES, ...pricingRates };
+  const additional = Math.max(0, teamSize - 1);
+  const tierRate = tierRateFor(additional, rates);
+  const additionalCost = additional * tierRate;
+  const total = rates.baseMonthly + additionalCost;
+
+  const dec = () => setTeamSize((c) => Math.max(1, c - 1));
+  const inc = () => setTeamSize((c) => Math.min(maxDesigners, c + 1));
 
   return (
     <section
@@ -67,7 +120,7 @@ export default function HomeClientsPricing({
             </div>
           </div>
 
-          {/* Team / expandable */}
+          {/* Team / expandable calculator */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-1 pt-1">
               <p className={rowLabelClass}>{teamLabel}</p>
@@ -84,11 +137,51 @@ export default function HomeClientsPricing({
               </button>
               <div className={ruleClass} />
             </div>
-            {expanded && teamDetail ? (
-              <p className={`${rowValueClass} pt-3 text-foreground/70 whitespace-pre-line max-w-[640px]`}>
-                {teamDetail}
-              </p>
-            ) : null}
+
+            {expanded && (
+              <div className="pt-4 flex flex-col gap-3 w-full max-w-[520px]">
+                {/* Designer stepper */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className={rowValueClass}>Designers</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={dec}
+                        disabled={teamSize <= 1}
+                        aria-label="Fewer designers"
+                        className={stepperBtnClass}
+                      >
+                        −
+                      </button>
+                      <span className="w-5 text-center font-plex text-[14px] leading-[21px] text-foreground tabular-nums">
+                        {teamSize}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={inc}
+                        disabled={teamSize >= maxDesigners}
+                        aria-label="More designers"
+                        className={stepperBtnClass}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className={ruleClass} />
+                </div>
+
+                {/* Breakdown */}
+                <PriceRow label="Lead Designer (Dru)" value={gbp(rates.baseMonthly)} />
+                {teamSize > 1 && (
+                  <PriceRow
+                    label={`${additional === 1 ? "Additional designer" : `Additional designers (×${additional})`} · ${gbp(tierRate)} each`}
+                    value={gbp(additionalCost)}
+                  />
+                )}
+                <PriceRow label="Monthly total" value={gbp(total)} emphasis />
+              </div>
+            )}
           </div>
         </div>
       </div>

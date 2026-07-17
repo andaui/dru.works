@@ -25,11 +25,6 @@ const DEFAULT_NOTES: ApproachNote[] = [
       "I work best with product teams and founders who value clear communication, trust, and focus. I don’t take full-time roles or sit in daily standups. Instead, I run a structured async process that delivers fast, high-quality design work without the drag of unnecessary meetings.",
   },
   {
-    title: "On the team",
-    body:
-      "When your roadmap needs more velocity, I bring in senior designers I’ve personally vetted and worked with for years, product, motion, 3D. I stay your single point of contact, handling direction and quality. More capacity, no management overhead.",
-  },
-  {
     title: "On new ideas",
     body:
       "I’m curious by default. Every project is a chance to try something I haven’t tried before. I don’t recycle solutions.",
@@ -89,9 +84,9 @@ export default function HomeApproachBlock({
       </div>
 
       {/* 4-column notes */}
-      <div className="w-full lg:w-[80%] mt-8 lg:mt-[32px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[28px]">
+      <div className="w-full lg:w-[80%] mt-8 lg:mt-[32px] flex flex-col sm:flex-row sm:flex-wrap gap-[48px]">
         {notes.map((note) => (
-          <div key={note.title} className="flex flex-col gap-[9px]">
+          <div key={note.title} className="flex flex-col gap-[9px] w-full sm:w-[294px]">
             <p className="m-0 font-plex font-semibold text-[14px] leading-[23px] text-foreground">
               {note.title}
             </p>

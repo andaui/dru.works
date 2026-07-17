@@ -661,10 +661,6 @@ export default async function Home() {
   // Pricing strip
   const baseMonthly = pricingRates?.baseMonthly ?? pricingDoc?.baseMonthlyLead ?? 20000;
   const monthlyRateValue = `GBP ${Number(baseMonthly).toLocaleString("en-GB")}`;
-  const teamDetail =
-    (pricingDoc?.howIWorkDescription && String(pricingDoc.howIWorkDescription).trim()) ||
-    (pricingDoc?.moreInfoDescription && String(pricingDoc.moreInfoDescription).trim()) ||
-    null;
 
   return (
     <div className="relative w-full bg-background min-h-screen overflow-x-hidden">
@@ -685,7 +681,8 @@ export default async function Home() {
       <HomeClientsPricing
         clientColumns={indexClientColumns}
         monthlyRateValue={monthlyRateValue}
-        teamDetail={teamDetail}
+        pricingRates={pricingRates}
+        maxDesigners={pricingMaxTeamSize}
       />
 
       {/* 4 — Project layout sequence.

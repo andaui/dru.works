@@ -4,11 +4,11 @@ import ProjectSectionOneCol from "@/components/project/ProjectSectionOneCol";
 import ProjectSectionText from "@/components/project/ProjectSectionText";
 import ProjectSectionWhatIDidOutcomes from "@/components/project/ProjectSectionWhatIDidOutcomes";
 import ProjectSectionSpacer from "@/components/project/ProjectSectionSpacer";
+import ProjectSectionMedia from "@/components/project/ProjectSectionMedia";
 import TestimonialCard from "@/components/TestimonialCard";
 import type { HomeTestimonialItem } from "@/components/HomeTestimonialsGrid";
 import { client, projectBySlugQuery, featuredWorkQuery, urlFor } from "@/lib/sanity";
 import { resolveProjectMedia } from "@/lib/projectMedia";
-import ProjectDetailFooterActions from "@/components/project/ProjectDetailFooterActions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -50,8 +50,8 @@ function toHomeTestimonialItem(testimonial: any): HomeTestimonialItem | null {
 function NavArrow({ direction }: { direction: "left" | "right" }) {
   return (
     <svg
-      width={44}
-      height={44}
+      width={20}
+      height={20}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -67,11 +67,10 @@ function NavArrow({ direction }: { direction: "left" | "right" }) {
 }
 
 const navLabelClass =
-  "font-soehne font-normal text-[70px] leading-[65px] tracking-[-0.25px]";
+  "font-plex text-[14px] leading-[19px]";
 
-/** Monthly pricing expandable description (HomePricingCalculator) — 30% opacity; full accent on link hover. */
 const navProjectTitleClass =
-  "font-soehne font-normal text-[20px] leading-[29px] text-foreground/30 group-hover:text-accent transition-colors shrink min-w-0";
+  "font-plex text-[14px] leading-[21px] text-foreground/40 group-hover:text-accent transition-colors shrink min-w-0";
 
 async function getProject(slug: string) {
   return client.fetch(projectBySlugQuery, { slug });
@@ -131,13 +130,53 @@ export default async function ProjectDetailView({
   const fallbackAlt = (project.projectTitle || "").trim() || "Project";
   const clientName = (project.client || "").trim();
 
+  // First media section becomes a featured hero (top-right, 65%); skipped from the normal flow.
+  const mediaSectionTypes = new Set([
+    "projectSectionOneCol",
+    "projectSectionTwoCol50",
+    "projectSectionTwoCol30",
+  ]);
+  const sectionsList: any[] = project.sections || [];
+  const firstMediaIdx = sectionsList.findIndex(
+    (s: any) => s?._key && mediaSectionTypes.has(s._type),
+  );
+  const firstMediaSection = firstMediaIdx >= 0 ? sectionsList[firstMediaIdx] : null;
+
   return (
     <>
       <div id="project-detail-top" className="h-0 w-full shrink-0 scroll-mt-0" aria-hidden />
-      {/* Project intro (Figma frame): description first, full width; no title in modal/page shell. */}
+
+      {/* Featured hero: first media section, top-right at 65% width. */}
+      {firstMediaSection ? (
+        <div className="w-full lg:w-[65%] lg:ml-auto">
+          {firstMediaSection._type === "projectSectionOneCol" ? (
+            <ProjectSectionMedia media={resolveProjectMedia(firstMediaSection.media, fallbackAlt)} />
+          ) : firstMediaSection._type === "projectSectionTwoCol50" ? (
+            <ProjectSectionTwoCol50
+              leftMedia={resolveProjectMedia(firstMediaSection.leftMedia, fallbackAlt)}
+              rightMedia={resolveProjectMedia(firstMediaSection.rightMedia, fallbackAlt)}
+            />
+          ) : (
+            <ProjectSectionTwoCol30
+              ratio={
+                firstMediaSection.ratio === "40-60"
+                  ? "40-60"
+                  : firstMediaSection.ratio === "35-65"
+                    ? "35-65"
+                    : "30-70"
+              }
+              narrowSide={firstMediaSection.narrowSide === "right" ? "right" : "left"}
+              leftMedia={resolveProjectMedia(firstMediaSection.leftMedia, fallbackAlt)}
+              rightMedia={resolveProjectMedia(firstMediaSection.rightMedia, fallbackAlt)}
+            />
+          )}
+        </div>
+      ) : null}
+
+      {/* Project intro: description below the featured hero, left-aligned. */}
       {description ? (
         <div className="w-full pt-[50px]">
-          <p className="font-soehne font-normal text-[30px] sm:text-[39px] leading-[37px] sm:leading-[45px] tracking-[-0.25px] text-black dark:text-white m-0 w-full">
+          <p className="font-plex text-[14px] leading-[23px] text-foreground m-0 w-full max-w-[640px]">
             {description}
           </p>
         </div>
@@ -147,13 +186,13 @@ export default async function ProjectDetailView({
         <div className="w-full mt-[80px]">
           <div className="grid grid-cols-12 gap-x-[34px] gap-y-10 w-full items-start">
             <div className="col-span-12 lg:col-span-9 min-w-0">
-              <div className="font-soehne font-normal text-[18px] sm:text-[20px] leading-[26px] sm:leading-[29px] tracking-[-0.25px]">
-                <p className="m-0 text-black/50 dark:text-white/50">{listTitle}</p>
+              <div className="font-plex text-[14px] leading-[21px]">
+                <p className="m-0 font-semibold text-foreground">{listTitle}</p>
                 {listLines.length > 0 ? (
-                  <div className="mt-[10px] flex flex-col gap-1 text-black dark:text-white">
+                  <div className="mt-[10px] flex flex-col gap-1 text-foreground">
                     {listLines.map((line, i) => (
                       <p key={i} className="m-0">
-                        {line}
+                        / {line}
                       </p>
                     ))}
                   </div>
@@ -164,11 +203,11 @@ export default async function ProjectDetailView({
             {clientName ? (
               <div className="col-span-12 lg:col-span-2 lg:col-start-11 min-w-0">
                 <div className="pt-1">
-                  <p className="m-0 font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-black dark:text-white">
+                  <p className="m-0 font-plex font-semibold text-[14px] leading-[23px] text-foreground">
                     Client
                   </p>
                   <div className="h-px w-full bg-border mt-1" aria-hidden />
-                  <p className="m-0 pt-1 font-soehne font-normal text-[20px] sm:text-[24px] leading-[32px] sm:leading-[37px] tracking-[-0.25px] text-black/50 dark:text-white/50">
+                  <p className="m-0 pt-1 font-plex text-[14px] leading-[21px] text-foreground">
                     {clientName}
                   </p>
                   <div className="h-px w-full bg-border mt-1" aria-hidden />
@@ -182,8 +221,9 @@ export default async function ProjectDetailView({
       {/* Keep media-heavy sections constrained, while intro remains full width. */}
       <div className="w-full max-w-[1900px] mx-auto mt-[115px]">
         <div className="w-full min-w-0 flex flex-col gap-6">
-          {(project.sections || []).map((section: any) => {
+          {sectionsList.map((section: any, idx: number) => {
             if (!section?._key) return null;
+            if (idx === firstMediaIdx) return null; // rendered as the featured hero above
             switch (section._type) {
               case "projectSectionTwoCol50":
                 return (
@@ -289,9 +329,6 @@ export default async function ProjectDetailView({
           </div>
         ) : null}
 
-        <div className="w-full min-w-0 mt-[200px]">
-          <ProjectDetailFooterActions />
-        </div>
       </div>
     </>
   );

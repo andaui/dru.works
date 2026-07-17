@@ -5,7 +5,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 /** The five "/"-prefixed intro clauses (Figma 2190:61). Each renders on its own line. */
 const DEFAULT_INTRO_LINES = [
-  "/ I’m a Design partner with engineering fluency, unafraid to push things further than briefs ask",
+  "/ I’m a design partner with engineering fluency, unafraid to push things further than briefs ask",
   "/ Working with founders and product teams shipping software worth using",
   "/ I’m driven by curiosity, risk, and the search for ideas that haven’t been done yet",
   "/ I generate design concepts constantly, some stay in the studio, some find their way into the world",
