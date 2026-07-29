@@ -683,6 +683,7 @@ export default async function Home() {
         monthlyRateValue={monthlyRateValue}
         pricingRates={pricingRates}
         maxDesigners={pricingMaxTeamSize}
+        showPricing={pricingDoc?.showPricing === true}
       />
 
       {/* 4 — Project layout sequence.

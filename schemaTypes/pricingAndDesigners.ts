@@ -8,6 +8,14 @@ export default defineType({
     'Homepage pricing calculator: amounts, Dru portrait (both left stripes), and optional photos for additional designers (team row: Dru first, then these in order).',
   fields: [
     defineField({
+      name: 'showPricing',
+      title: 'Show pricing on homepage',
+      type: 'boolean',
+      description:
+        'Turn ON to show the “Monthly rate / broader team” pricing block on the homepage. Off (default) hides it — the client list stays visible either way.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'baseMonthlyLead',
       title: 'Base monthly (lead / Dru)',
       type: 'number',

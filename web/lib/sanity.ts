@@ -253,6 +253,7 @@ export const heroTestimonialsQuery = `*[_type == "testimonial"] | order(order as
 
 /** Singleton `pricingAndDesigners` — homepage calculator amounts + stripe images */
 export const pricingAndDesignersQuery = `*[_type == "pricingAndDesigners" && _id == "pricingAndDesigners"][0] {
+  showPricing,
   baseMonthlyLead,
   rateAdditional1,
   rateAdditional2,

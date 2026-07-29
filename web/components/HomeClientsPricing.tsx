@@ -23,6 +23,8 @@ type HomeClientsPricingProps = {
   pricingRates?: Partial<HomePricingTierRates>;
   /** Max designers the stepper allows. */
   maxDesigners?: number;
+  /** Toggle the pricing block (Sanity). Client list stays visible when false. */
+  showPricing?: boolean;
 };
 
 const rowLabelClass = "m-0 font-plex font-semibold text-[14px] leading-[23px] text-foreground";
@@ -70,6 +72,7 @@ export default function HomeClientsPricing({
   teamLabel = "When a broader team is needed, I can bring in trusted designers",
   pricingRates,
   maxDesigners = 8,
+  showPricing = true,
 }: HomeClientsPricingProps) {
   const [expanded, setExpanded] = useState(false);
   const [teamSize, setTeamSize] = useState(2);
@@ -106,7 +109,8 @@ export default function HomeClientsPricing({
           ))}
         </div>
 
-        {/* Pricing table */}
+        {/* Pricing table — toggled via Sanity (pricingAndDesigners.showPricing) */}
+        {showPricing && (
         <div className="flex flex-col gap-[28px] w-full lg:max-w-[815px]">
           {/* Monthly rate */}
           <div className="flex flex-col">
@@ -184,6 +188,7 @@ export default function HomeClientsPricing({
             )}
           </div>
         </div>
+        )}
       </div>
     </section>
   );
