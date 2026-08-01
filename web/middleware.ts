@@ -12,6 +12,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Vercel Analytics / Speed Insights (script + event beacon) must bypass the auth gate,
+  // otherwise visitors on the login page never report and the dashboard stays empty.
+  if (pathname.startsWith('/_vercel/')) {
+    return NextResponse.next();
+  }
+
   // Check if user is authenticated via cookie
   const authCookie = request.cookies.get('site-auth');
   const isAuthenticated = authCookie?.value 
