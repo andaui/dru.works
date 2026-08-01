@@ -672,6 +672,7 @@ export default async function Home() {
         projectsLabel={navProjectsTitle}
         aboutLabel={navAboutTitle}
         servicesLabel={navServicesTitle}
+        contactEmail={homeIndex?.contactEmail}
       />
 
       {/* 2 — Approach: 80% cover + four notes */}

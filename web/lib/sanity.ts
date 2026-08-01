@@ -214,8 +214,15 @@ export const homeIndexQuery = `*[_type == "homeIndex"][0] {
   servicesColumns[] {
     items
   },
-  contactButtonText
+  contactButtonText,
+  contactEmail
 }`
+
+/** Fallback used everywhere until a Contact email is set in Sanity (homeIndex.contactEmail). */
+export const DEFAULT_CONTACT_EMAIL = 'carterandrew93@gmail.com'
+
+/** Lightweight fetch of just the contact email (for interior pages that don't need all of homeIndex). */
+export const contactEmailQuery = `*[_type == "homeIndex"][0].contactEmail`
 
 // Works Page Projects: same shape as Homepage Work (2-col, main, grid) for /work page.
 export const worksPageProjectsQuery = `*[_type == "worksPageProjects"][0] {

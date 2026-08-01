@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import HomeProjectCard from "@/components/HomeProjectCard";
-import { client, featuredWorkQuery, navigationPagesQuery, urlFor, worksPageProjectsQuery } from "@/lib/sanity";
+import { client, featuredWorkQuery, navigationPagesQuery, urlFor, worksPageProjectsQuery, contactEmailQuery } from "@/lib/sanity";
 
 function processOneMedia(media: any, fallbackTitle: string): { url: string; alt: string; type: "image" | "video" } | null {
   if (!media) return null;
@@ -52,10 +52,11 @@ async function getNavigationPages() {
 export const revalidate = 60;
 
 export default async function WorkPage() {
-  const [navigationPages, worksPageData, allFeaturedWorkFallback] = await Promise.all([
+  const [navigationPages, worksPageData, allFeaturedWorkFallback, contactEmail] = await Promise.all([
     getNavigationPages(),
     client.fetch(worksPageProjectsQuery).then((r: any) => r || null),
     client.fetch(featuredWorkQuery).then((r: any[]) => r || []),
+    client.fetch(contactEmailQuery).then((r: string | null) => r || null),
   ]);
 
   // Flatten Works Page Projects (same schema shape as Homepage Work) into one ordered list for the grid.
@@ -77,7 +78,7 @@ export default async function WorkPage() {
 
   return (
     <div className="relative w-full max-w-[1900px] mx-auto bg-background min-h-screen pb-[40px] lg:pb-[200px] px-[2.5%] sm:px-0">
-      <Header currentPage="work" navigationPages={navigationPages} />
+      <Header currentPage="work" navigationPages={navigationPages} contactEmail={contactEmail} />
 
       {/* All projects in 4-col grid */}
       <div className="w-full min-w-0 px-[2.5%] sm:px-[24px] pt-[120px]">

@@ -40,6 +40,8 @@ type HomeHeroIntroProps = {
   projectsLabel?: string;
   aboutLabel?: string;
   servicesLabel?: string;
+  /** Contact email (Sanity homeIndex.contactEmail). */
+  contactEmail?: string | null;
 };
 
 type Tab = "index" | "about" | "services";
@@ -55,6 +57,7 @@ export default function HomeHeroIntro({
   projectsLabel = "Projects",
   aboutLabel = "About",
   servicesLabel = "Services",
+  contactEmail,
 }: HomeHeroIntroProps) {
   const [tab, setTab] = useState<Tab>("index");
   const [emailCopied, setEmailCopied] = useState(false);
@@ -63,9 +66,11 @@ export default function HomeHeroIntro({
   const toggle = (t: Exclude<Tab, "index">) =>
     setTab((cur) => (cur === t ? "index" : t));
 
+  const email = (contactEmail && contactEmail.trim()) || "carterandrew93@gmail.com";
+
   const handleContactClick = async () => {
     try {
-      await navigator.clipboard.writeText("carterandrew93@gmail.com");
+      await navigator.clipboard.writeText(email);
       setEmailCopied(true);
     } catch {
       /* clipboard unavailable */

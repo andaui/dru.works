@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
+import { DEFAULT_CONTACT_EMAIL } from "@/lib/sanity";
 
 interface NavigationPage {
   slug: string;
@@ -12,9 +13,11 @@ interface NavigationPage {
 interface HeaderProps {
   currentPage?: "work" | "about" | "services";
   navigationPages?: NavigationPage[];
+  contactEmail?: string | null;
 }
 
-export default function Header({ currentPage, navigationPages = [] }: HeaderProps) {
+export default function Header({ currentPage, navigationPages = [], contactEmail }: HeaderProps) {
+  const email = (contactEmail && contactEmail.trim()) || DEFAULT_CONTACT_EMAIL;
   // Create a map of slug to title for easy lookup
   const pageTitles = navigationPages.reduce((acc, page) => {
     acc[page.slug] = page.title;
@@ -31,7 +34,7 @@ export default function Header({ currentPage, navigationPages = [] }: HeaderProp
   
   const handleContactClick = async () => {
     try {
-      await navigator.clipboard.writeText('carterandrew93@gmail.com');
+      await navigator.clipboard.writeText(email);
       setEmailCopied(true);
     } catch (err) {
       console.error('Failed to copy email:', err);
@@ -72,7 +75,7 @@ export default function Header({ currentPage, navigationPages = [] }: HeaderProp
             Email copied
           </span>
           <a 
-            href="mailto:carterandrew93@gmail.com" 
+            href={`mailto:${email}`} 
             className={`text-foreground opacity-100 ${emailCopied ? 'hidden md:block' : 'hidden'}`}
           >
             Open mail
@@ -86,7 +89,7 @@ export default function Header({ currentPage, navigationPages = [] }: HeaderProp
           </button>
           {/* Link for mobile - only visible on mobile via CSS */}
           <a 
-            href="mailto:carterandrew93@gmail.com" 
+            href={`mailto:${email}`} 
             className={`text-foreground opacity-100 ${emailCopied ? 'hidden' : 'block md:hidden'}`}
           >
             Contact

@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import AboutPageLayout from "@/components/AboutPageLayout";
 import HeroDescriptionWithCompanyAccent from "@/components/HeroDescriptionWithCompanyAccent";
-import { client, pageDataQuery, navigationPagesQuery } from "@/lib/sanity";
+import { client, pageDataQuery, navigationPagesQuery, contactEmailQuery } from "@/lib/sanity";
 
 async function getPageData() {
   try {
@@ -39,13 +39,14 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function About() {
   const navigationPages = await getNavigationPages();
+  const contactEmail = await client.fetch(contactEmailQuery);
   const pageData = await getPageData();
   const sections = pageData?.sections || [];
   const sectionsForNav = await getSectionsForNav();
   
   return (
     <div data-about-page className="relative w-full bg-background min-h-screen overflow-x-hidden px-[2.5%] sm:px-0">
-      <Header currentPage="about" navigationPages={navigationPages} />
+      <Header currentPage="about" navigationPages={navigationPages} contactEmail={contactEmail} />
 
       <AboutPageLayout
         heroContent={

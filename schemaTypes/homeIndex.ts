@@ -73,6 +73,14 @@ export default defineType({
       description: 'Label for the mail button between the client and services lists.',
       initialValue: 'Contact',
     }),
+    defineField({
+      name: 'contactEmail',
+      title: 'Contact email',
+      type: 'string',
+      description:
+        'Email used by every “Contact” link (copied to clipboard on desktop, mailto on mobile) in the header and interior pages.',
+      initialValue: 'carterandrew93@gmail.com',
+    }),
   ],
   preview: {
     prepare() {
